@@ -12,3 +12,7 @@ Based on Kvaser canlib linux driver.
 
 
 ##Usage
+
+##Todo
+* Almost ervery command has to be reworked
+* Overhaul of the internal data structure
