@@ -19,3 +19,4 @@ can4osx is a user space driver, only supporting usb devices right now. So just i
 ##Todo
 * Almost ervery command has to be reworked
 * Overhaul of the internal data structure
+* Add new interfaces
