@@ -123,6 +123,7 @@ typedef struct {
 typedef struct {
     canStatus (*can4osxhwInitRef)(const CanHandle hnd);
     canStatus (*can4osxhwCanWriteRef)(const CanHandle hnd,UInt32 id, void *msg, UInt16 dlc, UInt16 flag);
+    canStatus (*can4osxhwCanReadRef) (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt16 *flag, UInt32 *time);
 }Can4osxHwFunctions;
 
 
