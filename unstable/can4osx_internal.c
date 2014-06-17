@@ -85,7 +85,9 @@ CanEventMsgBuf* CAN4OSX_CreateCanEventBuffer( UInt32 bufferSize )
 void CAN4OSX_ReleaseCanEventBuffer( CanEventMsgBuf* bufferRef )
 {
 	if ( bufferRef != NULL ) {
-        dispatch_release(bufferRef->bufferGDCqueueRef);
+        if (bufferRef->bufferGDCqueueRef != NULL) {
+            dispatch_release(bufferRef->bufferGDCqueueRef);
+        }
 		free(bufferRef->canEventRef);
 		free(bufferRef);
 	}

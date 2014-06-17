@@ -328,7 +328,7 @@ static void CAN4OSX_DeviceAdded(void *refCon, io_iterator_t iterator)
         }
         
         
-        kernRetVal = CAN4OSX_FindInterfaces(&can4osxUsbDeviceHandle[can4osxMaxChannelCount]);
+        /*kernRetVal = */CAN4OSX_FindInterfaces(&can4osxUsbDeviceHandle[can4osxMaxChannelCount]);
         
         kernRetVal = IOServiceAddInterestNotification(can4osxUsbNotificationPortRef,            // notifyPort
 											  can4osxUsbDevice,                                 // service
@@ -379,7 +379,7 @@ static IOReturn CAN4OSX_ConfigureDevice(IOUSBDeviceInterface **dev)
     IOReturn kr;
     IOUSBConfigurationDescriptorPtr configDesc;
  
-    kr = (*dev)->GetNumberOfConfigurations(dev, &numConfig);
+    /*kr = */(*dev)->GetNumberOfConfigurations(dev, &numConfig);
     if (!numConfig) {
         return -1;
     }
@@ -554,7 +554,7 @@ static IOReturn CAN4OSX_Dealloc(Can4osxUsbDeviceHandleEntry	*self)
     kern_return_t retval;
     
     if (self->can4osxDeviceInterface) {
-        retval = (*self->can4osxDeviceInterface)->Release(self->can4osxDeviceInterface);
+        /*retval = */(*self->can4osxDeviceInterface)->Release(self->can4osxDeviceInterface);
     }
     
     if(self->can4osxInterfaceInterface) {

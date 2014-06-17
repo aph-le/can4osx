@@ -194,7 +194,9 @@ LeafCommandMsgBuf* LeafCreateCommandBuffer( UInt32 bufferSize )
 void LeafReleaseCommandBuffer( LeafCommandMsgBuf* bufferRef )
 {
 	if ( bufferRef != NULL ) {
-        dispatch_release(bufferRef->bufferGDCqueueRef);
+        if (bufferRef->bufferGDCqueueRef != NULL) {
+            dispatch_release(bufferRef->bufferGDCqueueRef);
+        }
 		free(bufferRef->commandRef);
 		free(bufferRef);
 	}
@@ -554,6 +556,9 @@ static void LeafBulkWriteCompletion(void *refCon, IOReturn result, void *arg0)
     IOUSBInterfaceInterface **interface = self->can4osxInterfaceInterface;
     
     UInt32 numBytesWritten = (UInt32) arg0;
+    
+    (void)numBytesWritten;
+    
     CAN4OSX_DEBUG_PRINT("Asynchronous bulk write complete\n");
     
     if (result != kIOReturnSuccess)
