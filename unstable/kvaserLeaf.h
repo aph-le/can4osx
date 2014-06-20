@@ -299,13 +299,5 @@ canStatus LeafCanTranslateBaud (SInt32 *const freq,
                                 UInt32 *const nosamp,
                                 UInt32 *const syncMode);
 
-canStatus LeafCanStartChip(CanHandle hdl);
-
-canStatus LeafCanSetNotify(const CanHandle hnd, CanNotificationType notifyStruct, unsigned int notifyFlags, void *tag);
-
-canStatus LeafCanSetBusParams (const CanHandle hnd, SInt32 freq, UInt32 tseg1, UInt32 tseg2, UInt32 sjw, UInt32 noSamp, UInt32 syncmode);
-
-void LeafCanInitializeLibrary (void);
-
 
 #endif

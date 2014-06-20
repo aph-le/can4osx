@@ -53,6 +53,8 @@
 #include "can4osx_internal.h"
 
 
+static UInt8 CAN4OSX_TestFullCanEventBuffer(CanEventMsgBuf* bufferRef);
+static UInt8 CAN4OSX_TestEmptyCanEventBuffer(CanEventMsgBuf* bufferRef);
 
 
 CanEventMsgBuf* CAN4OSX_CreateCanEventBuffer( UInt32 bufferSize )
@@ -93,7 +95,7 @@ void CAN4OSX_ReleaseCanEventBuffer( CanEventMsgBuf* bufferRef )
 	}
 }
 
-UInt8 CAN4OSX_TestFullCanEventBuffer(CanEventMsgBuf* bufferRef)
+static UInt8 CAN4OSX_TestFullCanEventBuffer(CanEventMsgBuf* bufferRef)
 {
 	if (bufferRef->bufferCount == bufferRef->bufferSize) {
 		return 1;
@@ -102,7 +104,7 @@ UInt8 CAN4OSX_TestFullCanEventBuffer(CanEventMsgBuf* bufferRef)
 	}
 }
 
-UInt8 CAN4OSX_TestEmptyCanEventBuffer(CanEventMsgBuf* bufferRef)
+static UInt8 CAN4OSX_TestEmptyCanEventBuffer(CanEventMsgBuf* bufferRef)
 {
     if ( bufferRef->bufferCount == 0 ) {
         return 1;

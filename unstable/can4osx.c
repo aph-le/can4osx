@@ -101,17 +101,19 @@ canStatus canBusOn(const CanHandle hnd)
 {
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
         return canERR_INVHANDLE;
+    } else {
+        Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
+        return self->hwFunctions.can4osxhwCanBusOnRef(hnd);
     }
-    
-    return LeafCanStartChip(hnd);
 }
 
 CanHandle canOpenChannel(int channel, int flags)
 {
     if ( CAN4OSX_CheckHandle(channel) == -1 ) {
         return canERR_NOCHANNELS;
+    } else {
+        return (CanHandle)channel;
     }
-    return (CanHandle)channel;
 }
 
 canStatus canSetNotify (const CanHandle hnd, CanNotificationType notifyStruct, unsigned int notifyFlags, void *tag)
@@ -142,9 +144,10 @@ canStatus canSetBusParams (const CanHandle hnd, SInt32 freq, UInt32 tseg1, UInt3
 {
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
         return canERR_INVHANDLE;
+    } else {
+        Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
+        return self->hwFunctions.can4osxhwCanSetBusParamsRef(hnd, freq, tseg1, tseg2, sjw, noSamp, syncmode);
     }
-    
-    return LeafCanSetBusParams(hnd, freq, tseg1, tseg2, sjw, noSamp, syncmode);
 }
 
 canStatus canRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt16 *flag, UInt32 *time)
@@ -176,10 +179,8 @@ canStatus canWrite (const CanHandle hnd,UInt32 id, void *msg, UInt16 dlc, UInt16
         return canERR_INVHANDLE;
     } else {
         Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
-        
         return self->hwFunctions.can4osxhwCanWriteRef(hnd, id, msg, dlc, flag);
     }
-    return 0;
 }
 
 
@@ -354,7 +355,6 @@ static void CAN4OSX_DeviceAdded(void *refCon, io_iterator_t iterator)
         
         can4osxUsbDeviceHandle[can4osxMaxChannelCount].endpoitBulkOutBusy = FALSE;
         
-        
         // FIXME
         
         can4osxUsbDeviceHandle[can4osxMaxChannelCount].hwFunctions = leafHardwareFunctions;
@@ -363,7 +363,8 @@ static void CAN4OSX_DeviceAdded(void *refCon, io_iterator_t iterator)
         
         
         LeafReadFromBulkInPipe(&can4osxUsbDeviceHandle[can4osxMaxChannelCount]);
-        LeafCanSetBusParams(can4osxMaxChannelCount, canBITRATE_125K, 10, 5, 1, 1, 0);
+        
+        can4osxUsbDeviceHandle[can4osxMaxChannelCount].hwFunctions.can4osxhwCanSetBusParamsRef(can4osxMaxChannelCount, canBITRATE_125K, 10, 5, 1, 1, 0);
 
         can4osxMaxChannelCount++;
         
@@ -529,11 +530,10 @@ static void CAN4OSX_DeviceNotification(void *refCon, io_service_t service, natur
     if (messageType == kIOMessageServiceIsTerminated) {
         CAN4OSX_DEBUG_PRINT("%s : Device removed. Channel number %d\n",__func__, self->channelNumber);
         
-        self->channelNumber = -1;
-        
         CAN4OSX_Dealloc(self);
 
-        
+        self->channelNumber = -1;
+
     }
 }
 

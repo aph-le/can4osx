@@ -61,6 +61,9 @@
 #include "kvaserLeaf.h"
 
 
+static canStatus LeafCanStartChip(CanHandle hdl);
+static canStatus LeafCanSetBusParams (const CanHandle hnd, SInt32 freq, UInt32 tseg1, UInt32 tseg2, UInt32 sjw, UInt32 noSamp, UInt32 syncmode);
+
 
 
 static LeafCommandMsgBuf* LeafCreateCommandBuffer( UInt32 bufferSize );
@@ -79,6 +82,8 @@ canStatus LeafInitHardware(const CanHandle hnd);
 
 Can4osxHwFunctions leafHardwareFunctions = {
     .can4osxhwInitRef = LeafInitHardware,
+    .can4osxhwCanSetBusParamsRef = LeafCanSetBusParams,
+    .can4osxhwCanBusOnRef = LeafCanStartChip,
     .can4osxhwCanWriteRef = LeafCanWrite,
 };
 
@@ -203,7 +208,7 @@ void LeafReleaseCommandBuffer( LeafCommandMsgBuf* bufferRef )
 }
 
 
-UInt8 LeafTestFullCommandBuffer(LeafCommandMsgBuf* bufferRef)
+static UInt8 LeafTestFullCommandBuffer(LeafCommandMsgBuf* bufferRef)
 {
 	if (bufferRef->bufferCount == bufferRef->bufferSize) {
 		return 1;
@@ -213,7 +218,7 @@ UInt8 LeafTestFullCommandBuffer(LeafCommandMsgBuf* bufferRef)
 }
 
 
-UInt8 LeafTestEmptyCommandBuffer(LeafCommandMsgBuf* bufferRef)
+static UInt8 LeafTestEmptyCommandBuffer(LeafCommandMsgBuf* bufferRef)
 {
     if ( bufferRef->bufferCount == 0 ) {
         return 1;
@@ -294,10 +299,6 @@ void LeafDecodeCommand(Can4osxUsbDeviceHandleEntry *self, leafCmd *cmd) {
             
         case CMD_LOG_MESSAGE:
         {
-            
-            UInt32 channel = cmd->logMessage.channel;
-            UInt32 ident = cmd->logMessage.ident;
-            
             CanEvent event;
             //event.eventTag = V_RECEIVE_MSG;
             event.eventTagData.canMsg.canId = cmd->logMessage.ident;
@@ -306,9 +307,8 @@ void LeafDecodeCommand(Can4osxUsbDeviceHandleEntry *self, leafCmd *cmd) {
             // TODO
             event.eventTimestamp = LeafCalculateTimeStamp(cmd->logMessage.time, 16);
             
-            memcpy(event.eventTagData.canMsg.canData, cmd->logMessage.data, 8);
+            memcpy(event.eventTagData.canMsg.canData, cmd->logMessage.data, cmd->logMessage.dlc);
             
-        
             // This should go to a dispatcher
             CAN4OSX_WriteCanEventBuffer(self->canEventMsgBuff,event);
             if (self->canNotification.notifacionCenter) {
@@ -316,7 +316,7 @@ void LeafDecodeCommand(Can4osxUsbDeviceHandleEntry *self, leafCmd *cmd) {
             }
             
             
-            CAN4OSX_DEBUG_PRINT("CMD_LOG_MESSAGE Channel: %d Id: %X\n", channel, ident);
+            CAN4OSX_DEBUG_PRINT("CMD_LOG_MESSAGE Channel: %d Id: %X\n", cmd->logMessage.channel, cmd->logMessage.ident);
             
         }
         break;
@@ -607,7 +607,7 @@ static IOReturn LeafWriteToBulkPipe(Can4osxUsbDeviceHandleEntry *self)
 
 
 //Go bus on
-canStatus LeafCanStartChip(CanHandle hdl)
+static canStatus LeafCanStartChip(CanHandle hdl)
 {
     int retVal = 0;
     leafCmd cmd;
@@ -625,7 +625,7 @@ canStatus LeafCanStartChip(CanHandle hdl)
 
 
 //Set bit timing
-canStatus LeafCanSetBusParams ( const CanHandle hnd, SInt32 freq, unsigned int tseg1,
+static canStatus LeafCanSetBusParams ( const CanHandle hnd, SInt32 freq, unsigned int tseg1,
                              unsigned int tseg2, unsigned int sjw,
                              unsigned int noSamp, unsigned int syncmode )
 {
