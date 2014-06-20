@@ -13,7 +13,10 @@ Based on Kvaser canlib linux driver.
 
 
 ##Usage
+can4osx is a user space driver, only supporting usb devices right now. So just include the files in your project.
+
 
 ##Todo
 * Almost ervery command has to be reworked
 * Overhaul of the internal data structure
+* Add new interfaces
