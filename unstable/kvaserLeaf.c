@@ -63,6 +63,9 @@
 
 static canStatus LeafCanStartChip(CanHandle hdl);
 static canStatus LeafCanSetBusParams (const CanHandle hnd, SInt32 freq, UInt32 tseg1, UInt32 tseg2, UInt32 sjw, UInt32 noSamp, UInt32 syncmode);
+static canStatus LeafCanWrite (const CanHandle hnd,UInt32 id, void *msg, UInt16 dlc, UInt16 flag);
+static canStatus LeafCanRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt16 *flag, UInt32 *time);
+static canStatus LeafCanClose(const CanHandle hnd);
 
 
 
@@ -75,7 +78,6 @@ static void LeafBulkWriteCompletion(void *refCon, IOReturn result, void *arg0);
 static IOReturn LeafWriteToBulkPipe(Can4osxUsbDeviceHandleEntry *self);
 static UInt16 LeafFillBulkPipeBuffer(LeafCommandMsgBuf* bufferRef, UInt8 *pipe, UInt16 maxPipeSize);
 
-static canStatus LeafCanWrite (const CanHandle hnd,UInt32 id, void *msg, UInt16 dlc, UInt16 flag);
 
 //Hardware interface function
 canStatus LeafInitHardware(const CanHandle hnd);
@@ -85,6 +87,8 @@ Can4osxHwFunctions leafHardwareFunctions = {
     .can4osxhwCanSetBusParamsRef = LeafCanSetBusParams,
     .can4osxhwCanBusOnRef = LeafCanStartChip,
     .can4osxhwCanWriteRef = LeafCanWrite,
+    .can4osxhwCanReadRef = LeafCanRead,
+    .can4osxhwCanCloseRef = LeafCanClose,
 };
 
 
@@ -111,7 +115,27 @@ canStatus LeafInitHardware(const CanHandle hnd)
     
     
     return canOK;
+}
+
+static canStatus LeafCanClose(const CanHandle hnd)
+{
+
+    Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
     
+    if ( self->privateData != NULL ) {
+        LeafPrivateData *priv = (LeafPrivateData *)self->privateData;
+        
+        if ( priv->cmdBufferRef != NULL ) {
+            LeafReleaseCommandBuffer(priv->cmdBufferRef);
+        }
+        
+    } else {
+        return canERR_NOMEM;
+    }
+    
+    
+    return canOK;
+
 }
 
 
@@ -153,13 +177,39 @@ static canStatus LeafCanWrite (const CanHandle hnd,UInt32 id, void *msg, UInt16 
         
         LeafWriteToBulkPipe(self);
         
+        return canOK;
         
     } else {
         return canERR_INTERNAL;
     }
 
+}
 
-    return canOK;
+static canStatus LeafCanRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt16 *flag, UInt32 *time)
+{
+    Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
+
+    if ( self->privateData != NULL ) {
+
+    
+        CanEvent event;
+    
+        if ( CAN4OSX_ReadCanEventBuffer(self->canEventMsgBuff, &event) ) {
+        
+            *id = event.eventTagData.canMsg.canId;
+            *dlc = event.eventTagData.canMsg.canDlc;
+            *time = event.eventTimestamp;
+        
+            memcpy(msg, event.eventTagData.canMsg.canData, *dlc);
+        
+            return canOK;
+        } else {
+            return canERR_NOMSG;
+        }
+    } else {
+        return canERR_INTERNAL;
+    }
+
 }
 
 

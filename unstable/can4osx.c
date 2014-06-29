@@ -156,21 +156,8 @@ canStatus canRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt
         return canERR_INVHANDLE;
     } else {
         Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
-        CanEvent event;
-        
-        if ( CAN4OSX_ReadCanEventBuffer(self->canEventMsgBuff, &event) ) {
-        
-            *id = event.eventTagData.canMsg.canId;
-            *dlc = event.eventTagData.canMsg.canDlc;
-            *time = event.eventTimestamp;
-            
-            memcpy(msg, event.eventTagData.canMsg.canData, *dlc);
-        
-            return 1;
-        }
-        
+        return self->hwFunctions.can4osxhwCanReadRef(hnd, id, msg, dlc, flag, time );
     }
-    return 0;
 }
 
 canStatus canWrite (const CanHandle hnd,UInt32 id, void *msg, UInt16 dlc, UInt16 flag)
@@ -553,6 +540,8 @@ static IOReturn CAN4OSX_Dealloc(Can4osxUsbDeviceHandleEntry	*self)
 {
     kern_return_t retval;
     
+    // Release the usb stuff
+    
     if (self->can4osxDeviceInterface) {
         /*retval = */(*self->can4osxDeviceInterface)->Release(self->can4osxDeviceInterface);
     }
@@ -569,9 +558,23 @@ static IOReturn CAN4OSX_Dealloc(Can4osxUsbDeviceHandleEntry	*self)
         free(self->endpointBufferBulkOutRef);
     }
     
+    // Release the notification
+    
     retval = IOObjectRelease(self->can4osxNotification);
     
+    // FIXME test return value
+    if (0) {
+        return retval;
+    }
+    
+    // Now release  the dive internal stuff
+    
+    // FIXME with the channelnumber
+    
+    self->hwFunctions.can4osxhwCanCloseRef(self->channelNumber);
+    
     return retval;
+    
 }
 
 
