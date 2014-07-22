@@ -120,24 +120,25 @@ canStatus canSetNotify (const CanHandle hnd, CanNotificationType notifyStruct, u
 {
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
         return canERR_INVHANDLE;
-    }
-    
-    Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
-    
-    if ( notifyFlags ) {
-        CFStringRef temp = self->canNotification.notificationString;
-        
-        self->canNotification.notifacionCenter = notifyStruct.notifacionCenter;
-        self->canNotification.notificationString = CFStringCreateCopy(kCFAllocatorDefault, notifyStruct.notificationString);
-        
-        if ( temp ) {
-            CFRelease(temp);
-        }
     } else {
-        self->canNotification.notifacionCenter = NULL;
-        CFRelease( self->canNotification.notificationString );
+    
+        Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
+    
+        if ( notifyFlags ) {
+            CFStringRef temp = self->canNotification.notificationString;
+        
+            self->canNotification.notifacionCenter = notifyStruct.notifacionCenter;
+            self->canNotification.notificationString = CFStringCreateCopy(kCFAllocatorDefault, notifyStruct.notificationString);
+        
+            if ( temp ) {
+                CFRelease(temp);
+            }
+        } else {
+            self->canNotification.notifacionCenter = NULL;
+            CFRelease( self->canNotification.notificationString );
+        }
+        return 0;
     }
-    return 0;
 }
 
 canStatus canSetBusParams (const CanHandle hnd, SInt32 freq, UInt32 tseg1, UInt32 tseg2, UInt32 sjw, UInt32 noSamp, UInt32 syncmode)
