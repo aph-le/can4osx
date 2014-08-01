@@ -158,6 +158,17 @@ p img {
   border: none;
 }
 
+li img {
+  display: inline;
+  padding: 10;
+  vertical-align: left;
+  text-align: left;
+  border: none;
+  height:30px;
+  margin: 10px 0 -15px 0;
+}
+
+
 /* Code blocks */
 
 code, pre {
