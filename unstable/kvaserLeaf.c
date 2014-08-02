@@ -731,7 +731,7 @@ static canStatus LeafCanSetBusParams ( const CanHandle hnd, SInt32 freq, unsigne
 
 
 
-void BulkReadCompletion(void *refCon, IOReturn result, void *arg0)
+static void BulkReadCompletion(void *refCon, IOReturn result, void *arg0)
 {
     Can4osxUsbDeviceHandleEntry *self = (Can4osxUsbDeviceHandleEntry *)refCon;
     IOUSBInterfaceInterface **interface = self->can4osxInterfaceInterface;
