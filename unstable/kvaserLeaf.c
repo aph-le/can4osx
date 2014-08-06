@@ -161,13 +161,18 @@ static canStatus LeafCanWrite (const CanHandle hnd,UInt32 id, void *msg, UInt16 
             cmd.txCanMessage.rawMessage[4] = (UInt8)((id      ) & 0x3f);
         } else {
             // Standard CAN
-            cmd.txCanMessage.cmdNo         = CMD_TX_STD_MESSAGE;
+            cmd.txCanMessage.cmdNo = CMD_TX_STD_MESSAGE;
             
             cmd.txCanMessage.rawMessage[0] = (UInt8)((id >>  6) & 0x1F);
             cmd.txCanMessage.rawMessage[1] = (UInt8)((id      ) & 0x3F);
         }
-
         
+        cmd.txCanMessage.flags = 0;
+        
+        // RTR Frame
+        if ( flag & canMSG_RTR ) {
+            cmd.txCanMessage.flags |= LEAF_MSG_FLAG_REMOTE_FRAME;
+        }
 
         // DLC and DATA
         cmd.txCanMessage.rawMessage[5]   = dlc & 0x0F;
