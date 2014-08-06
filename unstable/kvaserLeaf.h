@@ -161,6 +161,8 @@
 # define LED_SUBCOMMAND_LED_3_ON       8
 # define LED_SUBCOMMAND_LED_3_OFF      9
 
+# define LEAF_MSG_FLAG_REMOTE_FRAME  0x10
+
 
 
 // Header for every command.
