@@ -173,6 +173,8 @@ CanHandle canOpenChannel(int channel, int flags);
 
 canStatus canBusOn (const CanHandle hndl);
 
+canStatus canBusOff (const CanHandle hndl);
+
 /* Needed to setup a notififaction to the nofication center */
 canStatus canSetNotify (const CanHandle hnd, CanNotificationType notifyStruct, unsigned int notifyFlags, void *tag);
 

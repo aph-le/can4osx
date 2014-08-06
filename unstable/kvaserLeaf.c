@@ -62,6 +62,9 @@
 
 
 static canStatus LeafCanStartChip(CanHandle hdl);
+
+static canStatus LeafCanStopChip(CanHandle hdl);
+
 static canStatus LeafCanSetBusParams (const CanHandle hnd, SInt32 freq, UInt32 tseg1, UInt32 tseg2, UInt32 sjw, UInt32 noSamp, UInt32 syncmode);
 static canStatus LeafCanWrite (const CanHandle hnd,UInt32 id, void *msg, UInt16 dlc, UInt16 flag);
 static canStatus LeafCanRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt16 *flag, UInt32 *time);
@@ -86,6 +89,7 @@ Can4osxHwFunctions leafHardwareFunctions = {
     .can4osxhwInitRef = LeafInitHardware,
     .can4osxhwCanSetBusParamsRef = LeafCanSetBusParams,
     .can4osxhwCanBusOnRef = LeafCanStartChip,
+    .can4osxhwCanBusOffRef = LeafCanStopChip,
     .can4osxhwCanWriteRef = LeafCanWrite,
     .can4osxhwCanReadRef = LeafCanRead,
     .can4osxhwCanCloseRef = LeafCanClose,
@@ -668,7 +672,28 @@ static canStatus LeafCanStartChip(CanHandle hdl)
     leafCmd cmd;
     Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hdl];
     
+    CAN4OSX_DEBUG_PRINT("CAN BusOn Command %d\n", hdl);
+    
     cmd.head.cmdNo            = CMD_START_CHIP_REQ;
+    cmd.startChipReq.cmdLen   = sizeof(cmdStartChipReq);
+    cmd.startChipReq.channel  = 0;
+    cmd.startChipReq.transId  = 0;
+    
+    retVal = LeafWriteCommandToBulkPipe( self, cmd);
+    
+    return retVal;
+}
+
+//Go bus off
+static canStatus LeafCanStopChip(CanHandle hdl)
+{
+    int retVal = 0;
+    leafCmd cmd;
+    Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hdl];
+    
+    CAN4OSX_DEBUG_PRINT("CAN BusOff Command %d\n", hdl);
+    
+    cmd.head.cmdNo            = CMD_STOP_CHIP_REQ;
     cmd.startChipReq.cmdLen   = sizeof(cmdStartChipReq);
     cmd.startChipReq.channel  = 0;
     cmd.startChipReq.transId  = 0;

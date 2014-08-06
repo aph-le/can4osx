@@ -107,6 +107,17 @@ canStatus canBusOn(const CanHandle hnd)
     }
 }
 
+canStatus canBusOff(const CanHandle hnd)
+{
+    if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
+        return canERR_INVHANDLE;
+    } else {
+        Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
+        return self->hwFunctions.can4osxhwCanBusOffRef(hnd);
+    }
+}
+
+
 CanHandle canOpenChannel(int channel, int flags)
 {
     if ( CAN4OSX_CheckHandle(channel) == -1 ) {
