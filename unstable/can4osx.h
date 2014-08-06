@@ -103,6 +103,12 @@
 #define canMSG_TXRQ             0x0080      // Message is a TX REQUEST (msg is transfered to the chip)
 
 
+#define canOPEN_EXCLUSIVE           0x0008
+#define canOPEN_REQUIRE_EXTENDED    0x0010
+
+
+
+
 //
 // Don't forget to update canGetErrorText in canlib.c if this is changed!
 //
