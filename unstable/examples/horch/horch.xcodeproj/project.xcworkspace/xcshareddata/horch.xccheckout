@@ -5,16 +5,16 @@
 	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
 	<false/>
 	<key>IDESourceControlProjectIdentifier</key>
-	<string>249115C8-3820-4B51-BA7E-E89E9ABA3EDC</string>
+	<string>E176DFE0-2342-44DD-8207-8E2784E1B617</string>
 	<key>IDESourceControlProjectName</key>
-	<string>simpleSend</string>
+	<string>horch</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
 		<key>B100B041-3C04-4269-9A96-851044685389</key>
 		<string>https://github.com/aph-le/can4osx.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
-	<string>unstable/examples/simpleSend/simpleSend.xcodeproj/project.xcworkspace</string>
+	<string>unstable/examples/horch/horch.xcodeproj/project.xcworkspace</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
 		<key>B100B041-3C04-4269-9A96-851044685389</key>
