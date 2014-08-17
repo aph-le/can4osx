@@ -809,7 +809,7 @@ static void BulkReadCompletion(void *refCon, IOReturn result, void *arg0)
         while ( count < numBytesRead ) {
             if (loopCounter-- == 0) break;
             
-            cmd = (leafCmd *)&(self->endpointBufferBulkInRef[count]);//&gBufferReceive[count];
+            cmd = (leafCmd *)&(self->endpointBufferBulkInRef[count]);
             if ( cmd->head.cmdLen == 0 ) {
                 count += 512;
                 count &= -512;
