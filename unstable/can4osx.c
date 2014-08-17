@@ -72,6 +72,8 @@ static Can4osxUsbDeviceEntry can4osxSupportedDevices[] =
 // Internal stuff
 static IONotificationPortRef can4osxUsbNotificationPortRef = 0;
 static io_iterator_t can4osxIoIterator[(sizeof(can4osxSupportedDevices)/sizeof(Can4osxUsbDeviceEntry))];
+static dispatch_semaphore_t semaCan4osxStart = NULL;
+static dispatch_queue_t queueCan4osx = NULL;
 
 
 static void CAN4OSX_CanInitializeLibrary (void);
@@ -87,13 +89,18 @@ static IOReturn CAN4OSX_Dealloc(Can4osxUsbDeviceHandleEntry	*self);
 
 
 //The offical kvaser API
-
 void canInitializeLibrary (void)
 {
+    if (queueCan4osx != NULL) {
+        return;
+    }
+    queueCan4osx = dispatch_queue_create("can4osx", NULL);
+    semaCan4osxStart = dispatch_semaphore_create(0);
     //Get a own thread where the usb stuff runs
-    dispatch_async(dispatch_queue_create("can4osx", NULL), ^(void) {
+    dispatch_async(queueCan4osx, ^(void) {
         CAN4OSX_CanInitializeLibrary();
     });
+    dispatch_semaphore_wait(semaCan4osxStart, DISPATCH_TIME_FOREVER);
 }
 
 
@@ -236,6 +243,7 @@ static void CAN4OSX_CanInitializeLibrary (void)
         
     }
     
+    dispatch_semaphore_signal(semaCan4osxStart);
     CFRunLoopRun();
     
     // if the runloop is stopped release

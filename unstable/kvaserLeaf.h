@@ -164,6 +164,9 @@
 # define LEAF_MSG_FLAG_REMOTE_FRAME  0x10
 
 
+# define LEAF_TIMEOUT_ONE_MS 1000000
+# define LEAF_TIMEOUT_TEN_MS 10*LEAF_TIMEOUT_ONE_MS
+
 
 // Header for every command.
 typedef struct {
@@ -282,6 +285,7 @@ typedef struct {
 
 typedef struct {
     LeafCommandMsgBuf *cmdBufferRef;
+    dispatch_semaphore_t semaTimeout;
 } LeafPrivateData;
 
 

@@ -113,6 +113,8 @@ canStatus LeafInitHardware(const CanHandle hnd)
             return canERR_NOMEM;
         }
         
+        priv->semaTimeout = dispatch_semaphore_create(0);
+        
     } else {
         return canERR_NOMEM;
     }
@@ -349,6 +351,8 @@ static UInt32 LeafCalculateTimeStamp(UInt16 *timerRef,
 
 void LeafDecodeCommand(Can4osxUsbDeviceHandleEntry *self, leafCmd *cmd) {
     
+    LeafPrivateData *priv = (LeafPrivateData *)self->privateData;
+    
     switch (cmd->head.cmdNo) {
             
         case CMD_RX_EXT_MESSAGE:
@@ -381,9 +385,15 @@ void LeafDecodeCommand(Can4osxUsbDeviceHandleEntry *self, leafCmd *cmd) {
         break;
             
         case CMD_START_CHIP_RESP:
+            dispatch_semaphore_signal(priv->semaTimeout);
             CAN4OSX_DEBUG_PRINT("CMD_START_CHIP_RESP\n");
             break;
             
+        case CMD_STOP_CHIP_RESP:
+            dispatch_semaphore_signal(priv->semaTimeout);
+            CAN4OSX_DEBUG_PRINT("CMD_STOP_CHIP_RESP\n");
+            break;
+     
         case CMD_GET_CARD_INFO_RESP:
             CAN4OSX_DEBUG_PRINT("Card Info Response Serial %d\n",cmd->getCardInfoResp.serialNumber);
             
@@ -671,6 +681,7 @@ static canStatus LeafCanStartChip(CanHandle hdl)
     int retVal = 0;
     leafCmd cmd;
     Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hdl];
+    LeafPrivateData *priv = (LeafPrivateData*)self->privateData;
     
     CAN4OSX_DEBUG_PRINT("CAN BusOn Command %d\n", hdl);
     
@@ -681,7 +692,12 @@ static canStatus LeafCanStartChip(CanHandle hdl)
     
     retVal = LeafWriteCommandToBulkPipe( self, cmd);
     
-    return retVal;
+    if ( dispatch_semaphore_wait(priv->semaTimeout, dispatch_time(DISPATCH_TIME_NOW, LEAF_TIMEOUT_TEN_MS)) ) {
+        return canERR_TIMEOUT;
+    } else {
+        return retVal;
+    }
+    
 }
 
 //Go bus off
@@ -690,6 +706,8 @@ static canStatus LeafCanStopChip(CanHandle hdl)
     int retVal = 0;
     leafCmd cmd;
     Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hdl];
+    LeafPrivateData *priv = (LeafPrivateData*)self->privateData;
+
     
     CAN4OSX_DEBUG_PRINT("CAN BusOff Command %d\n", hdl);
     
@@ -699,6 +717,12 @@ static canStatus LeafCanStopChip(CanHandle hdl)
     cmd.startChipReq.transId  = 0;
     
     retVal = LeafWriteCommandToBulkPipe( self, cmd);
+    
+    if ( dispatch_semaphore_wait(priv->semaTimeout, dispatch_time(DISPATCH_TIME_NOW, LEAF_TIMEOUT_TEN_MS)) ) {
+        return canERR_TIMEOUT;
+    } else {
+        return retVal;
+    }
     
     return retVal;
 }
@@ -755,6 +779,7 @@ static canStatus LeafCanSetBusParams ( const CanHandle hnd, SInt32 freq, unsigne
                         cmd.setBusparamsReq.noSamp);
     
     retVal = LeafWriteCommandToBulkPipe( self, cmd);
+    
     
     return retVal;
 }
