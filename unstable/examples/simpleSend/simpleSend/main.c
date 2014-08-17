@@ -59,10 +59,7 @@ int main(int argc, const char * argv[])
     int repeat;
     
     canInitializeLibrary();
-  
-    // this sleep is needed to pass time to the driver thread
-    sleep(1);
-    
+      
     errno = 0;
     
     if (argc < 2 || (channel = atoi(argv[1]), errno) != 0) {
