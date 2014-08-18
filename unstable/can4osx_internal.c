@@ -68,9 +68,9 @@ CanEventMsgBuf* CAN4OSX_CreateCanEventBuffer( UInt32 bufferSize )
 	bufferRef->bufferCount = 0;
 	bufferRef->bufferFirst = 0;
     
-	bufferRef->canEventRef = malloc(bufferSize * sizeof(CanEvent));
+	bufferRef->canMsgRef = malloc(bufferSize * sizeof(CanMsg));
     
-	if ( bufferRef->canEventRef == NULL ) {
+	if ( bufferRef->canMsgRef == NULL ) {
 		free(bufferRef);
 		return NULL;
 	}
@@ -90,7 +90,7 @@ void CAN4OSX_ReleaseCanEventBuffer( CanEventMsgBuf* bufferRef )
         if (bufferRef->bufferGDCqueueRef != NULL) {
             dispatch_release(bufferRef->bufferGDCqueueRef);
         }
-		free(bufferRef->canEventRef);
+		free(bufferRef->canMsgRef);
 		free(bufferRef);
 	}
 }
@@ -114,7 +114,7 @@ static UInt8 CAN4OSX_TestEmptyCanEventBuffer(CanEventMsgBuf* bufferRef)
 }
 
 
-UInt8 CAN4OSX_WriteCanEventBuffer(CanEventMsgBuf* bufferRef, CanEvent newEvent)
+UInt8 CAN4OSX_WriteCanEventBuffer(CanEventMsgBuf* bufferRef, CanMsg newEvent)
 {
     __block UInt8 retval = 1;
     
@@ -122,14 +122,14 @@ UInt8 CAN4OSX_WriteCanEventBuffer(CanEventMsgBuf* bufferRef, CanEvent newEvent)
         if (CAN4OSX_TestFullCanEventBuffer(bufferRef)) {
             retval = 0;
         } else {
-            bufferRef->canEventRef[(bufferRef->bufferFirst + bufferRef->bufferCount++) % bufferRef->bufferSize] = newEvent;
+            bufferRef->canMsgRef[(bufferRef->bufferFirst + bufferRef->bufferCount++) % bufferRef->bufferSize] = newEvent;
         }
     });
     
 	return retval;
 }
 
-UInt8 CAN4OSX_ReadCanEventBuffer(CanEventMsgBuf* bufferRef, CanEvent* readEvent)
+UInt8 CAN4OSX_ReadCanEventBuffer(CanEventMsgBuf* bufferRef, CanMsg* readEvent)
 {
     __block UInt8 retval = 1;
     
@@ -138,7 +138,7 @@ UInt8 CAN4OSX_ReadCanEventBuffer(CanEventMsgBuf* bufferRef, CanEvent* readEvent)
             retval = 0;
         } else {
             bufferRef->bufferCount--;
-            *readEvent = bufferRef->canEventRef[bufferRef->bufferFirst++ % bufferRef->bufferSize];
+            *readEvent = bufferRef->canMsgRef[bufferRef->bufferFirst++ % bufferRef->bufferSize];
         }
 
     });

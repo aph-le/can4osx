@@ -203,15 +203,17 @@ static canStatus LeafCanRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16
     if ( self->privateData != NULL ) {
 
     
-        CanEvent event;
+        CanMsg canMsg;
     
-        if ( CAN4OSX_ReadCanEventBuffer(self->canEventMsgBuff, &event) ) {
+        if ( CAN4OSX_ReadCanEventBuffer(self->canEventMsgBuff, &canMsg) ) {
         
-            *id = event.eventTagData.canMsg.canId;
-            *dlc = event.eventTagData.canMsg.canDlc;
-            *time = event.eventTimestamp;
+            *id = canMsg.canId;
+            *dlc = canMsg.canDlc;
+            *time =canMsg.canTimestamp;
         
-            memcpy(msg, event.eventTagData.canMsg.canData, *dlc);
+            memcpy(msg, canMsg.canData, *dlc);
+            
+            *flag = canMsg.canFlags;
         
             return canOK;
         } else {
@@ -362,24 +364,54 @@ void LeafDecodeCommand(Can4osxUsbDeviceHandleEntry *self, leafCmd *cmd) {
             
         case CMD_LOG_MESSAGE:
         {
-            CanEvent event;
-            //event.eventTag = V_RECEIVE_MSG;
-            event.eventTagData.canMsg.canId = cmd->logMessage.ident;
-            event.eventTagData.canMsg.canDlc = cmd->logMessage.dlc;
-            //event.eventTimestamp = cmd->logMessage.time;
-            // TODO
-            event.eventTimestamp = LeafCalculateTimeStamp(cmd->logMessage.time, 16);
+            CanMsg canMsg;
             
-            memcpy(event.eventTagData.canMsg.canData, cmd->logMessage.data, cmd->logMessage.dlc);
+            if ( cmd->logMessage.ident & LEAF_EXT_MSG ) {
+                canMsg.canId = cmd->logMessage.ident & ~LEAF_EXT_MSG;
+                canMsg.canFlags = canMSG_EXT;
+            }  else {
+                canMsg.canId = cmd->logMessage.ident;
+                canMsg.canFlags = canMSG_STD;
+            }
+            
+            if (cmd->logMessage.flags & LEAF_MSG_FLAG_OVERRUN) {
+                //FIXME
+                //event.eventTagData.canMsg.canFlags |= canMSGERR_HW_OVERRUN | canMSGERR_SW_OVERRUN;
+            }
+            if (cmd->logMessage.flags & LEAF_MSG_FLAG_REMOTE_FRAME) {
+                canMsg.canFlags |= canMSG_RTR;
+            }
+            if (cmd->logMessage.flags & LEAF_MSG_FLAG_ERROR_FRAME) {
+                canMsg.canFlags |= canMSG_ERROR_FRAME;
+            }
+            if (cmd->logMessage.flags & LEAF_MSG_FLAG_TXACK) {
+                canMsg.canFlags |= canMSG_TXACK;
+            }
+            if (cmd->logMessage.flags & LEAF_MSG_FLAG_TXRQ) {
+                canMsg.canFlags |= canMSG_TXRQ;
+            }
+
+            
+            if ( cmd->logMessage.dlc > 8 ) {
+                cmd->logMessage.dlc = 8;
+            }
+            
+            canMsg.canDlc = cmd->logMessage.dlc;
+            
+            memcpy(canMsg.canData, cmd->logMessage.data, cmd->logMessage.dlc);
+            
+            // TODO
+            canMsg.canTimestamp = LeafCalculateTimeStamp(cmd->logMessage.time, 16);
+            
             
             // This should go to a dispatcher
-            CAN4OSX_WriteCanEventBuffer(self->canEventMsgBuff,event);
+            CAN4OSX_WriteCanEventBuffer(self->canEventMsgBuff,canMsg);
             if (self->canNotification.notifacionCenter) {
                 CFNotificationCenterPostNotification (self->canNotification.notifacionCenter, self->canNotification.notificationString, NULL, NULL, true);
             }
             
             
-            CAN4OSX_DEBUG_PRINT("CMD_LOG_MESSAGE Channel: %d Id: %X\n", cmd->logMessage.channel, cmd->logMessage.ident);
+            CAN4OSX_DEBUG_PRINT("CMD_LOG_MESSAGE Channel: %d Id: %X Flags: %X\n", cmd->logMessage.channel, cmd->logMessage.ident, cmd->logMessage.flags);
             
         }
         break;
@@ -394,6 +426,47 @@ void LeafDecodeCommand(Can4osxUsbDeviceHandleEntry *self, leafCmd *cmd) {
             CAN4OSX_DEBUG_PRINT("CMD_STOP_CHIP_RESP\n");
             break;
      
+            
+        case CMD_CHIP_STATE_EVENT:
+            
+            self->canState.rxErrorCounter = cmd->chipStateEvent.rxErrorCounter;
+            self->canState.txErrorCounter = cmd->chipStateEvent.txErrorCounter;
+            
+            CAN4OSX_DEBUG_PRINT("CMD_CHIP_STATE_EVENT rxE: %d txE: %d ",self->canState.rxErrorCounter,self->canState.txErrorCounter);
+            
+            if ( cmd->chipStateEvent.busStatus == 0 ) {
+                self->canState.canState = CHIPSTAT_ERROR_ACTIVE;
+                CAN4OSX_DEBUG_PRINT("CHIPSTAT_ERROR_ACTIVE\n");
+            } else {
+                switch( cmd->chipStateEvent.busStatus ) {
+                    case M16C_BUS_PASSIVE:
+                        self->canState.canState = CHIPSTAT_ERROR_PASSIVE;
+                        CAN4OSX_DEBUG_PRINT("CHIPSTAT_ERROR_PASSIVE\n");
+                        break;
+                        
+                    case M16C_BUS_OFF:
+                        self->canState.canState = CHIPSTAT_BUSOFF;
+                        CAN4OSX_DEBUG_PRINT("CHIPSTAT_BUSOFF\n");
+                        break;
+                        
+                    case (M16C_BUS_PASSIVE | M16C_BUS_OFF):
+                        self->canState.canState = CHIPSTAT_BUSOFF;
+                        CAN4OSX_DEBUG_PRINT("CHIPSTAT_BUSOFF\n");
+                        break;
+                        
+                    default:
+                        CAN4OSX_DEBUG_PRINT("CHIPSTAT_ERROR_UNKNOWN\n");
+                        break;
+                }
+                
+            }
+            
+ 
+            
+            
+            break;
+            
+            
         case CMD_GET_CARD_INFO_RESP:
             CAN4OSX_DEBUG_PRINT("Card Info Response Serial %d\n",cmd->getCardInfoResp.serialNumber);
             

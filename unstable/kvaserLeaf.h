@@ -163,6 +163,25 @@
 
 # define LEAF_MSG_FLAG_REMOTE_FRAME  0x10
 
+# define LEAF_EXT_MSG 0x80000000
+
+# define LEAF_MSG_FLAG_ERROR_FRAME   0x01
+# define LEAF_MSG_FLAG_OVERRUN       0x02
+# define LEAF_MSG_FLAG_NERR          0x04
+# define LEAF_MSG_FLAG_WAKEUP        0x08
+# define LEAF_MSG_FLAG_REMOTE_FRAME  0x10
+# define LEAF_MSG_FLAG_RESERVED_1    0x20
+# define LEAF_MSG_FLAG_TXACK         0x40
+# define LEAF_MSG_FLAG_TXRQ          0x80
+
+
+
+#define M16C_BUS_RESET    0x01    // Chip is in Reset state
+#define M16C_BUS_ERROR    0x10    // Chip has seen a bus error
+#define M16C_BUS_PASSIVE  0x20    // Chip is error passive
+#define M16C_BUS_OFF      0x40    // Chip is bus off
+
+
 
 # define LEAF_TIMEOUT_ONE_MS 1000000
 # define LEAF_TIMEOUT_TEN_MS 10*LEAF_TIMEOUT_ONE_MS
@@ -257,6 +276,19 @@ typedef struct {
     UInt8  flags;
 } __attribute__ ((packed)) cmdTxCanMessage;
 
+typedef struct {
+    UInt8  cmdLen;
+    UInt8  cmdNo;
+    UInt8  transId;
+    UInt8  channel;
+    UInt16 time[3];
+    UInt8 txErrorCounter;
+    UInt8 rxErrorCounter;
+    UInt8 busStatus;
+    UInt8 padding;
+    UInt16 padding2;
+} __attribute__ ((packed)) cmdChipStateEvent;
+
 
 
 typedef union {
@@ -269,6 +301,7 @@ typedef union {
     cmdGetSoftwareInfoResp  getSoftwareResp;
     cmdSetBusparamsReq      setBusparamsReq;
     cmdStartChipReq         startChipReq;
+    cmdChipStateEvent       chipStateEvent;
 } __attribute__ ((packed)) leafCmd;
 
 

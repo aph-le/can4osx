@@ -102,6 +102,18 @@
 #define canMSG_TXACK            0x0040      // Message is a TX ACK (msg is really sent)
 #define canMSG_TXRQ             0x0080      // Message is a TX REQUEST (msg is transfered to the chip)
 
+#define canSTAT_ERROR_PASSIVE   0x00000001  // The circuit is error passive
+#define canSTAT_BUS_OFF         0x00000002  // The circuit is Off Bus
+#define canSTAT_ERROR_WARNING   0x00000004  // At least one error counter > 96
+#define canSTAT_ERROR_ACTIVE    0x00000008  // The circuit is error active.
+#define canSTAT_TX_PENDING      0x00000010  // There are messages pending transmission
+#define canSTAT_RX_PENDING      0x00000020  // There are messages in the receive buffer
+#define canSTAT_RESERVED_1      0x00000040
+#define canSTAT_TXERR           0x00000080  // There has been at least one TX error
+#define canSTAT_RXERR           0x00000100  // There has been at least one RX error of some sort
+#define canSTAT_HW_OVERRUN      0x00000200  // The has been at least one HW buffer overflow
+#define canSTAT_SW_OVERRUN      0x00000400  // The has been at least one SW buffer overflow
+
 
 #define canOPEN_EXCLUSIVE           0x0008
 #define canOPEN_REQUIRE_EXTENDED    0x0010
@@ -190,6 +202,6 @@ canStatus canRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt
 
 canStatus canWrite (const CanHandle hnd,UInt32 id, void *msg, UInt16 dlc, UInt16 flag);
 
-
+canStatus canReadStatus	(const CanHandle hnd, UInt32 *const flags);
 
 #endif /* CAN4OSX_H */

@@ -71,9 +71,12 @@ typedef struct{
 
 
 typedef struct {
+    UInt32 canTimestamp;
     UInt32 canId;
     UInt8  canFlags;
     UInt8  canDlc;
+    UInt8  canChannel;
+    UInt8  padding;
     UInt8  canData[CAN4OSX_CAN_MAX_MSG_LEN];
 } __attribute__ ((packed)) CanMsg;
 
@@ -97,7 +100,7 @@ typedef union {
     ChipState chipState;
 } EventTagData;
 
-
+/*
 
 typedef struct {
 	UInt8  eventTag;
@@ -107,7 +110,7 @@ typedef struct {
 	UInt32 eventTimestamp;
 	EventTagData eventTagData;
 } __attribute__ ((packed)) CanEvent;
-
+*/
 
 //holds the actual buffer
 typedef struct {
@@ -115,7 +118,7 @@ typedef struct {
 	int bufferFirst;
 	int bufferCount;
     dispatch_queue_t bufferGDCqueueRef;
-	CanEvent *canEventRef;
+	CanMsg *canMsgRef;
 } CanEventMsgBuf;
 
 
@@ -130,6 +133,12 @@ typedef struct {
     canStatus (*can4osxhwCanCloseRef) (const CanHandle hnd);
 }Can4osxHwFunctions;
 
+
+typedef struct {
+    UInt8 rxErrorCounter;
+    UInt8 txErrorCounter;
+    UInt8 canState;
+} Can4osxDeviceState_T;
 
 
 typedef struct {
@@ -155,6 +164,8 @@ typedef struct {
     void *privateData; //Here every instace can save private stuff
     Can4osxHwFunctions hwFunctions;
     
+    Can4osxDeviceState_T canState;
+    
 }Can4osxUsbDeviceHandleEntry;
 
 
@@ -164,8 +175,8 @@ extern Can4osxUsbDeviceHandleEntry can4osxUsbDeviceHandle[CAN4OSX_MAX_CHANNEL_CO
 
 CanEventMsgBuf* CAN4OSX_CreateCanEventBuffer( UInt32 bufferSize );
 void CAN4OSX_ReleaseCanEventBuffer( CanEventMsgBuf* bufferRef );
-UInt8 CAN4OSX_WriteCanEventBuffer(CanEventMsgBuf* bufferRef, CanEvent newEvent);
-UInt8 CAN4OSX_ReadCanEventBuffer(CanEventMsgBuf* bufferRef, CanEvent* readEvent);
+UInt8 CAN4OSX_WriteCanEventBuffer(CanEventMsgBuf* bufferRef, CanMsg newEvent);
+UInt8 CAN4OSX_ReadCanEventBuffer(CanEventMsgBuf* bufferRef, CanMsg* readEvent);
 
 
 #endif //can4osx_intern_h

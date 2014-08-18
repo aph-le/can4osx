@@ -189,6 +189,34 @@ canStatus canWrite (const CanHandle hnd,UInt32 id, void *msg, UInt16 dlc, UInt16
     }
 }
 
+canStatus canReadStatus	(const CanHandle hnd, UInt32 *const flags)
+{
+    if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
+        return canERR_INVHANDLE;
+    } else {
+        Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
+        
+        *flags = 0;
+        
+        switch ( self->canState.canState ) {
+            case CHIPSTAT_ERROR_ACTIVE:
+                *flags = canSTAT_ERROR_ACTIVE;
+                break;
+            case CHIPSTAT_BUSOFF:
+                *flags = canSTAT_BUS_OFF;
+                break;
+            case CHIPSTAT_ERROR_PASSIVE:
+                *flags = canSTAT_ERROR_PASSIVE;
+                break;
+            default:
+                break;
+                
+        }
+        
+        return canOK;
+    }
+}
+
 
 // Internal
 
