@@ -103,6 +103,7 @@ void canInitializeLibrary (void)
         CAN4OSX_CanInitializeLibrary();
     });
     dispatch_semaphore_wait(semaCan4osxStart, DISPATCH_TIME_FOREVER);
+    dispatch_release(semaCan4osxStart);
 }
 
 
