@@ -96,6 +96,8 @@ void canInitializeLibrary (void)
     }
     queueCan4osx = dispatch_queue_create("can4osx", NULL);
     semaCan4osxStart = dispatch_semaphore_create(0);
+    
+    dispatch_set_target_queue(queueCan4osx, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0));
     //Get a own thread where the usb stuff runs
     dispatch_async(queueCan4osx, ^(void) {
         CAN4OSX_CanInitializeLibrary();
