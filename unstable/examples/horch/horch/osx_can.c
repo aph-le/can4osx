@@ -113,8 +113,6 @@ char line[40];
     
     canInitializeLibrary();
     
-    sleep(1);
-
     
     if(( can_fd = canOpenChannel( 0, canOPEN_EXCLUSIVE | canOPEN_REQUIRE_EXTENDED)) < 0 ) {
         fprintf(stderr,"Error opening CAN device %s\n", device);
@@ -248,7 +246,7 @@ int got;			/* got this number of messages */
     got = 80;
     do {
         canRead(can_fd, &id, msg, &dlc, &flag, &time);
-    }while(got-- > 0);
+    }while(got--);
     
     
     //FD_SET(can_fd, &(pSocket->allset));	/* watch on fd for CAN */
@@ -266,7 +264,7 @@ int got;			/* got this number of messages */
 
         size = MAXLINE;
         
-        ret = so_server_doit(pSocket, &idx, &in_line[0], &size, 1000);
+        ret = so_server_doit(pSocket, &idx, &in_line[0], &size, 1);
 
 #ifdef DEBUGCODE
 	switch (ret)  {
@@ -309,20 +307,49 @@ int got;			/* got this number of messages */
 
 	/*------------------------------------------------------*/
 	if( ret == SRET_CONN_CLOSED) {
-	int f = 0;	/* Flag */
+        int f = 0;	/* Flag */
 		/* check for other open connections */
 	    for(client = 0; client < HORCH_MAX_CLIENTS; client++) {
-		if (client_fd[client] != NO_CLIENT) {
-		    f = 1;
-		    break;
-		}
+            if (client_fd[client] != NO_CLIENT) {
+                f = 1;
+                break;
+            }
 	    }
 	    if (f == 0) {
 	    	/* Stop_CAN(); */
 	    }
 	}
 	/*------------------------------------------------------*/
-	
+    while(1) {
+        canmsg_t msgLinux;
+        canStatus ret =  canRead(can_fd, &id, msg, &dlc, &flag, &time);
+        if ( ret != canOK ) {
+            break;
+        }
+        msgLinux.id = id;
+        msgLinux.length = dlc;
+        memcpy(msgLinux.data, msg, dlc);
+        msgLinux.flags = 0;
+        msgLinux.timestamp.tv_usec = time;
+        if ((flag & canMSG_ERROR_FRAME) == 0) {
+            show_message(&msgLinux);
+        }
+        for(client = 0; client < HORCH_MAX_CLIENTS; client++) {
+			if (client_fd[client] == -1) {
+			    continue;
+			}
+            
+			/* formatted string reaches Buffer end !*/
+            /* fprintf(stderr, "=> send line\n"); */
+			display_line(client);
+			
+			/* send cyclic statistic if possible */
+			sendStatisticInformation(client);
+        } /* for all clients */
+
+    }
+        
+        
 	/*------------------------------------------------------*/
 	if(ret == SRET_SELECT_USER) {
 	    if (FD_ISSET(can_fd, &pSocket->allset))
@@ -743,9 +770,6 @@ int	set_bitrate(
     
     canBusOff(can_fd);
     
-    sleep(2);
-
-    
     switch(o_bitrate) {
         case 0:
             return -1;
@@ -763,7 +787,6 @@ int	set_bitrate(
     }
     
     canBusOn(can_fd);
-    sleep(2);
     
     return 0;
     
