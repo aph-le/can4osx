@@ -596,9 +596,10 @@ static IOReturn CAN4OSX_Dealloc(Can4osxUsbDeviceHandleEntry	*self)
         /*retval = */(*self->can4osxDeviceInterface)->Release(self->can4osxDeviceInterface);
     }
     
-    if(self->can4osxInterfaceInterface) {
-        (void)(*self->can4osxInterfaceInterface)->Release(self->can4osxInterfaceInterface);
-    }
+    //if(self->can4osxInterfaceInterface) {
+    //    (void)(*self->can4osxInterfaceInterface)->Release(self->can4osxInterfaceInterface);
+    //}
+    
     
     if(self->endpointBufferBulkInRef) {
         free(self->endpointBufferBulkInRef);
