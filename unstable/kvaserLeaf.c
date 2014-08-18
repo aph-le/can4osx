@@ -209,7 +209,7 @@ static canStatus LeafCanRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16
         
             *id = canMsg.canId;
             *dlc = canMsg.canDlc;
-            *time =canMsg.canTimestamp/100;
+            *time =canMsg.canTimestamp;
         
             memcpy(msg, canMsg.canData, *dlc);
             
@@ -400,7 +400,7 @@ void LeafDecodeCommand(Can4osxUsbDeviceHandleEntry *self, leafCmd *cmd) {
             
             memcpy(canMsg.canData, cmd->logMessage.data, cmd->logMessage.dlc);
             
-            canMsg.canTimestamp = LeafCalculateTimeStamp(cmd->logMessage.time, 24);
+            canMsg.canTimestamp = LeafCalculateTimeStamp(cmd->logMessage.time, 24) *10;
             
             
             CAN4OSX_WriteCanEventBuffer(self->canEventMsgBuff,canMsg);
