@@ -400,7 +400,7 @@ void LeafDecodeCommand(Can4osxUsbDeviceHandleEntry *self, leafCmd *cmd) {
             
             memcpy(canMsg.canData, cmd->logMessage.data, cmd->logMessage.dlc);
             
-            canMsg.canTimestamp = LeafCalculateTimeStamp(cmd->logMessage.time, 24) *10;
+            canMsg.canTimestamp = LeafCalculateTimeStamp(cmd->logMessage.time, 24) * 10;
             
             
             CAN4OSX_WriteCanEventBuffer(self->canEventMsgBuff,canMsg);
@@ -459,11 +459,7 @@ void LeafDecodeCommand(Can4osxUsbDeviceHandleEntry *self, leafCmd *cmd) {
                 
             }
             
- 
-            
-            
             break;
-            
             
         case CMD_GET_CARD_INFO_RESP:
             CAN4OSX_DEBUG_PRINT("Card Info Response Serial %d\n",cmd->getCardInfoResp.serialNumber);
