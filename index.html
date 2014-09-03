@@ -9,6 +9,28 @@
     <link rel="stylesheet" href="stylesheets/pygment_trac.css">
     <script src="javascripts/scale.fix.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <style type="text/css">
+        #footer{
+            position:fixed;
+            left:0px;
+            bottom:0px;
+            height:30px;
+            width:100%;
+            background:/*rgb(218,31,50)*/#CC0000;
+            line-height:30px;
+            color:#fff;
+        }
+    #footer span{padding-left:30px}
+        /* Für ie6*/
+        * html #footer{
+            position:absolute;
+            top:expression((0-(footer.offsetHeight)+(document.documentElement.clientHeight ? document.documentElement.clientHeight : document.body.clientHeight)+(ignoreMe = document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop))+'px');
+        }
+    
+    </style>
+    <link rel="stylesheet" href="stylesheets/prism.css">
+        
+    <script src="javascripts/prism.js"></script>
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
@@ -24,7 +46,7 @@
   <body>
     <div class="wrapper">
       <header>
-        <h1 class="header">can4osx</h1>
+          <h1 class="header">can4osx</h1>
         <p class="header">Userspace USB driver for CAN to USB adaptors - based on the Kvaser canlib API</p>
 
         <ul>
@@ -72,6 +94,33 @@ Based on Kvaser canlib linux driver.</p>
 </ul>
 <h2><a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h2>
 <p>Please refer to the Kvaser canlib documentation.</p>
+
+<h2><a name="example" class="anchor" href="#example"><span class="octicon octicon-link"></span></a>Example</h2>
+<pre class="line-numbers">
+    <code class="language-markup">
+    void simpleSend(void)
+    {
+    CanHandle hdl;
+    int channel = 0;
+    int bitrate = canBITRATE_125K;
+        
+        canInitializeLibrary();
+        
+        hdl = canOpenChannel(channel, canOPEN_EXCLUSIVE | canOPEN_REQUIRE_EXTENDED);
+        
+        canBusOff(hdl);
+            
+        canSetBusParams(hdl, bitrate, 10, 5, 1, 1, 0);
+        
+        canBusOn(hdl);
+        
+        canWrite(hdl, 0x123, "can4osx", 8, 0);
+        
+        canBusOff(hdl);
+    }
+    </code>
+</pre>
+
 <h2>
 <a name="todo" class="anchor" href="#todo"><span class="octicon octicon-link"></span></a>Todo</h2>
 
@@ -84,6 +133,9 @@ Based on Kvaser canlib linux driver.</p>
         <p><small>Hosted on <a href="http://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
       </footer>
     </div>
+    <div id="footer">
+        <span>can4osx - open source CAN driver for OSX</span>
+        </div>
     <!--[if !IE]><script>fixScale(document);</script><![endif]-->
 		
   </body>
