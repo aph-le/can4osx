@@ -173,6 +173,21 @@ canStatus canSetBusParams (const CanHandle hnd, SInt32 freq, UInt32 tseg1, UInt3
     }
 }
 
+canStatus CcanSetBusParamsFd(const CanHandle hnd, SInt64 freq_brs, UInt32 tseg1, UInt32 tseg2, UInt32 sjw)
+{
+    if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
+        return canERR_INVHANDLE;
+    } else {
+        Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
+        if (NULL != self->hwFunctions.can4osxhwCanSetBusParamsFdRef) {
+            return self->hwFunctions.can4osxhwCanSetBusParamsFdRef(hnd, freq_brs, tseg1, tseg2, sjw);
+        } else {
+            return canERR_PARAM;
+        }
+    }
+}
+
+
 canStatus canRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt16 *flag, UInt32 *time)
 {
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
