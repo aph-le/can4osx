@@ -65,6 +65,7 @@ static UInt32 can4osxMaxChannelCount = 0;
 static Can4osxUsbDeviceEntry can4osxSupportedDevices[] =
 {
     {0x0bfd, 0x0120}, //Kvaser Leaf Light v.2
+    {0x0bfd, 0x0107}, //Kvaser Leaf Pro HS v.2
     {0x0bfd, 0x000E}, //Kvaser Leaf SemiPro HS
 };
 
