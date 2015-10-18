@@ -1,7 +1,7 @@
 //
 // can4osx.c
 //
-// Copyright (c) 2014 Alexander Philipp. All rights reserved.
+// Copyright (c) 2014 - 2015 Alexander Philipp. All rights reserved.
 //
 //
 // License: GPLv2
@@ -123,6 +123,15 @@ void canInitializeLibrary (void)
 }
 
 
+/********************************************************************************/
+/**
+ * /brief canBusOn - enables the CAn bus
+ *
+ * This function set the CAN bus online
+ *
+ * /return canStatus
+ *
+ */
 canStatus canBusOn(const CanHandle hnd)
 {
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
@@ -133,6 +142,16 @@ canStatus canBusOn(const CanHandle hnd)
     }
 }
 
+
+/********************************************************************************/
+/**
+ * /brief canBusOff - disables the CAn bus
+ *
+ * This function set the CAN bus offline
+ *
+ * /return canStatus
+ *
+ */
 canStatus canBusOff(const CanHandle hnd)
 {
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
