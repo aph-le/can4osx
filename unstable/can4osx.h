@@ -190,13 +190,9 @@ canStatus canBusOff (const CanHandle hndl);
 /* Needed to setup a notififaction to the nofication center */
 canStatus canSetNotify (const CanHandle hnd, CanNotificationType notifyStruct, unsigned int notifyFlags, void *tag);
 
-canStatus canSetBusParams (const CanHandle hnd,
-                                     SInt32 freq,
-                                     UInt32 tseg1,
-                                     UInt32 tseg2,
-                                     UInt32 sjw,
-                                     UInt32 noSamp,
-                                     UInt32 syncmode);
+canStatus canSetBusParams (const CanHandle hnd, SInt32 freq, UInt32 tseg1, UInt32 tseg2, UInt32 sjw, UInt32 noSamp, UInt32 syncmode);
+
+canStatus CcanSetBusParamsFd(const CanHandle hnd, SInt64 freq_brs, UInt32 tseg1, UInt32 tseg2, UInt32 sjw);
 
 canStatus canRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt16 *flag, UInt32 *time);
 
