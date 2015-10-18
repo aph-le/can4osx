@@ -64,6 +64,7 @@ static UInt32 can4osxMaxChannelCount = 0;
 
 static Can4osxUsbDeviceEntry can4osxSupportedDevices[] =
 {
+    // Vendor Id, Product Id
     {0x0bfd, 0x0120}, //Kvaser Leaf Light v.2
     {0x0bfd, 0x0107}, //Kvaser Leaf Pro HS v.2
     {0x0bfd, 0x000E}, //Kvaser Leaf SemiPro HS
@@ -90,11 +91,23 @@ static IOReturn CAN4OSX_Dealloc(Can4osxUsbDeviceHandleEntry	*self);
 
 
 //The offical kvaser API
+/********************************************************************************/
+/**
+ * /brief canInitializeLibrary - intializing the driver
+ *
+ * This function might be called more than once, but at least once to init the
+ * driver and internal structures.
+ *
+ * /return none
+ *
+ */
 void canInitializeLibrary (void)
 {
     if (queueCan4osx != NULL) {
+        // If the queue already exist, the this function was already called
         return;
     }
+    // Create a queue to run in background, so the driver has his own task
     queueCan4osx = dispatch_queue_create("can4osx", NULL);
     semaCan4osxStart = dispatch_semaphore_create(0);
     
@@ -103,7 +116,9 @@ void canInitializeLibrary (void)
     dispatch_async(queueCan4osx, ^(void) {
         CAN4OSX_CanInitializeLibrary();
     });
+    // Wait here until the background usb task is done
     dispatch_semaphore_wait(semaCan4osxStart, DISPATCH_TIME_FOREVER);
+    
     dispatch_release(semaCan4osxStart);
 }
 
