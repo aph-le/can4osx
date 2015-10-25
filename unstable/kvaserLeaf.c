@@ -468,6 +468,8 @@ void LeafDecodeCommand(Can4osxUsbDeviceHandleEntry *self, leafCmd *cmd) {
         case CMD_GET_CARD_INFO_RESP:
             CAN4OSX_DEBUG_PRINT("Card Info Response Serial %d\n",cmd->getCardInfoResp.serialNumber);
             
+            self->devInfo.serialNumber = cmd->getCardInfoResp.serialNumber;
+            
             break;
             
         case CMD_GET_BUSLOAD_RESP:

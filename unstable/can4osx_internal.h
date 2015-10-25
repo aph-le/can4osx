@@ -141,6 +141,10 @@ typedef struct {
     UInt8 canState;
 } Can4osxDeviceState_T;
 
+typedef struct {
+    UInt64 serialNumber;
+} Can4osxDeviceInfo_T;
+
 
 typedef struct {
     IOUSBDeviceInterface	**can4osxDeviceInterface;
@@ -166,6 +170,8 @@ typedef struct {
     Can4osxHwFunctions hwFunctions;
     
     Can4osxDeviceState_T canState;
+    
+    Can4osxDeviceInfo_T devInfo;
     
 }Can4osxUsbDeviceHandleEntry;
 
