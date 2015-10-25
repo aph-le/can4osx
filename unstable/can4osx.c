@@ -163,6 +163,15 @@ canStatus canBusOff(const CanHandle hnd)
 }
 
 
+/********************************************************************************/
+/**
+ * \brief canOpenChannel - opens a channel on the interface
+ *
+ * This function opens a channel on the interface.
+ *
+ * \return canStatus
+ *
+ */
 CanHandle canOpenChannel(int channel, int flags)
 {
     if ( CAN4OSX_CheckHandle(channel) == -1 ) {
