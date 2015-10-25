@@ -2,7 +2,7 @@ can4osx
 =======
 * [Project Website](http://aph-le.github.io/can4osx/)
 
-At the moment very unstable
+Version 0.0.1
 
 ##Overview
 User-space driver using IOKitLib and IOUSBLib CAN to USB Adapters using the Kvaser canlib API.
