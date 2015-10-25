@@ -93,12 +93,12 @@ static IOReturn CAN4OSX_Dealloc(Can4osxUsbDeviceHandleEntry	*self);
 //The offical kvaser API
 /********************************************************************************/
 /**
- * /brief canInitializeLibrary - intializing the driver
+ * \brief canInitializeLibrary - intializing the driver
  *
  * This function might be called more than once, but at least once to init the
  * driver and internal structures.
  *
- * /return none
+ * \return none
  *
  */
 void canInitializeLibrary (void)
@@ -125,11 +125,11 @@ void canInitializeLibrary (void)
 
 /********************************************************************************/
 /**
- * /brief canBusOn - enables the CAn bus
+ * \brief canBusOn - enables the CAn bus
  *
  * This function set the CAN bus online
  *
- * /return canStatus
+ * \return canStatus
  *
  */
 canStatus canBusOn(const CanHandle hnd)
@@ -145,11 +145,11 @@ canStatus canBusOn(const CanHandle hnd)
 
 /********************************************************************************/
 /**
- * /brief canBusOff - disables the CAn bus
+ * \brief canBusOff - disables the CAn bus
  *
  * This function set the CAN bus offline
  *
- * /return canStatus
+ * \return canStatus
  *
  */
 canStatus canBusOff(const CanHandle hnd)
@@ -171,6 +171,7 @@ CanHandle canOpenChannel(int channel, int flags)
         return (CanHandle)channel;
     }
 }
+
 
 canStatus canSetNotify (const CanHandle hnd, CanNotificationType notifyStruct, unsigned int notifyFlags, void *tag)
 {
@@ -197,6 +198,7 @@ canStatus canSetNotify (const CanHandle hnd, CanNotificationType notifyStruct, u
     }
 }
 
+
 canStatus canSetBusParams (const CanHandle hnd, SInt32 freq, UInt32 tseg1, UInt32 tseg2, UInt32 sjw, UInt32 noSamp, UInt32 syncmode)
 {
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
@@ -206,6 +208,7 @@ canStatus canSetBusParams (const CanHandle hnd, SInt32 freq, UInt32 tseg1, UInt3
         return self->hwFunctions.can4osxhwCanSetBusParamsRef(hnd, freq, tseg1, tseg2, sjw, noSamp, syncmode);
     }
 }
+
 
 canStatus CcanSetBusParamsFd(const CanHandle hnd, SInt64 freq_brs, UInt32 tseg1, UInt32 tseg2, UInt32 sjw)
 {
@@ -232,6 +235,7 @@ canStatus canRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt
     }
 }
 
+
 canStatus canWrite (const CanHandle hnd,UInt32 id, void *msg, UInt16 dlc, UInt16 flag)
 {
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
@@ -241,6 +245,7 @@ canStatus canWrite (const CanHandle hnd,UInt32 id, void *msg, UInt16 dlc, UInt16
         return self->hwFunctions.can4osxhwCanWriteRef(hnd, id, msg, dlc, flag);
     }
 }
+
 
 canStatus canReadStatus	(const CanHandle hnd, UInt32 *const flags)
 {
@@ -263,7 +268,6 @@ canStatus canReadStatus	(const CanHandle hnd, UInt32 *const flags)
                 break;
             default:
                 break;
-                
         }
         
         return canOK;
@@ -337,6 +341,16 @@ static void CAN4OSX_CanInitializeLibrary (void)
 }
 
 
+/********************************************************************************/
+/**
+ * \internal
+ * \brief CAN4OSX_CheckHandle - checks if the handle is valid
+ *
+ * This function checks if the given handle is valid
+ *
+ * \return canStatus
+ *
+ */
 static CanHandle CAN4OSX_CheckHandle(const CanHandle hnd)
 {
     if (hnd >= CAN4OSX_MAX_CHANNEL_COUNT) {
@@ -349,7 +363,6 @@ static CanHandle CAN4OSX_CheckHandle(const CanHandle hnd)
     
     return hnd;
 }
-
 
 
 static void CAN4OSX_DeviceAdded(void *refCon, io_iterator_t iterator)
@@ -449,9 +462,6 @@ static void CAN4OSX_DeviceAdded(void *refCon, io_iterator_t iterator)
         
         can4osxUsbDeviceHandle[can4osxMaxChannelCount].hwFunctions.can4osxhwInitRef(can4osxMaxChannelCount);
         
-        
-        LeafReadFromBulkInPipe(&can4osxUsbDeviceHandle[can4osxMaxChannelCount]);
-        
         can4osxUsbDeviceHandle[can4osxMaxChannelCount].hwFunctions.can4osxhwCanSetBusParamsRef(can4osxMaxChannelCount, canBITRATE_125K, 10, 5, 1, 1, 0);
 
         can4osxMaxChannelCount++;
@@ -459,7 +469,6 @@ static void CAN4OSX_DeviceAdded(void *refCon, io_iterator_t iterator)
     }
 
 }
-
 
 
 static IOReturn CAN4OSX_ConfigureDevice(IOUSBDeviceInterface **dev)
@@ -486,7 +495,6 @@ static IOReturn CAN4OSX_ConfigureDevice(IOUSBDeviceInterface **dev)
     }
     return kIOReturnSuccess;
 }
-
 
 
 static IOReturn CAN4OSX_FindInterfaces(Can4osxUsbDeviceHandleEntry *handle)
@@ -609,8 +617,6 @@ static IOReturn CAN4OSX_FindInterfaces(Can4osxUsbDeviceHandleEntry *handle)
 }
 
 
-
-
 static void CAN4OSX_DeviceNotification(void *refCon, io_service_t service, natural_t messageType, void *messageArgument)
 {
     Can4osxUsbDeviceHandleEntry	*self = (Can4osxUsbDeviceHandleEntry *) refCon;
@@ -624,6 +630,7 @@ static void CAN4OSX_DeviceNotification(void *refCon, io_service_t service, natur
 
     }
 }
+
 
 static IOReturn CAN4OSX_CreateEndpointBuffer( const CanHandle hnd )
 {

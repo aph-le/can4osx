@@ -81,6 +81,8 @@ static void LeafBulkWriteCompletion(void *refCon, IOReturn result, void *arg0);
 static IOReturn LeafWriteToBulkPipe(Can4osxUsbDeviceHandleEntry *self);
 static UInt16 LeafFillBulkPipeBuffer(LeafCommandMsgBuf* bufferRef, UInt8 *pipe, UInt16 maxPipeSize);
 
+static void LeafReadFromBulkInPipe(Can4osxUsbDeviceHandleEntry *self);
+
 
 //Hardware interface function
 canStatus LeafInitHardware(const CanHandle hnd);
@@ -119,6 +121,8 @@ canStatus LeafInitHardware(const CanHandle hnd)
         return canERR_NOMEM;
     }
     
+    // Trigger the read
+    LeafReadFromBulkInPipe(self);
     
     return canOK;
 }
@@ -892,7 +896,7 @@ static void BulkReadCompletion(void *refCon, IOReturn result, void *arg0)
     LeafReadFromBulkInPipe(self);
 }
 
-void LeafReadFromBulkInPipe(Can4osxUsbDeviceHandleEntry *self)
+static void LeafReadFromBulkInPipe(Can4osxUsbDeviceHandleEntry *self)
 {
     IOReturn ret = (*(self->can4osxInterfaceInterface))->ReadPipeAsync(self->can4osxInterfaceInterface, self->endpointNumberBulkIn, self->endpointBufferBulkInRef, self->endpointMaxSizeBulkIn, BulkReadCompletion, (void*)self);
     

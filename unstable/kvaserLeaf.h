@@ -325,8 +325,6 @@ typedef struct {
 Can4osxHwFunctions leafHardwareFunctions;
 
 
-void LeafReadFromBulkInPipe(Can4osxUsbDeviceHandleEntry *self);
-
 
 /* Leaf API */
 
