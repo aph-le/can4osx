@@ -100,17 +100,6 @@ typedef union {
     ChipState chipState;
 } EventTagData;
 
-/*
-
-typedef struct {
-	UInt8  eventTag;
-	UInt8  eventChannel;
-	UInt8  transitionId;
-	UInt8  padding;
-	UInt32 eventTimestamp;
-	EventTagData eventTagData;
-} __attribute__ ((packed)) CanEvent;
-*/
 
 //holds the actual buffer
 typedef struct {
@@ -184,6 +173,8 @@ CanEventMsgBuf* CAN4OSX_CreateCanEventBuffer( UInt32 bufferSize );
 void CAN4OSX_ReleaseCanEventBuffer( CanEventMsgBuf* bufferRef );
 UInt8 CAN4OSX_WriteCanEventBuffer(CanEventMsgBuf* bufferRef, CanMsg newEvent);
 UInt8 CAN4OSX_ReadCanEventBuffer(CanEventMsgBuf* bufferRef, CanMsg* readEvent);
+
+canStatus CAN4OSX_GetChannelData(Can4osxUsbDeviceHandleEntry* pSelf, SInt32 cmd, void* pBuffer, size_t bufsize);
 
 
 #endif //can4osx_intern_h

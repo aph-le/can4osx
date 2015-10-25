@@ -84,6 +84,7 @@ CanEventMsgBuf* CAN4OSX_CreateCanEventBuffer( UInt32 bufferSize )
 	return bufferRef;
 }
 
+
 void CAN4OSX_ReleaseCanEventBuffer( CanEventMsgBuf* bufferRef )
 {
 	if ( bufferRef != NULL ) {
@@ -95,6 +96,7 @@ void CAN4OSX_ReleaseCanEventBuffer( CanEventMsgBuf* bufferRef )
 	}
 }
 
+
 static UInt8 CAN4OSX_TestFullCanEventBuffer(CanEventMsgBuf* bufferRef)
 {
 	if (bufferRef->bufferCount == bufferRef->bufferSize) {
@@ -103,6 +105,7 @@ static UInt8 CAN4OSX_TestFullCanEventBuffer(CanEventMsgBuf* bufferRef)
 		return 0;
 	}
 }
+
 
 static UInt8 CAN4OSX_TestEmptyCanEventBuffer(CanEventMsgBuf* bufferRef)
 {
@@ -129,6 +132,7 @@ UInt8 CAN4OSX_WriteCanEventBuffer(CanEventMsgBuf* bufferRef, CanMsg newEvent)
 	return retval;
 }
 
+
 UInt8 CAN4OSX_ReadCanEventBuffer(CanEventMsgBuf* bufferRef, CanMsg* readEvent)
 {
     __block UInt8 retval = 1;
@@ -145,6 +149,24 @@ UInt8 CAN4OSX_ReadCanEventBuffer(CanEventMsgBuf* bufferRef, CanMsg* readEvent)
     
 	return retval;
 
+}
+
+
+//**************************************************
+canStatus CAN4OSX_GetChannelData(Can4osxUsbDeviceHandleEntry* pSelf, SInt32 cmd, void* pBuffer, size_t bufsize)
+{
+
+    switch(cmd) {
+        case canCHANNELDATA_CARD_SERIAL_NO:
+            if (bufsize < 8) {
+                return canERR_NOMEM;
+            }
+            memcpy(pBuffer, &(pSelf->devInfo.serialNumber), 8);
+            break;
+        default:
+            break;
+    }
+    return canOK;
 }
 
 

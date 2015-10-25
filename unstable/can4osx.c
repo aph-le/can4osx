@@ -275,6 +275,28 @@ canStatus canReadStatus	(const CanHandle hnd, UInt32 *const flags)
 }
 
 
+canStatus canGetChannelData(const CanHandle hnd, SInt32 item, void* pBuffer, size_t bufsize)
+{
+    if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
+        return canERR_INVHANDLE;
+    } else {
+        Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
+        
+        if (NULL == pBuffer) {
+            return canERR_NOMEM;
+        }
+        
+        if (bufsize <= 0) {
+            return canERR_NOMEM;
+        }
+        
+        memset(pBuffer, 0, bufsize);
+        
+        return CAN4OSX_GetChannelData(self, item, pBuffer, bufsize);
+    }
+}
+
+
 // Internal
 
 static void CAN4OSX_CanInitializeLibrary (void)

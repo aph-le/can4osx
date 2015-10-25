@@ -119,6 +119,20 @@
 #define canOPEN_REQUIRE_EXTENDED    0x0010
 
 
+#define canCHANNELDATA_CHANNEL_CAP                1
+#define canCHANNELDATA_TRANS_CAP                  2
+#define canCHANNELDATA_CHANNEL_FLAGS              3   // available, etc
+#define canCHANNELDATA_CARD_TYPE                  4
+#define canCHANNELDATA_CARD_NUMBER                5
+#define canCHANNELDATA_CHAN_NO_ON_CARD            6
+#define canCHANNELDATA_CARD_SERIAL_NO             7
+#define canCHANNELDATA_TRANS_SERIAL_NO            8
+#define canCHANNELDATA_CARD_FIRMWARE_REV          9
+#define canCHANNELDATA_CARD_HARDWARE_REV          10
+#define canCHANNELDATA_CARD_UPC_NO                11
+#define canCHANNELDATA_TRANS_UPC_NO               12
+
+
 
 
 //
@@ -199,5 +213,7 @@ canStatus canRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt
 canStatus canWrite (const CanHandle hnd,UInt32 id, void *msg, UInt16 dlc, UInt16 flag);
 
 canStatus canReadStatus	(const CanHandle hnd, UInt32 *const flags);
+
+canStatus canGetChannelData(const CanHandle hnd, SInt32 item, void* pBuffer, size_t bufsize);
 
 #endif /* CAN4OSX_H */
