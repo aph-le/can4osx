@@ -624,7 +624,6 @@ static IOReturn CAN4OSX_FindInterfaces(Can4osxUsbDeviceHandleEntry *handle)
                     handle->endpointMaxSizeBulkIn = maxPacketSize;
                 }
             }
-        
         }
         
         ret = (*interface)->CreateInterfaceAsyncEventSource(interface, &runLoopSource);
@@ -650,14 +649,14 @@ static IOReturn CAN4OSX_FindInterfaces(Can4osxUsbDeviceHandleEntry *handle)
 
 static void CAN4OSX_DeviceNotification(void *refCon, io_service_t service, natural_t messageType, void *messageArgument)
 {
-    Can4osxUsbDeviceHandleEntry	*self = (Can4osxUsbDeviceHandleEntry *) refCon;
+    Can4osxUsbDeviceHandleEntry	*pSelf = (Can4osxUsbDeviceHandleEntry *) refCon;
     
     if (messageType == kIOMessageServiceIsTerminated) {
-        CAN4OSX_DEBUG_PRINT("%s : Device removed. Channel number %d\n",__func__, self->channelNumber);
+        CAN4OSX_DEBUG_PRINT("%s : Device removed. Channel number %d\n",__func__, pSelf->channelNumber);
         
-        CAN4OSX_Dealloc(self);
+        CAN4OSX_Dealloc(pSelf);
 
-        self->channelNumber = -1;
+        pSelf->channelNumber = -1;
 
     }
 }
@@ -665,11 +664,11 @@ static void CAN4OSX_DeviceNotification(void *refCon, io_service_t service, natur
 
 static IOReturn CAN4OSX_CreateEndpointBuffer( const CanHandle hnd )
 {
-    Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
+    Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
     
-    self->endpointBufferBulkInRef = calloc( 1 , self->endpointMaxSizeBulkIn);
+    pSelf->endpointBufferBulkInRef = calloc( 1 , pSelf->endpointMaxSizeBulkIn);
 
-    self->endpointBufferBulkOutRef = calloc( 1 , self->endpointMaxSizeBulkOut);
+    pSelf->endpointBufferBulkOutRef = calloc( 1 , pSelf->endpointMaxSizeBulkOut);
     
     return kIOReturnSuccess;
 }
