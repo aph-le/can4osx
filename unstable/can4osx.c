@@ -239,8 +239,8 @@ canStatus canRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
         return canERR_INVHANDLE;
     } else {
-        Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
-        return self->hwFunctions.can4osxhwCanReadRef(hnd, id, msg, dlc, flag, time );
+        Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
+        return pSelf->hwFunctions.can4osxhwCanReadRef(hnd, id, msg, dlc, flag, time );
     }
 }
 
@@ -250,8 +250,8 @@ canStatus canWrite (const CanHandle hnd,UInt32 id, void *msg, UInt16 dlc, UInt16
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
         return canERR_INVHANDLE;
     } else {
-        Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
-        return self->hwFunctions.can4osxhwCanWriteRef(hnd, id, msg, dlc, flag);
+        Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
+        return pSelf->hwFunctions.can4osxhwCanWriteRef(hnd, id, msg, dlc, flag);
     }
 }
 
@@ -289,7 +289,7 @@ canStatus canGetChannelData(const CanHandle hnd, SInt32 item, void* pBuffer, siz
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
         return canERR_INVHANDLE;
     } else {
-        Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
+        Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
         
         if (NULL == pBuffer) {
             return canERR_NOMEM;
@@ -301,7 +301,7 @@ canStatus canGetChannelData(const CanHandle hnd, SInt32 item, void* pBuffer, siz
         
         memset(pBuffer, 0, bufsize);
         
-        return CAN4OSX_GetChannelData(self, item, pBuffer, bufsize);
+        return CAN4OSX_GetChannelData(pSelf, item, pBuffer, bufsize);
     }
 }
 
