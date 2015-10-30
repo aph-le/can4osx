@@ -768,8 +768,8 @@ static canStatus LeafCanStartChip(CanHandle hdl)
     } else {
         return retVal;
     }
-    
 }
+
 
 //Go bus off
 static canStatus LeafCanStopChip(CanHandle hdl)
