@@ -143,7 +143,6 @@ static canStatus LeafCanClose(const CanHandle hnd)
         return canERR_NOMEM;
     }
     
-    
     return canOK;
 
 }
@@ -703,8 +702,7 @@ static void LeafBulkWriteCompletion(void *refCon, IOReturn result, void *arg0)
     
     CAN4OSX_DEBUG_PRINT("Asynchronous bulk write complete\n");
     
-    if (result != kIOReturnSuccess)
-    {
+    if (result != kIOReturnSuccess) {
         CAN4OSX_DEBUG_PRINT("error from asynchronous bulk write (%08x)\n", result);
         (void) (*interface)->USBInterfaceClose(interface);
         (void) (*interface)->Release(interface);
