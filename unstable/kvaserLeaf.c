@@ -721,18 +721,18 @@ static void LeafBulkWriteCompletion(void *refCon, IOReturn result, void *arg0)
 
 
 
-static IOReturn LeafWriteToBulkPipe(Can4osxUsbDeviceHandleEntry *self)
+static IOReturn LeafWriteToBulkPipe(Can4osxUsbDeviceHandleEntry *pSelf)
 {
     IOReturn retval = kIOReturnSuccess;
-    IOUSBInterfaceInterface **interface = self->can4osxInterfaceInterface;
-    LeafPrivateData *priv = (LeafPrivateData *)self->privateData;
+    IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
+    LeafPrivateData *priv = (LeafPrivateData *)pSelf->privateData;
     
-    if ( self->endpoitBulkOutBusy == FALSE ) {
-        self->endpoitBulkOutBusy = TRUE;
+    if ( pSelf->endpoitBulkOutBusy == FALSE ) {
+        pSelf->endpoitBulkOutBusy = TRUE;
         
-        if (0 < LeafFillBulkPipeBuffer(priv->cmdBufferRef, self->endpointBufferBulkOutRef, self->endpointMaxSizeBulkOut )) {
+        if (0 < LeafFillBulkPipeBuffer(priv->cmdBufferRef, pSelf->endpointBufferBulkOutRef, pSelf->endpointMaxSizeBulkOut )) {
 
-            retval = (*interface)->WritePipeAsync(interface, self->endpointNumberBulkOut, self->endpointBufferBulkOutRef, self->endpointMaxSizeBulkOut, LeafBulkWriteCompletion, (void*)self);
+            retval = (*interface)->WritePipeAsync(interface, pSelf->endpointNumberBulkOut, pSelf->endpointBufferBulkOutRef, pSelf->endpointMaxSizeBulkOut, LeafBulkWriteCompletion, (void*)pSelf);
         
             if (retval != kIOReturnSuccess) {
                 CAN4OSX_DEBUG_PRINT("Unable to perform asynchronous bulk write (%08x)\n", retval);
@@ -740,7 +740,7 @@ static IOReturn LeafWriteToBulkPipe(Can4osxUsbDeviceHandleEntry *self)
                 (void) (*interface)->Release(interface);
             }
         } else {
-            self->endpoitBulkOutBusy = FALSE;
+            pSelf->endpoitBulkOutBusy = FALSE;
         }
     }
     
@@ -753,8 +753,8 @@ static canStatus LeafCanStartChip(CanHandle hdl)
 {
     int retVal = 0;
     leafCmd cmd;
-    Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hdl];
-    LeafPrivateData *priv = (LeafPrivateData*)self->privateData;
+    Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hdl];
+    LeafPrivateData *priv = (LeafPrivateData*)pSelf->privateData;
     
     CAN4OSX_DEBUG_PRINT("CAN BusOn Command %d\n", hdl);
     
@@ -763,7 +763,7 @@ static canStatus LeafCanStartChip(CanHandle hdl)
     cmd.startChipReq.channel  = 0;
     cmd.startChipReq.transId  = 0;
     
-    retVal = LeafWriteCommandToBulkPipe( self, cmd);
+    retVal = LeafWriteCommandToBulkPipe( pSelf, cmd);
     
     if ( dispatch_semaphore_wait(priv->semaTimeout, dispatch_time(DISPATCH_TIME_NOW, LEAF_TIMEOUT_TEN_MS)) ) {
         return canERR_TIMEOUT;
@@ -861,8 +861,8 @@ static canStatus LeafCanSetBusParams ( const CanHandle hnd, SInt32 freq, unsigne
 
 static void BulkReadCompletion(void *refCon, IOReturn result, void *arg0)
 {
-    Can4osxUsbDeviceHandleEntry *self = (Can4osxUsbDeviceHandleEntry *)refCon;
-    IOUSBInterfaceInterface **interface = self->can4osxInterfaceInterface;
+    Can4osxUsbDeviceHandleEntry *pSelf = (Can4osxUsbDeviceHandleEntry *)refCon;
+    IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
     UInt32 numBytesRead = (UInt32) arg0;
     
     CAN4OSX_DEBUG_PRINT("Asynchronous bulk read complete (%ld)\n", (long)numBytesRead);
@@ -882,7 +882,7 @@ static void BulkReadCompletion(void *refCon, IOReturn result, void *arg0)
         while ( count < numBytesRead ) {
             if (loopCounter-- == 0) break;
             
-            cmd = (leafCmd *)&(self->endpointBufferBulkInRef[count]);
+            cmd = (leafCmd *)&(pSelf->endpointBufferBulkInRef[count]);
             if ( cmd->head.cmdLen == 0 ) {
                 count += 512;
                 count &= -512;
@@ -891,11 +891,11 @@ static void BulkReadCompletion(void *refCon, IOReturn result, void *arg0)
                 count += cmd->head.cmdLen;
             }
             
-            LeafDecodeCommand(self, cmd);
+            LeafDecodeCommand(pSelf, cmd);
         }
     }
     
-    LeafReadFromBulkInPipe(self);
+    LeafReadFromBulkInPipe(pSelf);
 }
 
 static void LeafReadFromBulkInPipe(Can4osxUsbDeviceHandleEntry *self)
