@@ -51,6 +51,7 @@
 #include <IOKit/usb/IOUSBLib.h>
 
 #include "can4osx_internal.h"
+#include "can4osx_debug.h"
 
 
 static UInt8 CAN4OSX_TestFullCanEventBuffer(CanEventMsgBuf* bufferRef);
@@ -162,6 +163,12 @@ canStatus CAN4OSX_GetChannelData(Can4osxUsbDeviceHandleEntry* pSelf, SInt32 cmd,
                 return canERR_NOMEM;
             }
             memcpy(pBuffer, &(pSelf->devInfo.serialNumber), 8);
+            break;
+        case canCHANNELDATA_DEVDESCR_ASCII:
+            if (bufsize > 128) {
+                bufsize = 128;
+            }
+            memcpy(pBuffer, pSelf->devInfo.deviceString, bufsize);
             break;
         default:
             break;
