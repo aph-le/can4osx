@@ -132,6 +132,8 @@
 #define canCHANNELDATA_CARD_UPC_NO                11
 #define canCHANNELDATA_TRANS_UPC_NO               12
 
+#define canCHANNELDATA_DEVDESCR_ASCII             26
+
 
 
 
@@ -215,5 +217,7 @@ canStatus canWrite (const CanHandle hnd,UInt32 id, void *msg, UInt16 dlc, UInt16
 canStatus canReadStatus	(const CanHandle hnd, UInt32 *const flags);
 
 canStatus canGetChannelData(const CanHandle hnd, SInt32 item, void* pBuffer, size_t bufsize);
+
+canStatus canGetNumberOfChannels(int *channelCount);
 
 #endif /* CAN4OSX_H */
