@@ -234,6 +234,15 @@ canStatus canSetBusParamsFd(const CanHandle hnd, SInt64 freq_brs, UInt32 tseg1, 
 }
 
 
+/********************************************************************************/
+/**
+ * \brief canRead - read a CAN message
+ *
+ * This function opens a channel on the interface.
+ *
+ * \return canStatus
+ *
+ */
 canStatus canRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt16 *flag, UInt32 *time)
 {
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
@@ -261,11 +270,11 @@ canStatus canReadStatus	(const CanHandle hnd, UInt32 *const flags)
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
         return canERR_INVHANDLE;
     } else {
-        Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
+        Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
         
         *flags = 0;
         
-        switch ( self->canState.canState ) {
+        switch ( pSelf->canState.canState ) {
             case CHIPSTAT_ERROR_ACTIVE:
                 *flags = canSTAT_ERROR_ACTIVE;
                 break;
@@ -303,6 +312,18 @@ canStatus canGetChannelData(const CanHandle hnd, SInt32 item, void* pBuffer, siz
         
         return CAN4OSX_GetChannelData(pSelf, item, pBuffer, bufsize);
     }
+}
+
+
+canStatus canGetNumberOfChannels (int *channelCount)
+{
+    if (NULL == channelCount) {
+        return canERR_NOMEM;
+    }
+    
+    *channelCount = can4osxMaxChannelCount;
+    
+    return canOK;
 }
 
 
