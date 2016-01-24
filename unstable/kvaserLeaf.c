@@ -61,6 +61,9 @@
 #include "kvaserLeaf.h"
 
 
+static char* pDeviceString = "Kvaser Leaf Light v.2";
+
+
 static canStatus LeafCanStartChip(CanHandle hdl);
 
 static canStatus LeafCanStopChip(CanHandle hdl);
@@ -120,6 +123,9 @@ canStatus LeafInitHardware(const CanHandle hnd)
     } else {
         return canERR_NOMEM;
     }
+    
+    // Set some device Infos
+    sprintf((char*)self->devInfo.deviceString, "%s : Channel %d",pDeviceString, self->channelNumber);
     
     // Trigger the read
     LeafReadFromBulkInPipe(self);
