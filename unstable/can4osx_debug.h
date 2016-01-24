@@ -46,7 +46,7 @@
 #define can4osx_cmd_can4osx_debug_h
 
 #ifndef CAN4OSX_DEBUG_PRINT
-# define CAN4OSX_DEBUG_PRINT(...) 
+# define CAN4OSX_DEBUG_PRINT printf
 #endif /* CAN4OSX_DEBUG_PRINT */
 
 
