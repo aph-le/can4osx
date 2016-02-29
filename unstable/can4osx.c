@@ -87,7 +87,7 @@ static CanHandle CAN4OSX_CheckHandle(const CanHandle hnd);
 static IOReturn CAN4OSX_CreateEndpointBuffer( const CanHandle hnd );
 static IOReturn CAN4OSX_Dealloc(Can4osxUsbDeviceHandleEntry	*self);
 
-
+bool bIsLoaded = false;
 
 
 //The offical kvaser API
@@ -103,6 +103,9 @@ static IOReturn CAN4OSX_Dealloc(Can4osxUsbDeviceHandleEntry	*self);
  */
 void canInitializeLibrary (void)
 {
+    if (true == bIsLoaded ) {
+        return;
+    }
     if (queueCan4osx != NULL) {
         // If the queue already exist, the this function was already called
         return;
@@ -120,6 +123,8 @@ void canInitializeLibrary (void)
     dispatch_semaphore_wait(semaCan4osxStart, DISPATCH_TIME_FOREVER);
     
     dispatch_release(semaCan4osxStart);
+    
+    bIsLoaded = true;
 }
 
 
@@ -422,9 +427,11 @@ static void CAN4OSX_DeviceAdded(void *refCon, io_iterator_t iterator)
     kern_return_t          kernRetVal;
     SInt32                 score;
     HRESULT                result;
+    UInt16                 productId;
     
     io_service_t           can4osxUsbDevice;
     IOCFPlugInInterface  **can4osxPluginInterface = NULL;
+    Can4osxUsbDeviceHandleEntry *pDevice;
     
     while ( (can4osxUsbDevice = IOIteratorNext(iterator) ) ) {
 
@@ -445,14 +452,16 @@ static void CAN4OSX_DeviceAdded(void *refCon, io_iterator_t iterator)
             continue;
         }
         
+        pDevice = &can4osxUsbDeviceHandle[can4osxMaxChannelCount];
+        
         // Use the plugin interface to retrieve the device interface.
         result = (*can4osxPluginInterface)->QueryInterface(can4osxPluginInterface, CFUUIDGetUUIDBytes(kIOUSBDeviceInterfaceID),
-                                                 (LPVOID*) &can4osxUsbDeviceHandle[can4osxMaxChannelCount].can4osxDeviceInterface);
+                                                 (LPVOID*) &(pDevice->can4osxDeviceInterface));
    
         // Now done with the plugin interface.
         (*can4osxPluginInterface)->Release(can4osxPluginInterface);
         
-        if (result || (can4osxUsbDeviceHandle[can4osxMaxChannelCount].can4osxDeviceInterface == NULL) ) {
+        if (result || (pDevice->can4osxDeviceInterface == NULL) ) {
             CAN4OSX_DEBUG_PRINT("%s : Could not create interface\n", __func__);
             IODestroyPlugInInterface(can4osxPluginInterface);
             IOObjectRelease(can4osxUsbDevice);
@@ -482,7 +491,7 @@ static void CAN4OSX_DeviceAdded(void *refCon, io_iterator_t iterator)
         }
         
         
-        /*kernRetVal = */CAN4OSX_FindInterfaces(&can4osxUsbDeviceHandle[can4osxMaxChannelCount]);
+        /*kernRetVal = */CAN4OSX_FindInterfaces(pDevice);
         
         kernRetVal = IOServiceAddInterestNotification(can4osxUsbNotificationPortRef,            // notifyPort
 											  can4osxUsbDevice,                                 // service
@@ -496,7 +505,7 @@ static void CAN4OSX_DeviceAdded(void *refCon, io_iterator_t iterator)
             CAN4OSX_DEBUG_PRINT("%s : IOServiceAddInterestNotification returned 0x%08x.\n",__func__ ,kernRetVal);
         }
         
-        can4osxUsbDeviceHandle[can4osxMaxChannelCount].channelNumber = can4osxMaxChannelCount;
+        pDevice->channelNumber = can4osxMaxChannelCount;
         
         // Done with this USB device; release the reference added by IOIteratorNext
         (void)IOObjectRelease(can4osxUsbDevice);
@@ -504,13 +513,24 @@ static void CAN4OSX_DeviceAdded(void *refCon, io_iterator_t iterator)
         // Set up buffer for sending and receiving
         (void)CAN4OSX_CreateEndpointBuffer(can4osxMaxChannelCount);
         
-        can4osxUsbDeviceHandle[can4osxMaxChannelCount].canEventMsgBuff = CAN4OSX_CreateCanEventBuffer(1000);
+        pDevice->canEventMsgBuff = CAN4OSX_CreateCanEventBuffer(1000);
         
-        can4osxUsbDeviceHandle[can4osxMaxChannelCount].endpoitBulkOutBusy = FALSE;
+        pDevice->endpoitBulkOutBusy = FALSE;
         
         // FIXME
         
-        can4osxUsbDeviceHandle[can4osxMaxChannelCount].hwFunctions = leafHardwareFunctions;
+        (*can4osxUsbDeviceHandle[can4osxMaxChannelCount].can4osxDeviceInterface)->GetDeviceProduct(pDevice->can4osxDeviceInterface, &productId);
+        
+        CAN4OSX_DEBUG_PRINT("Found a Device with productId: %X\n", (UInt16)productId);
+        
+        switch (productId) {
+            case 0x0120: // Leaf Light v.2
+                can4osxUsbDeviceHandle[can4osxMaxChannelCount].hwFunctions = leafHardwareFunctions;
+                break;
+            default:
+                can4osxUsbDeviceHandle[can4osxMaxChannelCount].hwFunctions = leafHardwareFunctions;
+                break;
+        }
         
         can4osxUsbDeviceHandle[can4osxMaxChannelCount].hwFunctions.can4osxhwInitRef(can4osxMaxChannelCount);
         
@@ -620,7 +640,11 @@ static IOReturn CAN4OSX_FindInterfaces(Can4osxUsbDeviceHandleEntry *handle)
         }
         
         CAN4OSX_DEBUG_PRINT("%s : Interface has %d endpoints\n",__func__, interfaceNumEndpoints);
-
+        
+        // Reset the endpoint numbers
+        handle->endpointNumberBulkIn = 0u;
+        handle->endpointNumberBulkOut = 0u;
+        
         for (loopCount = 1; loopCount <= interfaceNumEndpoints; loopCount++ ) {
             UInt8 direction;
             UInt8 number;
@@ -635,14 +659,18 @@ static IOReturn CAN4OSX_FindInterfaces(Can4osxUsbDeviceHandleEntry *handle)
             } else {
                 if ( (direction == kUSBOut) && (transferType == kUSBBulk) ) {
                     CAN4OSX_DEBUG_PRINT("%s : Found BulkOut endpoint %d \n",__func__ ,loopCount);
-                    handle->endpointNumberBulkOut = loopCount;
-                    handle->endpointMaxSizeBulkOut = maxPacketSize;
+                    if (handle->endpointNumberBulkOut == 0) {
+                        handle->endpointNumberBulkOut = loopCount;
+                        handle->endpointMaxSizeBulkOut = maxPacketSize;
+                    }
                 }
                 
                 if ( (direction == kUSBIn) && (transferType == kUSBBulk) ) {
                     CAN4OSX_DEBUG_PRINT("%s : Found BulkIn endpoint %d \n",__func__ ,loopCount);
-                    handle->endpointNumberBulkIn = loopCount;
-                    handle->endpointMaxSizeBulkIn = maxPacketSize;
+                    if (handle->endpointNumberBulkIn == 0u)  {
+                        handle->endpointNumberBulkIn = 1;//loopCount;
+                        handle->endpointMaxSizeBulkIn = maxPacketSize;
+                    }
                 }
             }
         }
