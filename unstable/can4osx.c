@@ -53,8 +53,9 @@
 #include <IOKit/IOCFPlugIn.h>
 #include <IOKit/usb/IOUSBLib.h>
 
-
+// Hardeware specific headers
 #include "kvaserLeaf.h"
+#include "kvaserLeafPro.h"
 
 
 Can4osxUsbDeviceHandleEntry can4osxUsbDeviceHandle[CAN4OSX_MAX_CHANNEL_COUNT];
@@ -162,8 +163,8 @@ canStatus canBusOff(const CanHandle hnd)
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
         return canERR_INVHANDLE;
     } else {
-        Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
-        return self->hwFunctions.can4osxhwCanBusOffRef(hnd);
+        Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
+        return pSelf->hwFunctions.can4osxhwCanBusOffRef(hnd);
     }
 }
 
@@ -218,8 +219,8 @@ canStatus canSetBusParams (const CanHandle hnd, SInt32 freq, UInt32 tseg1, UInt3
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
         return canERR_INVHANDLE;
     } else {
-        Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
-        return self->hwFunctions.can4osxhwCanSetBusParamsRef(hnd, freq, tseg1, tseg2, sjw, noSamp, syncmode);
+        Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
+        return pSelf->hwFunctions.can4osxhwCanSetBusParamsRef(hnd, freq, tseg1, tseg2, sjw, noSamp, syncmode);
     }
 }
 
@@ -229,9 +230,9 @@ canStatus canSetBusParamsFd(const CanHandle hnd, SInt64 freq_brs, UInt32 tseg1, 
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
         return canERR_INVHANDLE;
     } else {
-        Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
-        if (NULL != self->hwFunctions.can4osxhwCanSetBusParamsFdRef) {
-            return self->hwFunctions.can4osxhwCanSetBusParamsFdRef(hnd, freq_brs, tseg1, tseg2, sjw);
+        Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
+        if (NULL != pSelf->hwFunctions.can4osxhwCanSetBusParamsFdRef) {
+            return pSelf->hwFunctions.can4osxhwCanSetBusParamsFdRef(hnd, freq_brs, tseg1, tseg2, sjw);
         } else {
             return canERR_PARAM;
         }
@@ -723,14 +724,14 @@ static IOReturn CAN4OSX_CreateEndpointBuffer( const CanHandle hnd )
 }
 
 
-static IOReturn CAN4OSX_Dealloc(Can4osxUsbDeviceHandleEntry	*self)
+static IOReturn CAN4OSX_Dealloc(Can4osxUsbDeviceHandleEntry	*pSelf)
 {
     kern_return_t retval;
     
     // Release the usb stuff
     
-    if (self->can4osxDeviceInterface) {
-        /*retval = */(*self->can4osxDeviceInterface)->Release(self->can4osxDeviceInterface);
+    if (pSelf->can4osxDeviceInterface) {
+        /*retval = */(*pSelf->can4osxDeviceInterface)->Release(pSelf->can4osxDeviceInterface);
     }
     
     //if(self->can4osxInterfaceInterface) {
@@ -738,17 +739,17 @@ static IOReturn CAN4OSX_Dealloc(Can4osxUsbDeviceHandleEntry	*self)
     //}
     
     
-    if(self->endpointBufferBulkInRef) {
-        free(self->endpointBufferBulkInRef);
+    if(pSelf->endpointBufferBulkInRef) {
+        free(pSelf->endpointBufferBulkInRef);
     }
     
-    if(self->endpointBufferBulkOutRef) {
-        free(self->endpointBufferBulkOutRef);
+    if(pSelf->endpointBufferBulkOutRef) {
+        free(pSelf->endpointBufferBulkOutRef);
     }
     
     // Release the notification
     
-    retval = IOObjectRelease(self->can4osxNotification);
+    retval = IOObjectRelease(pSelf->can4osxNotification);
     
     // FIXME test return value
     if (0) {
@@ -759,7 +760,7 @@ static IOReturn CAN4OSX_Dealloc(Can4osxUsbDeviceHandleEntry	*self)
     
     // FIXME with the channelnumber
     
-    self->hwFunctions.can4osxhwCanCloseRef(self->channelNumber);
+    pSelf->hwFunctions.can4osxhwCanCloseRef(pSelf->channelNumber);
     
     return retval;
     
