@@ -125,7 +125,7 @@ canStatus LeafInitHardware(const CanHandle hnd)
     }
     
     // Set some device Infos
-    sprintf((char*)self->devInfo.deviceString, "%s : Channel %d",pDeviceString, self->channelNumber);
+    sprintf((char*)self->devInfo.deviceString, "%s",pDeviceString);
     
     // Trigger the read
     LeafReadFromBulkInPipe(self);
