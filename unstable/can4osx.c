@@ -520,22 +520,24 @@ static void CAN4OSX_DeviceAdded(void *refCon, io_iterator_t iterator)
         
         // FIXME
         
+        // Read out the product ID of the device
+        productId = 0u;
         (*can4osxUsbDeviceHandle[can4osxMaxChannelCount].can4osxDeviceInterface)->GetDeviceProduct(pDevice->can4osxDeviceInterface, &productId);
         
         CAN4OSX_DEBUG_PRINT("Found a Device with productId: %X\n", (UInt16)productId);
         
         switch (productId) {
             case 0x0120: // Leaf Light v.2
-                can4osxUsbDeviceHandle[can4osxMaxChannelCount].hwFunctions = leafHardwareFunctions;
+                pDevice->hwFunctions = leafHardwareFunctions;
                 break;
             default:
-                can4osxUsbDeviceHandle[can4osxMaxChannelCount].hwFunctions = leafHardwareFunctions;
+                pDevice->hwFunctions = leafHardwareFunctions;
                 break;
         }
         
-        can4osxUsbDeviceHandle[can4osxMaxChannelCount].hwFunctions.can4osxhwInitRef(can4osxMaxChannelCount);
+        pDevice->hwFunctions.can4osxhwInitRef(can4osxMaxChannelCount);
         
-        can4osxUsbDeviceHandle[can4osxMaxChannelCount].hwFunctions.can4osxhwCanSetBusParamsRef(can4osxMaxChannelCount, canBITRATE_125K, 10, 5, 1, 1, 0);
+        pDevice->hwFunctions.can4osxhwCanSetBusParamsRef(can4osxMaxChannelCount, canBITRATE_125K, 10, 5, 1, 1, 0);
 
         can4osxMaxChannelCount++;
         
