@@ -47,26 +47,14 @@
 
 // Header for every command.
 typedef struct {
-    UInt8 cmdNo;
-    union {
-        struct {
-            UInt8 dstAddr    : 6;
-            UInt8 srcChannel : 2;
-        } cmdIOP;
-        UInt8 heAddress;    // 0..5: dstHE, 6..7: srcHE-msb-part
-    };
-    union {
-        struct {
-            UInt16 transId : 12; //  0..11: Seq
-            UInt16 srcHE   : 4;  // 12..15: srcHe-lsb-part
-        } cmdIOPSeq;
-        UInt16 transId;     // 0..11 transId; 12..15 don't care
-    };
+    UInt8   cmdNo;
+    UInt8   address;
+    UInt16  transitionId;
 } __attribute__ ((packed)) proCmdHead;
 
 typedef struct {
-    proCmdHead header;
-    UInt8 flags;
+    proCmdHead  header;
+    UInt8       flags;
 }  __attribute__ ((packed)) proCmdReadClockReq;
 
 
