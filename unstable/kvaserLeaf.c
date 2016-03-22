@@ -92,6 +92,7 @@ canStatus LeafInitHardware(const CanHandle hnd);
 
 Can4osxHwFunctions leafHardwareFunctions = {
     .can4osxhwInitRef = LeafInitHardware,
+    .can4osxhwCanOpenChannel = NULL,
     .can4osxhwCanSetBusParamsRef = LeafCanSetBusParams,
     .can4osxhwCanBusOnRef = LeafCanStartChip,
     .can4osxhwCanBusOffRef = LeafCanStopChip,
