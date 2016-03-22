@@ -183,6 +183,11 @@ CanHandle canOpenChannel(int channel, int flags)
     if ( CAN4OSX_CheckHandle(channel) == -1 ) {
         return canERR_NOCHANNELS;
     } else {
+        Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[channel];
+        if (pSelf->hwFunctions.can4osxhwCanOpenChannel != NULL) {
+            pSelf->hwFunctions.can4osxhwCanOpenChannel(channel, flags);
+        }
+        
         return (CanHandle)channel;
     }
 }
@@ -530,6 +535,9 @@ static void CAN4OSX_DeviceAdded(void *refCon, io_iterator_t iterator)
             case 0x0120: // Leaf Light v.2
                 pDevice->hwFunctions = leafHardwareFunctions;
                 break;
+            case 0x0107:
+                pDevice->hwFunctions = leafProHardwareFunctions;
+                break;
             default:
                 pDevice->hwFunctions = leafHardwareFunctions;
                 break;
@@ -537,7 +545,7 @@ static void CAN4OSX_DeviceAdded(void *refCon, io_iterator_t iterator)
         
         pDevice->hwFunctions.can4osxhwInitRef(can4osxMaxChannelCount);
         
-        pDevice->hwFunctions.can4osxhwCanSetBusParamsRef(can4osxMaxChannelCount, canBITRATE_125K, 10, 5, 1, 1, 0);
+        //pDevice->hwFunctions.can4osxhwCanSetBusParamsRef(can4osxMaxChannelCount, canBITRATE_125K, 10, 5, 1, 1, 0);
 
         can4osxMaxChannelCount++;
         
@@ -671,7 +679,7 @@ static IOReturn CAN4OSX_FindInterfaces(Can4osxUsbDeviceHandleEntry *handle)
                 if ( (direction == kUSBIn) && (transferType == kUSBBulk) ) {
                     CAN4OSX_DEBUG_PRINT("%s : Found BulkIn endpoint %d \n",__func__ ,loopCount);
                     if (handle->endpointNumberBulkIn == 0u)  {
-                        handle->endpointNumberBulkIn = 1;//loopCount;
+                        handle->endpointNumberBulkIn = loopCount;
                         handle->endpointMaxSizeBulkIn = maxPacketSize;
                     }
                 }
