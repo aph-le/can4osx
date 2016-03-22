@@ -114,6 +114,7 @@ typedef struct {
 
 typedef struct {
     canStatus (*can4osxhwInitRef) (const CanHandle hnd);
+    CanHandle (*can4osxhwCanOpenChannel)(int channel, int flags);
     canStatus (*can4osxhwCanBusOnRef) (const CanHandle hndl);
     canStatus (*can4osxhwCanBusOffRef) (const CanHandle hnd);
     canStatus (*can4osxhwCanSetBusParamsRef) (const CanHandle hnd, SInt32 freq, UInt32 tseg1, UInt32 tseg2, UInt32 sjw, UInt32 noSamp, UInt32 syncmode);
