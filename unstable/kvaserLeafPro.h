@@ -1,5 +1,5 @@
 //
-//  kvaserLeaf.h
+//  kvaserLeafPro.h
 //
 //
 // Copyright (c) 2016 Alexander Philipp. All rights reserved.
@@ -45,18 +45,89 @@
 #define can4osx_logExample_kvaserLeafPro_h
 
 
+// Info
+/*
+ setSeq setz letzten 8 bit von transId
+ 
+ 
+ */
+
+Can4osxHwFunctions leafProHardwareFunctions;
+
+#define LEAFPRO_CMD_SET_BUSPARAMS_REQ           16
+#define LEAFPRO_CMD_SET_BUSPARAMS_RESP          85
+
+#define LEAFPRO_CMD_CHIP_STATE_EVENT              20
+#define LEAFPRO_CMD_START_CHIP_REQ                26
+#define LEAFPRO_CMD_START_CHIP_RESP               27
+
+
+#define LEAFPRO_CMD_MAP_CHANNEL_REQ             200
+#define LEAFPRO_CMD_MAP_CHANNEL_RESP            201
+
+
+
 // Header for every command.
 typedef struct {
     UInt8   cmdNo;
     UInt8   address;
     UInt16  transitionId;
-} __attribute__ ((packed)) proCmdHead;
+} __attribute__ ((packed)) proCmdHead_t;
 
 typedef struct {
-    proCmdHead  header;
-    UInt8       flags;
-}  __attribute__ ((packed)) proCmdReadClockReq;
+    proCmdHead_t    header;
+    UInt8           data[28];
+} __attribute__ ((packed)) proCmdRaw_t;
 
+
+typedef struct {
+    proCmdHead_t  header;
+    UInt8       flags;
+} __attribute__ ((packed)) proCmdReadClockReq_t;
+
+typedef struct {
+    proCmdHead_t    header;
+    char            name[16];
+    UInt8           channel;
+    UInt8           reserved[11];
+} __attribute__ ((packed)) proCmdMapChannelReq_t;
+
+typedef struct {
+    proCmdHead_t    header;
+    UInt8   heAddress;         // Opaque for the driver.
+    UInt8   position;          // Physical "position" in device
+    UInt16  flags;             // Various flags, to be defined
+    UInt8   reserved1[24];
+} __attribute__ ((packed)) proCmdMapChannelResp_t;
+
+typedef struct {
+    proCmdHead_t    header;
+    UInt32          bitRate;
+    UInt8           tseg1;
+    UInt8           tseg2;
+    UInt8           sjw;
+    UInt8           noSamp;
+    UInt8           channel;
+    UInt8           padding[19];
+} __attribute__ ((packed)) proCmdSetBusparamsReq_t;
+
+typedef union {
+    proCmdHead_t proCmdHead;
+    proCmdRaw_t proCmdRaw;
+    proCmdReadClockReq_t proCmdReadClockReq;
+    proCmdMapChannelReq_t proCmdMapChannelReq;
+    proCmdMapChannelResp_t proCmdMapChannelResp;
+    proCmdSetBusparamsReq_t proCmdSetBusparamsReq;
+} __attribute__ ((packed)) proCommand_t;
+
+
+
+
+typedef struct {
+    dispatch_semaphore_t semaTimeout;
+    UInt8 timeOutReason;
+    UInt8 address;
+} LeafProPrivateData;
 
 
 #endif
