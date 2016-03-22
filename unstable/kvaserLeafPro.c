@@ -69,6 +69,19 @@ static void LeafProDecodeCommand(Can4osxUsbDeviceHandleEntry *pSelf, proCommand_
 
 static void LeafProMapChannels(Can4osxUsbDeviceHandleEntry *pSelf);
 
+static canStatus LeafProCanSetBusParams ( const CanHandle hnd, SInt32 freq, unsigned int tseg1,
+                                         unsigned int tseg2, unsigned int sjw,
+                                         unsigned int noSamp, unsigned int syncmode );
+static canStatus LeafProCanRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt16 *flag, UInt32 *time);
+
+
+static canStatus LeafProCanTranslateBaud (SInt32 *const freq,
+                                          unsigned int *const tseg1,
+                                          unsigned int *const tseg2,
+                                          unsigned int *const sjw,
+                                          unsigned int *const nosamp,
+                                          unsigned int *const syncMode);
+
 static IOReturn LeafProWriteCommandWait(Can4osxUsbDeviceHandleEntry *pSelf, proCommand_t cmd, UInt8 reason);
 
 
@@ -78,14 +91,17 @@ static void LeafProBulkReadCompletion(void *refCon, IOReturn result, void *arg0)
 
 //Hardware interface function
 static canStatus LeafProInitHardware(const CanHandle hnd);
+static CanHandle LeafProCanOpenChannel(int channel, int flags);
+static canStatus LeafProCanStartChip(CanHandle hdl);
 
 Can4osxHwFunctions leafProHardwareFunctions = {
     .can4osxhwInitRef = LeafProInitHardware,
-    .can4osxhwCanSetBusParamsRef = NULL,
-    .can4osxhwCanBusOnRef = NULL,
+    .can4osxhwCanOpenChannel = LeafProCanOpenChannel,
+    .can4osxhwCanSetBusParamsRef = LeafProCanSetBusParams,
+    .can4osxhwCanBusOnRef = LeafProCanStartChip,
     .can4osxhwCanBusOffRef = NULL,
     .can4osxhwCanWriteRef = NULL,
-    .can4osxhwCanReadRef = NULL,
+    .can4osxhwCanReadRef = LeafProCanRead,
     .can4osxhwCanCloseRef = NULL,
 };
 
@@ -110,16 +126,236 @@ static canStatus LeafProInitHardware(const CanHandle hnd)
     // Trigger next read
     LeafProReadFromBulkInPipe(pSelf);
     
-    // Set up channels
-    LeafProMapChannels(pSelf);
     
     return canOK;
 }
 
+static CanHandle LeafProCanOpenChannel(int channel, int flags)
+{
+    Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[channel];
+
+    // Set up channels
+    LeafProMapChannels(pSelf);
+
+    return (CanHandle)channel;
+}
+
+
+//Set bit timing
+static canStatus LeafProCanSetBusParams ( const CanHandle hnd, SInt32 freq, unsigned int tseg1,
+                                      unsigned int tseg2, unsigned int sjw,
+                                      unsigned int noSamp, unsigned int syncmode )
+{
+    proCommand_t        cmd;
+    UInt32         tmp, PScl;
+    int            retVal;
+    Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
+    LeafProPrivateData *pPriv = (LeafProPrivateData *)pSelf->privateData;
+    
+    CAN4OSX_DEBUG_PRINT("leaf pro: _set_busparam\n");
+    
+    if ( canOK != LeafProCanTranslateBaud( &freq, &tseg1, &tseg2, &sjw, &noSamp, &syncmode)) {
+        // TODO
+        CAN4OSX_DEBUG_PRINT(" can4osx strange bitrate\n");
+        return -1;
+    }
+    
+    
+    // Check bus parameters
+    tmp = freq * (tseg1 + tseg2 + 1);
+    if (tmp == 0) {
+        CAN4OSX_DEBUG_PRINT("leaf: _set_busparams() tmp == 0!\n");
+        return VCAN_STAT_BAD_PARAMETER;
+    }
+    
+    PScl = 16000000UL / tmp;
+    
+    if (PScl <= 1 || PScl > 256) {
+        CAN4OSX_DEBUG_PRINT("hwif_set_chip_param() prescaler wrong (%d)\n",PScl & 1 /* even */);
+        return VCAN_STAT_BAD_PARAMETER;
+    }
+    memset(&cmd, 0 , sizeof(cmd));
+    
+    cmd.proCmdSetBusparamsReq.header.cmdNo = LEAFPRO_CMD_SET_BUSPARAMS_REQ;
+    cmd.proCmdSetBusparamsReq.header.address = pPriv->address;
+    cmd.proCmdSetBusparamsReq.header.transitionId = 1;
+    
+    cmd.proCmdSetBusparamsReq.bitRate = freq;
+    cmd.proCmdSetBusparamsReq.sjw     = (UInt8)sjw;
+    cmd.proCmdSetBusparamsReq.tseg1   = (UInt8)tseg1;
+    cmd.proCmdSetBusparamsReq.tseg2   = (UInt8)tseg2;
+    cmd.proCmdSetBusparamsReq.channel = (UInt8)0;//vChan->channel;
+    cmd.proCmdSetBusparamsReq.noSamp  = 1;
+    
+    
+    retVal = LeafProWriteCommandWait( pSelf, cmd, LEAFPRO_CMD_SET_BUSPARAMS_RESP);
+    
+    
+    return retVal;
+}
+
+//Go bus on
+static canStatus LeafProCanStartChip(CanHandle hdl)
+{
+    int retVal = 0;
+    proCommand_t        cmd;
+    Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hdl];
+    LeafProPrivateData *pPriv = (LeafProPrivateData *)pSelf->privateData;
+    
+    CAN4OSX_DEBUG_PRINT("CAN BusOn Command %d\n", hdl);
+    
+    cmd.proCmdHead.cmdNo = LEAFPRO_CMD_START_CHIP_REQ;
+    cmd.proCmdHead.address = pPriv->address;
+    cmd.proCmdHead.transitionId = 1u;
+    retVal = LeafProWriteCommandWait( pSelf, cmd, LEAFPRO_CMD_CHIP_STATE_EVENT);
+    
+    return retVal;
+}
+
+static canStatus LeafProCanRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt16 *flag, UInt32 *time)
+{
+    Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
+    
+    if ( pSelf->privateData != NULL ) {
+        
+        CanMsg canMsg;
+        
+        if ( CAN4OSX_ReadCanEventBuffer(pSelf->canEventMsgBuff, &canMsg) ) {
+            
+            *id = canMsg.canId;
+            *dlc = canMsg.canDlc;
+            *time =canMsg.canTimestamp;
+            
+            memcpy(msg, canMsg.canData, *dlc);
+            
+            *flag = canMsg.canFlags;
+            
+            return canOK;
+        } else {
+            return canERR_NOMSG;
+        }
+    } else {
+        return canERR_INTERNAL;
+    }
+    
+}
+
+//******************************************************
+// Translate from baud macro to bus params
+//******************************************************
+static canStatus LeafProCanTranslateBaud (SInt32 *const freq,
+                                unsigned int *const tseg1,
+                                unsigned int *const tseg2,
+                                unsigned int *const sjw,
+                                unsigned int *const nosamp,
+                                unsigned int *const syncMode)
+{
+    switch (*freq) {
+        case canBITRATE_1M:
+            *freq     = 1000000L;
+            *tseg1    = 4;
+            *tseg2    = 3;
+            *sjw      = 1;
+            *nosamp   = 1;
+            *syncMode = 0;
+            break;
+            
+        case canBITRATE_500K:
+            *freq     = 500000L;
+            *tseg1    = 4;
+            *tseg2    = 3;
+            *sjw      = 1;
+            *nosamp   = 1;
+            *syncMode = 0;
+            break;
+            
+        case canBITRATE_250K:
+            *freq     = 250000L;
+            *tseg1    = 4;
+            *tseg2    = 3;
+            *sjw      = 1;
+            *nosamp   = 1;
+            *syncMode = 0;
+            break;
+            
+        case canBITRATE_125K:
+            *freq     = 125000L;
+            *tseg1    = 10;
+            *tseg2    = 5;
+            *sjw      = 1;
+            *nosamp   = 1;
+            *syncMode = 0;
+            break;
+            
+        case canBITRATE_100K:
+            *freq     = 100000L;
+            *tseg1    = 10;
+            *tseg2    = 5;
+            *sjw      = 1;
+            *nosamp   = 1;
+            *syncMode = 0;
+            break;
+            
+        case canBITRATE_83K:
+            *freq     = 83333L;
+            *tseg1    = 5;
+            *tseg2    = 2;
+            *sjw      = 2;
+            *nosamp   = 1;
+            *syncMode = 0;
+            break;
+            
+        case canBITRATE_62K:
+            *freq     = 62500L;
+            *tseg1    = 10;
+            *tseg2    = 5;
+            *sjw      = 1;
+            *nosamp   = 1;
+            *syncMode = 0;
+            break;
+            
+        case canBITRATE_50K:
+            *freq     = 50000L;
+            *tseg1    = 10;
+            *tseg2    = 5;
+            *sjw      = 1;
+            *nosamp   = 1;
+            *syncMode = 0;
+            break;
+            
+        case canBITRATE_10K:
+            *freq     = 10000L;
+            *tseg1    = 11;
+            *tseg2    = 4;
+            *sjw      = 1;
+            *nosamp   = 1;
+            *syncMode = 0;
+            break;
+            
+        default:
+            return canERR_PARAM;
+    }
+    
+    return canOK;
+}
+
+
 #pragma mark LeafPro command stuff
 static void LeafProDecodeCommand(Can4osxUsbDeviceHandleEntry *pSelf, proCommand_t *pCmd)
 {
-    CAN4OSX_DEBUG_PRINT("Pro-Decode command %d",(UInt8)pCmd->proCmdHead.cmdNo);
+    CAN4OSX_DEBUG_PRINT("Pro-Decode command %d\n",(UInt8)pCmd->proCmdHead.cmdNo);
+    LeafProPrivateData *pPriv = (LeafProPrivateData *)pSelf->privateData;
+
+    
+    switch (pCmd->proCmdHead.cmdNo) {
+        case LEAFPRO_CMD_MAP_CHANNEL_RESP:
+            CAN4OSX_DEBUG_PRINT("LEAFPRO_CMD_MAP_CHANNEL_RESP chan %X\n",pCmd->proCmdHead.transitionId);
+            CAN4OSX_DEBUG_PRINT("LEAFPRO_CMD_MAP_CHANNEL_RESP adr %X\n",pCmd->proCmdHead.address);
+            pPriv->address = (UInt8)pCmd->proCmdMapChannelResp.heAddress;
+            break;
+        default:
+            break;
+    }
 }
 
 
@@ -129,9 +365,14 @@ static void LeafProMapChannels(Can4osxUsbDeviceHandleEntry *pSelf)
     proCommand_t cmd;
     
     cmd.proCmdHead.cmdNo = LEAFPRO_CMD_MAP_CHANNEL_REQ;
+    cmd.proCmdHead.transitionId = 0x40;
+    cmd.proCmdHead.address = 0x00;
+    
+    cmd.proCmdMapChannelReq.channel = 0;
+    
+    strcpy(cmd.proCmdMapChannelReq.name, "CAN");
         
     LeafProWriteCommandWait(pSelf, cmd, LEAFPRO_CMD_MAP_CHANNEL_RESP);
-
 
 }
 
