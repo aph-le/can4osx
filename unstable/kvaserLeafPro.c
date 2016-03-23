@@ -256,8 +256,8 @@ static canStatus LeafProCanTranslateBaud (SInt32 *const freq,
     switch (*freq) {
         case canBITRATE_1M:
             *freq     = 1000000L;
-            *tseg1    = 4;
-            *tseg2    = 3;
+            *tseg1    = 6;
+            *tseg2    = 1;
             *sjw      = 1;
             *nosamp   = 1;
             *syncMode = 0;
@@ -265,8 +265,8 @@ static canStatus LeafProCanTranslateBaud (SInt32 *const freq,
             
         case canBITRATE_500K:
             *freq     = 500000L;
-            *tseg1    = 4;
-            *tseg2    = 3;
+            *tseg1    = 6;
+            *tseg2    = 1;
             *sjw      = 1;
             *nosamp   = 1;
             *syncMode = 0;
@@ -274,8 +274,8 @@ static canStatus LeafProCanTranslateBaud (SInt32 *const freq,
             
         case canBITRATE_250K:
             *freq     = 250000L;
-            *tseg1    = 4;
-            *tseg2    = 3;
+            *tseg1    = 6;
+            *tseg2    = 1;
             *sjw      = 1;
             *nosamp   = 1;
             *syncMode = 0;
@@ -283,8 +283,8 @@ static canStatus LeafProCanTranslateBaud (SInt32 *const freq,
             
         case canBITRATE_125K:
             *freq     = 125000L;
-            *tseg1    = 10;
-            *tseg2    = 5;
+            *tseg1    = 13;
+            *tseg2    = 2;
             *sjw      = 1;
             *nosamp   = 1;
             *syncMode = 0;
@@ -292,8 +292,8 @@ static canStatus LeafProCanTranslateBaud (SInt32 *const freq,
             
         case canBITRATE_100K:
             *freq     = 100000L;
-            *tseg1    = 10;
-            *tseg2    = 5;
+            *tseg1    = 13;
+            *tseg2    = 2;
             *sjw      = 1;
             *nosamp   = 1;
             *syncMode = 0;
@@ -325,16 +325,7 @@ static canStatus LeafProCanTranslateBaud (SInt32 *const freq,
             *nosamp   = 1;
             *syncMode = 0;
             break;
-            
-        case canBITRATE_10K:
-            *freq     = 10000L;
-            *tseg1    = 11;
-            *tseg2    = 4;
-            *sjw      = 1;
-            *nosamp   = 1;
-            *syncMode = 0;
-            break;
-            
+                        
         default:
             return canERR_PARAM;
     }
