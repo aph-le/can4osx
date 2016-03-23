@@ -63,16 +63,25 @@
 # define LEAFPRO_TIMEOUT_ONE_MS 1000000
 # define LEAFPRO_TIMEOUT_TEN_MS 10*LEAFPRO_TIMEOUT_ONE_MS
 
-static char* pDeviceString = "Kvaser Leaf Pro v.2";
+static char* pDeviceString = "Kvaser Leaf Pro v2";
 
 static void LeafProDecodeCommand(Can4osxUsbDeviceHandleEntry *pSelf, proCommand_t *pCmd);
 
 static void LeafProMapChannels(Can4osxUsbDeviceHandleEntry *pSelf);
 
-static canStatus LeafProCanSetBusParams ( const CanHandle hnd, SInt32 freq, unsigned int tseg1,
-                                         unsigned int tseg2, unsigned int sjw,
-                                         unsigned int noSamp, unsigned int syncmode );
-static canStatus LeafProCanRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt16 *flag, UInt32 *time);
+static canStatus LeafProCanSetBusParams ( const CanHandle hnd, SInt32 freq,
+                                         unsigned int tseg1,
+                                         unsigned int tseg2,
+                                         unsigned int sjw,
+                                         unsigned int noSamp,
+                                         unsigned int syncmode );
+
+static canStatus LeafProCanRead (const CanHandle hnd,
+                                 UInt32 *id,
+                                 void *msg,
+                                 UInt16 *dlc,
+                                 UInt16 *flag,
+                                 UInt32 *time);
 
 
 static canStatus LeafProCanTranslateBaud (SInt32 *const freq,
@@ -82,11 +91,15 @@ static canStatus LeafProCanTranslateBaud (SInt32 *const freq,
                                           unsigned int *const nosamp,
                                           unsigned int *const syncMode);
 
-static IOReturn LeafProWriteCommandWait(Can4osxUsbDeviceHandleEntry *pSelf, proCommand_t cmd, UInt8 reason);
+static IOReturn LeafProWriteCommandWait(Can4osxUsbDeviceHandleEntry *pSelf,
+                                        proCommand_t cmd,
+                                        UInt8 reason);
 
 
 static void LeafProReadFromBulkInPipe(Can4osxUsbDeviceHandleEntry *self);
-static void LeafProBulkReadCompletion(void *refCon, IOReturn result, void *arg0);
+static void LeafProBulkReadCompletion(void *refCon,
+                                      IOReturn result,
+                                      void *arg0);
 
 
 //Hardware interface function
@@ -173,7 +186,8 @@ static canStatus LeafProCanSetBusParams ( const CanHandle hnd, SInt32 freq, unsi
     PScl = 16000000UL / tmp;
     
     if (PScl <= 1 || PScl > 256) {
-        CAN4OSX_DEBUG_PRINT("hwif_set_chip_param() prescaler wrong (%d)\n",PScl & 1 /* even */);
+        CAN4OSX_DEBUG_PRINT("hwif_set_chip_param() prescaler wrong (%d)\n",
+                PScl & 1 /* even */);
         return VCAN_STAT_BAD_PARAMETER;
     }
     memset(&cmd, 0 , sizeof(cmd));
@@ -190,7 +204,8 @@ static canStatus LeafProCanSetBusParams ( const CanHandle hnd, SInt32 freq, unsi
     cmd.proCmdSetBusparamsReq.noSamp  = 1;
     
     
-    retVal = LeafProWriteCommandWait( pSelf, cmd, LEAFPRO_CMD_SET_BUSPARAMS_RESP);
+    retVal = LeafProWriteCommandWait( pSelf, cmd,
+                LEAFPRO_CMD_SET_BUSPARAMS_RESP);
     
     
     return retVal;
@@ -214,8 +229,15 @@ static canStatus LeafProCanStartChip(CanHandle hdl)
     return retVal;
 }
 
-/********************************************************************/
-static canStatus LeafProCanRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt16 *flag, UInt32 *time)
+/******************************************************************************/
+static canStatus LeafProCanRead (
+    const   CanHandle hnd,
+    UInt32  *id,
+    void    *msg,
+    UInt16  *dlc,
+    UInt16  *flag,
+    UInt32  *time
+)
 {
     Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
     

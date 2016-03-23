@@ -61,7 +61,7 @@
 #include "kvaserLeaf.h"
 
 
-static char* pDeviceString = "Kvaser Leaf Light v.2";
+static char* pDeviceString = "Kvaser Leaf Light v2";
 
 
 static canStatus LeafCanStartChip(CanHandle hdl);
