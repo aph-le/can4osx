@@ -8,7 +8,7 @@
 //
 // License: GPLv2
 //
-// ===============================================================================
+// =============================================================================
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -24,7 +24,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
-// ===============================================================================
+// =============================================================================
 //
 // Disclaimer:     IMPORTANT: THE SOFTWARE IS PROVIDED ON AN "AS IS" BASIS. THE AUTHOR MAKES NO
 // WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE IMPLIED
@@ -39,7 +39,7 @@
 // OF SOFTWARE, HOWEVER CAUSED AND WHETHER UNDER THEORY OF CONTRACT, TORT
 // (INCLUDING NEGLIGENCE), STRICT LIABILITY OR OTHERWISE, EVEN IF THE AUTHOR HAS
 // BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// ===============================================================================
+// =============================================================================
 //
 
 
