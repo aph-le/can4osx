@@ -57,13 +57,26 @@ Can4osxHwFunctions leafProHardwareFunctions;
 #define LEAFPRO_CMD_SET_BUSPARAMS_REQ           16
 #define LEAFPRO_CMD_SET_BUSPARAMS_RESP          85
 
-#define LEAFPRO_CMD_CHIP_STATE_EVENT              20
-#define LEAFPRO_CMD_START_CHIP_REQ                26
-#define LEAFPRO_CMD_START_CHIP_RESP               27
+#define LEAFPRO_CMD_CHIP_STATE_EVENT            20
+#define LEAFPRO_CMD_START_CHIP_REQ              26
+#define LEAFPRO_CMD_START_CHIP_RESP             27
 
+#define LEAFPRO_CMD_LOG_MESSAGE                 106
 
 #define LEAFPRO_CMD_MAP_CHANNEL_REQ             200
 #define LEAFPRO_CMD_MAP_CHANNEL_RESP            201
+
+
+# define LEAFPRO_MSG_FLAG_ERROR_FRAME   0x01
+# define LEAFPRO_MSG_FLAG_OVERRUN       0x02
+# define LEAFPRO_MSG_FLAG_NERR          0x04
+# define LEAFPRO_MSG_FLAG_WAKEUP        0x08
+# define LEAFPRO_MSG_FLAG_REMOTE_FRAME  0x10
+# define LEAFPRO_MSG_FLAG_EXTENDED      0x20
+# define LEAFPRO_MSG_FLAG_TXACK         0x40
+# define LEAFPRO_MSG_FLAG_TXRQ          0x80
+
+# define LEAFPRO_EXT_MSG 0x80000000
 
 
 
@@ -111,6 +124,19 @@ typedef struct {
     UInt8           padding[19];
 } __attribute__ ((packed)) proCmdSetBusparamsReq_t;
 
+typedef struct {
+    proCmdHead_t    header;
+    UInt8   cmdLen;
+    UInt8   cmdNo;
+    UInt8   channel;
+    UInt8   flags;
+    UInt16  time[3];
+    UInt8   dlc;
+    UInt8   padding;
+    UInt32  canId;
+    UInt8   data[8];
+} __attribute__ ((packed)) proCmdLogMessage_t;
+
 typedef union {
     proCmdHead_t proCmdHead;
     proCmdRaw_t proCmdRaw;
@@ -118,6 +144,7 @@ typedef union {
     proCmdMapChannelReq_t proCmdMapChannelReq;
     proCmdMapChannelResp_t proCmdMapChannelResp;
     proCmdSetBusparamsReq_t proCmdSetBusparamsReq;
+    proCmdLogMessage_t proCmdLogMessage;
 } __attribute__ ((packed)) proCommand_t;
 
 
