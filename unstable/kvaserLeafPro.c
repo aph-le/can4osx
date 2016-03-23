@@ -105,6 +105,7 @@ Can4osxHwFunctions leafProHardwareFunctions = {
     .can4osxhwCanCloseRef = NULL,
 };
 
+
 static canStatus LeafProInitHardware(const CanHandle hnd)
 {
     Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
@@ -129,6 +130,7 @@ static canStatus LeafProInitHardware(const CanHandle hnd)
     
     return canOK;
 }
+
 
 static CanHandle LeafProCanOpenChannel(int channel, int flags)
 {
@@ -212,6 +214,7 @@ static canStatus LeafProCanStartChip(CanHandle hdl)
     return retVal;
 }
 
+/********************************************************************/
 static canStatus LeafProCanRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt16 *flag, UInt32 *time)
 {
     Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
@@ -345,9 +348,60 @@ static void LeafProDecodeCommand(Can4osxUsbDeviceHandleEntry *pSelf, proCommand_
 {
     CAN4OSX_DEBUG_PRINT("Pro-Decode command %d\n",(UInt8)pCmd->proCmdHead.cmdNo);
     LeafProPrivateData *pPriv = (LeafProPrivateData *)pSelf->privateData;
-
     
     switch (pCmd->proCmdHead.cmdNo) {
+        case LEAFPRO_CMD_LOG_MESSAGE:
+            {
+            CanMsg canMsg;
+            
+                if ( pCmd->proCmdLogMessage.canId & LEAFPRO_EXT_MSG ) {
+                    canMsg.canId = pCmd->proCmdLogMessage.canId & ~LEAFPRO_EXT_MSG;
+                    canMsg.canFlags = canMSG_EXT;
+                }  else {
+                    canMsg.canId = pCmd->proCmdLogMessage.canId;
+                    canMsg.canFlags = canMSG_STD;
+                }
+            
+                if (pCmd->proCmdLogMessage.flags & LEAFPRO_MSG_FLAG_OVERRUN) {
+                    //FIXME
+                    //event.eventTagData.canMsg.canFlags |= canMSGERR_HW_OVERRUN | canMSGERR_SW_OVERRUN;
+                }
+                if (pCmd->proCmdLogMessage.flags & LEAFPRO_MSG_FLAG_REMOTE_FRAME) {
+                    canMsg.canFlags |= canMSG_RTR;
+                }
+                if (pCmd->proCmdLogMessage.flags & LEAFPRO_MSG_FLAG_ERROR_FRAME) {
+                    canMsg.canFlags |= canMSG_ERROR_FRAME;
+                }
+                if (pCmd->proCmdLogMessage.flags & LEAFPRO_MSG_FLAG_TXACK) {
+                    canMsg.canFlags |= canMSG_TXACK;
+                }
+                if (pCmd->proCmdLogMessage.flags & LEAFPRO_MSG_FLAG_TXRQ) {
+                    canMsg.canFlags |= canMSG_TXRQ;
+                }
+            
+            
+                if ( pCmd->proCmdLogMessage.dlc > 8 ) {
+                    pCmd->proCmdLogMessage.dlc = 8;
+                }
+            
+                canMsg.canDlc = pCmd->proCmdLogMessage.dlc;
+            
+                memcpy(canMsg.canData, pCmd->proCmdLogMessage.data, pCmd->proCmdLogMessage.dlc);
+            
+                // FIXME canMsg.canTimestamp = LeafCalculateTimeStamp(pCmd->proCmdLogMessage.time, 24) * 10;
+            
+            
+                CAN4OSX_WriteCanEventBuffer(pSelf->canEventMsgBuff,canMsg);
+                if (pSelf->canNotification.notifacionCenter) {
+                    CFNotificationCenterPostNotification (pSelf->canNotification.notifacionCenter,
+                                                      pSelf->canNotification.notificationString, NULL, NULL, true);
+                }
+            
+            
+                CAN4OSX_DEBUG_PRINT("PRO_CMD_LOG_MESSAGE Channel: Id: %X Flags: %X\n", pCmd->proCmdLogMessage.canId, pCmd->proCmdLogMessage.flags);
+            
+            }
+            break;
         case LEAFPRO_CMD_MAP_CHANNEL_RESP:
             CAN4OSX_DEBUG_PRINT("LEAFPRO_CMD_MAP_CHANNEL_RESP chan %X\n",pCmd->proCmdHead.transitionId);
             CAN4OSX_DEBUG_PRINT("LEAFPRO_CMD_MAP_CHANNEL_RESP adr %X\n",pCmd->proCmdHead.address);
