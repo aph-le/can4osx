@@ -150,9 +150,19 @@ typedef union {
 } __attribute__ ((packed)) proCommand_t;
 
 
+//holds the actual cmd buffer
+typedef struct {
+    int bufferSize;
+    int bufferFirst;
+    int bufferCount;
+    dispatch_queue_t bufferGDCqueueRef;
+    proCommand_t *commandRef;
+} LeafProCommandMsgBuf_t;
+
 
 
 typedef struct {
+    LeafProCommandMsgBuf_t *cmdBufferRef;
     dispatch_semaphore_t semaTimeout;
     UInt8 timeOutReason;
     UInt8 address;

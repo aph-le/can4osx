@@ -1,9 +1,8 @@
 //
 //  kvaserLeafPro.c
-//  can4osx_cmd
 //
 //
-// Copyright (c) 2016 Alexander Philipp. All rights reserved.
+// Copyright (c) 2014 - 2016 Alexander Philipp. All rights reserved.
 //
 //
 // License: GPLv2
@@ -22,24 +21,26 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+// Foundation, Inc., 51 Franklin Street,
+// Fifth Floor, Boston, MA  02110-1301, USA.
 //
 // =============================================================================
 //
-// Disclaimer:     IMPORTANT: THE SOFTWARE IS PROVIDED ON AN "AS IS" BASIS. THE AUTHOR MAKES NO
-// WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE IMPLIED
-// WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE, REGARDING THE SOFTWARE OR ITS USE AND OPERATION ALONE OR IN
-// COMBINATION WITH YOUR PRODUCTS.
+// Disclaimer:     IMPORTANT: THE SOFTWARE IS PROVIDED ON AN "AS IS" BASIS. THE
+// AUTHOR MAKES NO WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION
+// THE IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS FOR A
+// PARTICULAR PURPOSE, REGARDING THE SOFTWARE OR ITS USE AND OPERATION ALONE OR
+// IN COMBINATION WITH YOUR PRODUCTS.
 //
-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, INDIRECT, INCIDENTAL OR
-// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
-//                       GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-// ARISING IN ANY WAY OUT OF THE USE, REPRODUCTION, MODIFICATION AND/OR DISTRIBUTION
-// OF SOFTWARE, HOWEVER CAUSED AND WHETHER UNDER THEORY OF CONTRACT, TORT
-// (INCLUDING NEGLIGENCE), STRICT LIABILITY OR OTHERWISE, EVEN IF THE AUTHOR HAS
-// BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, INDIRECT, INCIDENTAL
+// OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) ARISING IN ANY WAY OUT OF THE USE, REPRODUCTION, MODIFICATION
+// AND/OR DISTRIBUTION OF SOFTWARE, HOWEVER CAUSED AND WHETHER UNDER THEORY OF
+// CONTRACT, TORT (INCLUDING NEGLIGENCE), STRICT LIABILITY OR OTHERWISE, EVEN IF
+// THE AUTHOR HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // =============================================================================
+//
 //
 
 
@@ -96,6 +97,9 @@ static IOReturn LeafProWriteCommandWait(Can4osxUsbDeviceHandleEntry *pSelf,
                                         proCommand_t cmd,
                                         UInt8 reason);
 
+static LeafProCommandMsgBuf_t* LeafProCreateCommandBuffer(UInt32 bufferSize);
+static void LeafProReleaseCommandBuffer(LeafProCommandMsgBuf_t* pBufferRef);
+
 
 static void LeafProReadFromBulkInPipe(Can4osxUsbDeviceHandleEntry *self);
 static void LeafProBulkReadCompletion(void *refCon,
@@ -126,9 +130,15 @@ static canStatus LeafProInitHardware(const CanHandle hnd)
     pSelf->privateData = calloc(1,sizeof(LeafProPrivateData));
 
     if ( pSelf->privateData != NULL ) {
-        LeafProPrivateData *priv = (LeafProPrivateData *)pSelf->privateData;
-                
-        priv->semaTimeout = dispatch_semaphore_create(0);
+        LeafProPrivateData *pPriv = (LeafProPrivateData *)pSelf->privateData;
+        
+        pPriv->cmdBufferRef = LeafProCreateCommandBuffer(1000);
+        if ( pPriv->cmdBufferRef == NULL ) {
+            free(pPriv);
+            return canERR_NOMEM;
+        }
+
+        pPriv->semaTimeout = dispatch_semaphore_create(0);
         
     } else {
         return canERR_NOMEM;
@@ -469,9 +479,54 @@ static void LeafProMapChannels(
 }
 
 
+#pragma mark Command Buffer
+static LeafProCommandMsgBuf_t* LeafProCreateCommandBuffer(UInt32 bufferSize)
+{
+    LeafProCommandMsgBuf_t* pBufferRef = malloc(sizeof(LeafProCommandMsgBuf_t));
+    if ( pBufferRef == NULL ) {
+        return NULL;
+    }
+    
+    pBufferRef->bufferSize = bufferSize;
+    pBufferRef->bufferCount = 0;
+    pBufferRef->bufferFirst = 0;
+    
+    pBufferRef->commandRef = malloc(bufferSize * sizeof(proCommand_t));
+    
+    if ( pBufferRef->commandRef == NULL ) {
+        free(pBufferRef);
+        return NULL;
+    }
+    
+    pBufferRef->bufferGDCqueueRef = dispatch_queue_create(
+                                        "com.can4osx.leafprocommandqueue", 0);
+    if ( pBufferRef->bufferGDCqueueRef == NULL ) {
+        LeafProReleaseCommandBuffer(pBufferRef);
+        return NULL;
+    }
+    
+    return pBufferRef;
+}
+
+
+static void LeafProReleaseCommandBuffer( LeafProCommandMsgBuf_t* pBufferRef )
+{
+    if ( pBufferRef != NULL ) {
+        if (pBufferRef->bufferGDCqueueRef != NULL) {
+            dispatch_release(pBufferRef->bufferGDCqueueRef);
+        }
+        free(pBufferRef->commandRef);
+        free(pBufferRef);
+    }
+}
+
 
 #pragma mark USB-Stuff
-
+/******************************************************************************/
+/******************************************************************************/
+/**************************** USB Low Level Stuff *****************************/
+/******************************************************************************/
+/******************************************************************************/
 static IOReturn LeafProWriteCommandWait(
     Can4osxUsbDeviceHandleEntry *pSelf,
     proCommand_t cmd,
