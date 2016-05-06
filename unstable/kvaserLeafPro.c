@@ -137,8 +137,8 @@ static canStatus LeafProInitHardware(
         const CanHandle hnd
         )
 {
-    Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
-    pSelf->privateData = calloc(1,sizeof(LeafProPrivateData_t));
+Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
+pSelf->privateData = calloc(1,sizeof(LeafProPrivateData_t));
 
     if ( pSelf->privateData != NULL ) {
         LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
@@ -172,7 +172,7 @@ static CanHandle LeafProCanOpenChannel(
         int flags
         )
 {
-    Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[channel];
+Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[channel];
 
     // Set up channels
     LeafProMapChannels(pSelf);
@@ -249,10 +249,10 @@ static canStatus LeafProCanStartChip(
         CanHandle hdl
         )
 {
-    int retVal = 0;
-    proCommand_t        cmd;
-    Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hdl];
-    LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
+int retVal = 0;
+proCommand_t        cmd;
+Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hdl];
+LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
     
     CAN4OSX_DEBUG_PRINT("CAN BusOn Command %d\n", hdl);
     
@@ -274,7 +274,7 @@ static canStatus LeafProCanRead (
         UInt32  *time
         )
 {
-    Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
+Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
     
     if ( pSelf->privateData != NULL ) {
         
@@ -310,7 +310,7 @@ static canStatus LeafProCanWrite(
         UInt16 flag
         )
 {
-    Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
+Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
     
     if ( pSelf->privateData != NULL ) {
         LeafProPrivateData_t *pPriv = (LeafProPrivateData_t*)pSelf->privateData;
@@ -451,9 +451,10 @@ static void LeafProDecodeCommand(
         proCommand_t *pCmd
         )
 {
-    CAN4OSX_DEBUG_PRINT("Pro-Decode command %d\n",(UInt8)pCmd->proCmdHead.cmdNo);
-    LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
-    
+LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
+
+    CAN4OSX_DEBUG_PRINT("Pro-Decode cmd %d\n",(UInt8)pCmd->proCmdHead.cmdNo);
+
     switch (pCmd->proCmdHead.cmdNo) {
         case LEAFPRO_CMD_LOG_MESSAGE:
             {
@@ -535,7 +536,7 @@ static void LeafProMapChannels(
         *pSelf
         )
 {
-    proCommand_t cmd;
+proCommand_t cmd;
     
     cmd.proCmdHead.cmdNo = LEAFPRO_CMD_MAP_CHANNEL_REQ;
     cmd.proCmdHead.transitionId = 0x40;
@@ -555,7 +556,8 @@ static LeafProCommandMsgBuf_t* LeafProCreateCommandBuffer(
         UInt32 bufferSize
         )
 {
-    LeafProCommandMsgBuf_t* pBufferRef = malloc(sizeof(LeafProCommandMsgBuf_t));
+LeafProCommandMsgBuf_t* pBufferRef = malloc(sizeof(LeafProCommandMsgBuf_t));
+
     if ( pBufferRef == NULL ) {
         return NULL;
     }
@@ -601,7 +603,7 @@ static UInt8 LeafProWriteCommandBuffer(
         proCommand_t newCommand
         )
 {
-    __block UInt8 retval = 1;
+__block UInt8 retval = 1;
     
     dispatch_sync(pBufferRef->bufferGDCqueueRef, ^{
         if (LeafProTestFullCommandBuffer(pBufferRef)) {
@@ -622,7 +624,7 @@ static UInt8 LeafReadCommandBuffer(
         proCommand_t* pReadCommand
         )
 {
-    __block UInt8 retval = 1;
+__block UInt8 retval = 1;
     
     dispatch_sync(pBufferRef->bufferGDCqueueRef, ^{
         if (LeafProTestEmptyCommandBuffer(pBufferRef)) {
@@ -677,8 +679,8 @@ static void LeafProBulkWriteCompletion(
         void *arg0
         )
 {
-    Can4osxUsbDeviceHandleEntry *self = (Can4osxUsbDeviceHandleEntry *)refCon;
-    IOUSBInterfaceInterface **interface = self->can4osxInterfaceInterface;
+Can4osxUsbDeviceHandleEntry *self = (Can4osxUsbDeviceHandleEntry *)refCon;
+IOUSBInterfaceInterface **interface = self->can4osxInterfaceInterface;
     
     UInt32 numBytesWritten = (UInt32) arg0;
     
@@ -705,9 +707,9 @@ static IOReturn LeafProWriteBulkPipe(
         Can4osxUsbDeviceHandleEntry *pSelf
         )
 {
-    IOReturn retval = kIOReturnSuccess;
-    IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
-    LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
+IOReturn retval = kIOReturnSuccess;
+IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
+LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
     
     if ( pSelf->endpoitBulkOutBusy == FALSE ) {
         pSelf->endpoitBulkOutBusy = TRUE;
@@ -743,7 +745,7 @@ static UInt16 LeafProFillBulkPipeBuffer(
         UInt16 maxPipeSize
         )
 {
-    UInt16 fillState = 0;
+UInt16 fillState = 0;
     
     while ( fillState < maxPipeSize ) {
         proCommand_t cmd;
@@ -774,9 +776,9 @@ static IOReturn LeafProWriteCommandWait(
         UInt8 reason
         )
 {
-    IOReturn retVal = kIOReturnSuccess;
-    IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
-    LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
+IOReturn retVal = kIOReturnSuccess;
+IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
+LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
     
     if( pSelf->endpoitBulkOutBusy == FALSE ) {
         
@@ -817,10 +819,10 @@ static void LeafProBulkReadCompletion(
         void *arg0
         )
 {
-    Can4osxUsbDeviceHandleEntry *pSelf = (Can4osxUsbDeviceHandleEntry *)refCon;
-    LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
-    IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
-    UInt32 numBytesRead = (UInt32) arg0;
+Can4osxUsbDeviceHandleEntry *pSelf = (Can4osxUsbDeviceHandleEntry *)refCon;
+LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
+IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
+UInt32 numBytesRead = (UInt32) arg0;
     
     CAN4OSX_DEBUG_PRINT("Asynchronous bulk read complete (%ld)\n",
                         (long)numBytesRead);
