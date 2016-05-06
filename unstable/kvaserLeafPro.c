@@ -598,6 +598,7 @@ static UInt8 LeafProWriteCommandBuffer(
     return retval;
 }
 
+
 static UInt8 LeafReadCommandBuffer(
         LeafProCommandMsgBuf_t* pBufferRef,
         proCommand_t* pReadCommand
@@ -621,19 +622,21 @@ static UInt8 LeafReadCommandBuffer(
 }
 
 
-
 static UInt8 LeafProTestFullCommandBuffer(
-        LeafProCommandMsgBuf_t* bufferRef
+        LeafProCommandMsgBuf_t* pBufferRef
         )
 {
-    if (bufferRef->bufferCount == bufferRef->bufferSize) {
+    if (pBufferRef->bufferCount == pBufferRef->bufferSize) {
         return 1;
     } else {
         return 0;
     }
 }
 
-static UInt8 LeafProTestEmptyCommandBuffer(LeafProCommandMsgBuf_t* pBufferRef)
+
+static UInt8 LeafProTestEmptyCommandBuffer(
+        LeafProCommandMsgBuf_t* pBufferRef
+        )
 {
     if ( pBufferRef->bufferCount == 0 ) {
         return 1;
@@ -641,9 +644,6 @@ static UInt8 LeafProTestEmptyCommandBuffer(LeafProCommandMsgBuf_t* pBufferRef)
         return 0;
     }
 }
-
-
-
 
 
 #pragma mark USB-Stuff
