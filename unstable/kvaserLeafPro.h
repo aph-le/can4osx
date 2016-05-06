@@ -46,14 +46,6 @@
 #ifndef can4osx_logExample_kvaserLeafPro_h
 #define can4osx_logExample_kvaserLeafPro_h
 
-
-// Info
-/*
- setSeq setz letzten 8 bit von transId
- 
- 
- */
-
 Can4osxHwFunctions leafProHardwareFunctions;
 
 #define LEAFPRO_CMD_SET_BUSPARAMS_REQ           16
@@ -63,8 +55,8 @@ Can4osxHwFunctions leafProHardwareFunctions;
 #define LEAFPRO_CMD_START_CHIP_REQ              26
 #define LEAFPRO_CMD_START_CHIP_RESP             27
 
-#define LEAFPRO_CMD_LOG_MESSAGE                 106
 #define LEAFPRO_CMD_TX_CAN_MESSAGE              33
+#define LEAFPRO_CMD_LOG_MESSAGE                 106
 
 #define LEAFPRO_CMD_MAP_CHANNEL_REQ             200
 #define LEAFPRO_CMD_MAP_CHANNEL_RESP            201

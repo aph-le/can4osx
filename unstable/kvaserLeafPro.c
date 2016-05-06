@@ -314,7 +314,7 @@ static canStatus LeafProCanWrite(const CanHandle hnd,UInt32 id, void *msg, UInt1
         cmd.proCmdTxMessage.flags = 0;
         // RTR Frame
         if ( flag & canMSG_RTR ) {
-            //cmd.txCanMessage.flags |= LEAF_MSG_FLAG_REMOTE_FRAME;
+            cmd.proCmdTxMessage.flags |= LEAFPRO_MSG_FLAG_REMOTE_FRAME;
         }
         
         cmd.proCmdHead.cmdNo = LEAFPRO_CMD_TX_CAN_MESSAGE;
