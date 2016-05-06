@@ -671,7 +671,11 @@ static UInt8 LeafProTestEmptyCommandBuffer(
 /******************************************************************************/
 /******************************************************************************/
 
-static void LeafProBulkWriteCompletion(void *refCon, IOReturn result, void *arg0)
+static void LeafProBulkWriteCompletion(
+        void *refCon,
+        IOReturn result,
+        void *arg0
+        )
 {
     Can4osxUsbDeviceHandleEntry *self = (Can4osxUsbDeviceHandleEntry *)refCon;
     IOUSBInterfaceInterface **interface = self->can4osxInterfaceInterface;
@@ -697,7 +701,9 @@ static void LeafProBulkWriteCompletion(void *refCon, IOReturn result, void *arg0
     
 }
 
-static IOReturn LeafProWriteBulkPipe(Can4osxUsbDeviceHandleEntry *pSelf)
+static IOReturn LeafProWriteBulkPipe(
+        Can4osxUsbDeviceHandleEntry *pSelf
+        )
 {
     IOReturn retval = kIOReturnSuccess;
     IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
@@ -731,7 +737,11 @@ static IOReturn LeafProWriteBulkPipe(Can4osxUsbDeviceHandleEntry *pSelf)
 }
 
 
-static UInt16 LeafProFillBulkPipeBuffer(LeafProCommandMsgBuf_t* bufferRef, UInt8 *pPipe, UInt16 maxPipeSize)
+static UInt16 LeafProFillBulkPipeBuffer(
+        LeafProCommandMsgBuf_t* bufferRef,
+        UInt8 *pPipe,
+        UInt16 maxPipeSize
+        )
 {
     UInt16 fillState = 0;
     
@@ -759,10 +769,10 @@ static UInt16 LeafProFillBulkPipeBuffer(LeafProCommandMsgBuf_t* bufferRef, UInt8
 
 
 static IOReturn LeafProWriteCommandWait(
-    Can4osxUsbDeviceHandleEntry *pSelf,
-    proCommand_t cmd,
-    UInt8 reason
-    )
+        Can4osxUsbDeviceHandleEntry *pSelf,
+        proCommand_t cmd,
+        UInt8 reason
+        )
 {
     IOReturn retVal = kIOReturnSuccess;
     IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
@@ -802,10 +812,10 @@ static IOReturn LeafProWriteCommandWait(
 
 
 static void LeafProBulkReadCompletion(
-    void *refCon,
-    IOReturn result,
-    void *arg0
-    )
+        void *refCon,
+        IOReturn result,
+        void *arg0
+        )
 {
     Can4osxUsbDeviceHandleEntry *pSelf = (Can4osxUsbDeviceHandleEntry *)refCon;
     LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
@@ -857,7 +867,9 @@ static void LeafProBulkReadCompletion(
     LeafProReadFromBulkInPipe(pSelf);
 }
 
-static void LeafProReadFromBulkInPipe(Can4osxUsbDeviceHandleEntry *pSelf)
+static void LeafProReadFromBulkInPipe(
+        Can4osxUsbDeviceHandleEntry *pSelf
+        )
 {
     IOReturn ret = (*(pSelf->can4osxInterfaceInterface))->ReadPipeAsync(pSelf->can4osxInterfaceInterface, pSelf->endpointNumberBulkIn, pSelf->endpointBufferBulkInRef, pSelf->endpointMaxSizeBulkIn, LeafProBulkReadCompletion, (void*)pSelf);
     
