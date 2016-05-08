@@ -141,7 +141,7 @@ Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
 pSelf->privateData = calloc(1,sizeof(LeafProPrivateData_t));
 
     if ( pSelf->privateData != NULL ) {
-        LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
+    LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
         
         pPriv->cmdBufferRef = LeafProCreateCommandBuffer(1000);
         if ( pPriv->cmdBufferRef == NULL ) {
@@ -196,8 +196,8 @@ proCommand_t   cmd;
 UInt32         tmp, PScl;
 int            retVal;
     
-    Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
-    LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
+Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
+LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
     
     CAN4OSX_DEBUG_PRINT("leaf pro: _set_busparam\n");
     
