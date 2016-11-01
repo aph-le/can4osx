@@ -78,7 +78,7 @@ CanEventMsgBuf* CAN4OSX_CreateCanEventBuffer( UInt32 bufferSize )
 	}
     
     bufferRef->bufferGDCqueueRef = dispatch_queue_create("com.can4osx.caneventqueue", 0);
-	if ( bufferRef->bufferGDCqueueRef == NULL ) {
+    if ( bufferRef->bufferGDCqueueRef == NULL ) {
 		CAN4OSX_ReleaseCanEventBuffer(bufferRef);
 		return NULL;
 	}
