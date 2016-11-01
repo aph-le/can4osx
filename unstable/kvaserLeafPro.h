@@ -61,6 +61,8 @@ Can4osxHwFunctions leafProHardwareFunctions;
 #define LEAFPRO_CMD_MAP_CHANNEL_REQ             200
 #define LEAFPRO_CMD_MAP_CHANNEL_RESP            201
 
+#define LEAFPRO_CMD_CAN_FD                      255
+
 
 # define LEAFPRO_MSG_FLAG_ERROR_FRAME   0x01
 # define LEAFPRO_MSG_FLAG_OVERRUN       0x02
@@ -143,6 +145,41 @@ typedef struct {
     UInt8   padding[11];
 } __attribute__ ((packed)) proCmdTxMessage_t;
 
+
+/* CAN FD */
+typedef struct {
+    proCmdHead_t    header;
+    UInt16          len;
+    UInt8           cmd;
+    UInt8           padding;
+} __attribute__ ((packed)) proCmdFdHead_t;
+
+typedef struct {
+    proCmdFdHead_t  fdHeader;
+    UInt32          flags;
+    UInt32          canId;
+    UInt32          canId2;
+    UInt32          control;
+    UInt64          timestamp;
+    UInt8           data[64];
+} __attribute__ ((packed)) proCmdFdRxMessage_t;
+
+typedef struct {
+    proCmdFdHead_t  fdHeader;
+    UInt32          flags;
+    UInt32          canId;
+    UInt32          canId2;
+    UInt32          control;
+    UInt8           databytes;
+    UInt8           dlc;
+    UInt8           reserved4[6];
+    UInt8           data[64];
+} __attribute__ ((packed)) proCmdFdTxMessage_t;
+
+
+
+
+
 typedef union {
     proCmdHead_t proCmdHead;
     proCmdRaw_t proCmdRaw;
@@ -172,6 +209,5 @@ typedef struct {
     UInt8 timeOutReason;
     UInt8 address;
 } LeafProPrivateData_t;
-
 
 #endif
