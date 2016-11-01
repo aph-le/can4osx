@@ -218,7 +218,7 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
     
     PScl = 16000000UL / tmp;
     
-    if (PScl <= 1 || PScl > 256) {
+    if (PScl </*=*/ 1 || PScl > 256) {
         CAN4OSX_DEBUG_PRINT("hwif_set_chip_param() prescaler wrong (%d)\n",
                 PScl & 1 /* even */);
         return VCAN_STAT_BAD_PARAMETER;
@@ -308,7 +308,7 @@ static canStatus LeafProCanWrite(
         void *msg,
         UInt16 dlc,
         UInt16 flag
-        )
+    )
 {
 Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
     
@@ -352,12 +352,14 @@ Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
 /******************************************************************************/
 // Translate from baud macro to bus params
 /******************************************************************************/
-static canStatus LeafProCanTranslateBaud (SInt32 *const freq,
-                                unsigned int *const tseg1,
-                                unsigned int *const tseg2,
-                                unsigned int *const sjw,
-                                unsigned int *const nosamp,
-                                unsigned int *const syncMode)
+static canStatus LeafProCanTranslateBaud (
+        SInt32 *const freq,
+        unsigned int *const tseg1,
+        unsigned int *const tseg2,
+        unsigned int *const sjw,
+        unsigned int *const nosamp,
+        unsigned int *const syncMode
+    )
 {
     switch (*freq) {
         case canBITRATE_1M:
@@ -449,7 +451,7 @@ static canStatus LeafProCanTranslateBaud (SInt32 *const freq,
 static void LeafProDecodeCommand(
         Can4osxUsbDeviceHandleEntry *pSelf,
         proCommand_t *pCmd
-        )
+    )
 {
 LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
 
@@ -534,7 +536,7 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
 static void LeafProMapChannels(
         Can4osxUsbDeviceHandleEntry
         *pSelf
-        )
+    )
 {
 proCommand_t cmd;
     
@@ -554,7 +556,7 @@ proCommand_t cmd;
 #pragma mark Command Buffer
 static LeafProCommandMsgBuf_t* LeafProCreateCommandBuffer(
         UInt32 bufferSize
-        )
+    )
 {
 LeafProCommandMsgBuf_t* pBufferRef = malloc(sizeof(LeafProCommandMsgBuf_t));
 
@@ -586,7 +588,7 @@ LeafProCommandMsgBuf_t* pBufferRef = malloc(sizeof(LeafProCommandMsgBuf_t));
 
 static void LeafProReleaseCommandBuffer(
         LeafProCommandMsgBuf_t* pBufferRef
-        )
+    )
 {
     if ( pBufferRef != NULL ) {
         if (pBufferRef->bufferGDCqueueRef != NULL) {
@@ -601,7 +603,7 @@ static void LeafProReleaseCommandBuffer(
 static UInt8 LeafProWriteCommandBuffer(
         LeafProCommandMsgBuf_t* pBufferRef,
         proCommand_t newCommand
-        )
+    )
 {
 __block UInt8 retval = 1;
     
@@ -622,7 +624,7 @@ __block UInt8 retval = 1;
 static UInt8 LeafReadCommandBuffer(
         LeafProCommandMsgBuf_t* pBufferRef,
         proCommand_t* pReadCommand
-        )
+    )
 {
 __block UInt8 retval = 1;
     
@@ -656,7 +658,7 @@ static UInt8 LeafProTestFullCommandBuffer(
 
 static UInt8 LeafProTestEmptyCommandBuffer(
         LeafProCommandMsgBuf_t* pBufferRef
-        )
+    )
 {
     if ( pBufferRef->bufferCount == 0 ) {
         return 1;
@@ -677,7 +679,7 @@ static void LeafProBulkWriteCompletion(
         void *refCon,
         IOReturn result,
         void *arg0
-        )
+    )
 {
 Can4osxUsbDeviceHandleEntry *self = (Can4osxUsbDeviceHandleEntry *)refCon;
 IOUSBInterfaceInterface **interface = self->can4osxInterfaceInterface;
@@ -705,7 +707,7 @@ IOUSBInterfaceInterface **interface = self->can4osxInterfaceInterface;
 
 static IOReturn LeafProWriteBulkPipe(
         Can4osxUsbDeviceHandleEntry *pSelf
-        )
+    )
 {
 IOReturn retval = kIOReturnSuccess;
 IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
@@ -844,7 +846,8 @@ UInt32 numBytesRead = (UInt32) arg0;
             
             pCmd = (proCommand_t *)&(pSelf->endpointBufferBulkInRef[count]);
             switch (pCmd->proCmdHead.cmdNo) {
-                case 255:
+                case LEAFPRO_CMD_CAN_FD:
+                    count += ((proCmdFdHead_t *)(pCmd))->len;
                     // Special Command
                     break;
                 case 0:
