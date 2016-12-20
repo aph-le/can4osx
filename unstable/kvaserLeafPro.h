@@ -48,21 +48,6 @@
 
 Can4osxHwFunctions leafProHardwareFunctions;
 
-#define LEAFPRO_CMD_SET_BUSPARAMS_REQ           16
-#define LEAFPRO_CMD_SET_BUSPARAMS_RESP          85
-
-#define LEAFPRO_CMD_CHIP_STATE_EVENT            20
-#define LEAFPRO_CMD_START_CHIP_REQ              26
-#define LEAFPRO_CMD_START_CHIP_RESP             27
-
-#define LEAFPRO_CMD_TX_CAN_MESSAGE              33
-#define LEAFPRO_CMD_LOG_MESSAGE                 106
-
-#define LEAFPRO_CMD_MAP_CHANNEL_REQ             200
-#define LEAFPRO_CMD_MAP_CHANNEL_RESP            201
-
-#define LEAFPRO_CMD_CAN_FD                      255
-
 
 # define LEAFPRO_MSG_FLAG_ERROR_FRAME   0x01
 # define LEAFPRO_MSG_FLAG_OVERRUN       0x02
@@ -117,8 +102,15 @@ typedef struct {
     UInt8           tseg2;
     UInt8           sjw;
     UInt8           noSamp;
-    UInt8           channel;
-    UInt8           padding[19];
+    UInt8           reserved;
+    UInt8           padding[3];
+    UInt32          bitRateFd;
+    UInt8           tseg1Fd;
+    UInt8           tseg2Fd;
+    UInt8           sjwFd;
+    UInt8           noSampFd;
+    UInt8           open_as_canfd;
+    UInt8           padding2[7];
 } __attribute__ ((packed)) proCmdSetBusparamsReq_t;
 
 typedef struct {
@@ -131,7 +123,7 @@ typedef struct {
     UInt8   dlc;
     UInt8   padding;
     UInt32  canId;
-    UInt8   data[8];
+    UInt8   data[12];
 } __attribute__ ((packed)) proCmdLogMessage_t;
 
 typedef struct {
@@ -176,19 +168,28 @@ typedef struct {
     UInt8           data[64];
 } __attribute__ ((packed)) proCmdFdTxMessage_t;
 
+typedef struct {
+    UInt8           useExt;
+    UInt8           reserved[27];
+} __attribute__ ((packed)) proCmdGetSoftwareDetailsReq_t;
 
 
+typedef struct  {
+    UInt8   data[32];
+} LeafProRaw_t;
 
 
 typedef union {
-    proCmdHead_t proCmdHead;
-    proCmdRaw_t proCmdRaw;
-    proCmdReadClockReq_t proCmdReadClockReq;
-    proCmdMapChannelReq_t proCmdMapChannelReq;
-    proCmdMapChannelResp_t proCmdMapChannelResp;
-    proCmdSetBusparamsReq_t proCmdSetBusparamsReq;
-    proCmdLogMessage_t proCmdLogMessage;
-    proCmdTxMessage_t proCmdTxMessage;
+    LeafProRaw_t                    raw;
+    proCmdHead_t                    proCmdHead;
+    proCmdRaw_t                     proCmdRaw;
+    proCmdReadClockReq_t            proCmdReadClockReq;
+    proCmdMapChannelReq_t           proCmdMapChannelReq;
+    proCmdMapChannelResp_t          proCmdMapChannelResp;
+    proCmdSetBusparamsReq_t         proCmdSetBusparamsReq;
+    proCmdLogMessage_t              proCmdLogMessage;
+    proCmdTxMessage_t               proCmdTxMessage;
+    proCmdGetSoftwareDetailsReq_t   proCmdGetSoftwareDetailsReq;
 } __attribute__ ((packed)) proCommand_t;
 
 
@@ -202,12 +203,12 @@ typedef struct {
 } LeafProCommandMsgBuf_t;
 
 
-
 typedef struct {
     LeafProCommandMsgBuf_t *cmdBufferRef;
     dispatch_semaphore_t semaTimeout;
     UInt8 timeOutReason;
     UInt8 address;
+    UInt8 canFd;
 } LeafProPrivateData_t;
 
 #endif
