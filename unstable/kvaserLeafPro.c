@@ -60,6 +60,43 @@
 
 #include "kvaserLeafPro.h"
 
+#define LEAFPRO_CMD_SET_BUSPARAMS_REQ           16
+#define LEAFPRO_CMD_SET_BUSPARAMS_RESP          85
+
+#define LEAFPRO_CMD_SET_DRIVERMODE_REQ          21
+
+#define LEAFPRO_CMD_SET_BUSPARAMS_FD_REQ        69
+#define LEAFPRO_CMD_SET_BUSPARAMS_FD_RESP       70
+
+#define LEAFPRO_CMD_CHIP_STATE_EVENT            20
+#define LEAFPRO_CMD_START_CHIP_REQ              26
+#define LEAFPRO_CMD_START_CHIP_RESP             27
+
+#define LEAFPRO_CMD_TX_CAN_MESSAGE              33
+#define LEAFPRO_CMD_GET_CARD_INFO_REQ           34
+#define LEAFPRO_CMD_GET_CARD_INFO_RESP          35
+
+#define LEAFPRO_CMD_GET_SOFTWARE_INFO_REQ       38
+#define LEAFPRO_CMD_GET_SOFTWARE_INFO_RESP      39
+
+
+
+#define LEAFPRO_CMD_LOG_MESSAGE                 106
+
+#define LEAFPRO_CMD_MAP_CHANNEL_REQ             200
+#define LEAFPRO_CMD_MAP_CHANNEL_RESP            201
+#define LEAFPRO_CMD_GET_SOFTWARE_DETAILS_REQ    202
+#define LEAFPRO_CMD_GET_SOFTWARE_DETAILS_RESP   203
+
+
+#define LEAFPRO_CMD_CAN_FD                      255
+
+
+
+
+#define LEAFPRO_HE_ILLEGAL      0x3eu
+#define LEAFPRO_HE_ROUTER       0x00u
+
 #define LEAFPRO_COMMAND_SIZE 32
 # define LEAFPRO_TIMEOUT_ONE_MS 1000000
 # define LEAFPRO_TIMEOUT_TEN_MS 10*LEAFPRO_TIMEOUT_ONE_MS
@@ -70,6 +107,8 @@ static void LeafProDecodeCommand(Can4osxUsbDeviceHandleEntry *pSelf,
                                  proCommand_t *pCmd);
 
 static void LeafProMapChannels(Can4osxUsbDeviceHandleEntry *pSelf);
+
+static void LeafProGetCardInfo(Can4osxUsbDeviceHandleEntry *pSelf);
 
 static canStatus LeafProCanSetBusParams ( const CanHandle hnd, SInt32 freq,
                                          unsigned int tseg1,
@@ -162,6 +201,12 @@ pSelf->privateData = calloc(1,sizeof(LeafProPrivateData_t));
     // Trigger next read
     LeafProReadFromBulkInPipe(pSelf);
     
+    // Set up channels
+    LeafProMapChannels(pSelf);
+    
+    // Get channel info
+    LeafProGetCardInfo(pSelf);
+    
     
     return canOK;
 }
@@ -173,9 +218,14 @@ static CanHandle LeafProCanOpenChannel(
         )
 {
 Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[channel];
-
-    // Set up channels
-    LeafProMapChannels(pSelf);
+LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
+    
+    // set CAN Mode
+    if ((flags & canOPEN_CAN_FD) ==  canOPEN_CAN_FD) {
+        pPriv->canFd = 1;
+    } else {
+        pPriv->canFd = 0;
+    }
 
     return (CanHandle)channel;
 }
@@ -227,18 +277,57 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
     
     cmd.proCmdSetBusparamsReq.header.cmdNo = LEAFPRO_CMD_SET_BUSPARAMS_REQ;
     cmd.proCmdSetBusparamsReq.header.address = pPriv->address;
-    cmd.proCmdSetBusparamsReq.header.transitionId = 1;
+    cmd.proCmdSetBusparamsReq.header.transitionId = 0x0000;
     
     cmd.proCmdSetBusparamsReq.bitRate = freq;
     cmd.proCmdSetBusparamsReq.sjw     = (UInt8)sjw;
     cmd.proCmdSetBusparamsReq.tseg1   = (UInt8)tseg1;
     cmd.proCmdSetBusparamsReq.tseg2   = (UInt8)tseg2;
-    cmd.proCmdSetBusparamsReq.channel = (UInt8)0;//vChan->channel;
     cmd.proCmdSetBusparamsReq.noSamp  = 1;
-    
     
     retVal = LeafProWriteCommandWait( pSelf, cmd,
                 LEAFPRO_CMD_SET_BUSPARAMS_RESP);
+    
+    // FIXME
+#warning remove static FD
+    pPriv->canFd = 1;
+    
+    if (pPriv->canFd) {
+        cmd.proCmdSetBusparamsReq.header.cmdNo = LEAFPRO_CMD_SET_BUSPARAMS_FD_REQ;
+        cmd.proCmdSetBusparamsReq.open_as_canfd = 1;
+        
+        
+            cmd.proCmdSetBusparamsReq.bitRate = 500000;
+    cmd.proCmdSetBusparamsReq.sjw     = (UInt8)1;
+    cmd.proCmdSetBusparamsReq.tseg1   = (UInt8)5;
+    cmd.proCmdSetBusparamsReq.tseg2   = (UInt8)2;
+    cmd.proCmdSetBusparamsReq.noSamp  = 0;
+        cmd.proCmdSetBusparamsReq.bitRateFd = 1000000L;
+        cmd.proCmdSetBusparamsReq.tseg1Fd = 15;
+        cmd.proCmdSetBusparamsReq.tseg2Fd = 4;
+        cmd.proCmdSetBusparamsReq.sjwFd = 4;
+        cmd.proCmdSetBusparamsReq.noSampFd = 0;
+            retVal = LeafProWriteCommandWait( pSelf, cmd,
+                LEAFPRO_CMD_SET_BUSPARAMS_FD_RESP);
+        
+            cmd.proCmdHead.cmdNo = 0x1e;
+        
+                retVal = LeafProWriteCommandWait( pSelf, cmd,
+                LEAFPRO_CMD_SET_BUSPARAMS_FD_RESP);
+            cmd.proCmdHead.cmdNo = 0x61;
+        
+                retVal = LeafProWriteCommandWait( pSelf, cmd,
+                LEAFPRO_CMD_SET_BUSPARAMS_FD_RESP);
+        cmd.proCmdSetBusparamsReq.header.cmdNo = LEAFPRO_CMD_SET_BUSPARAMS_FD_REQ;
+        
+                retVal = LeafProWriteCommandWait( pSelf, cmd,
+                LEAFPRO_CMD_SET_BUSPARAMS_FD_RESP);
+
+
+    } else {
+        retVal = LeafProWriteCommandWait( pSelf, cmd,
+                LEAFPRO_CMD_SET_BUSPARAMS_RESP);
+    }
     
     
     return retVal;
@@ -253,8 +342,17 @@ int retVal = 0;
 proCommand_t        cmd;
 Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hdl];
 LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
+
+    memset(&cmd, 0u, sizeof(cmd));
+    cmd.proCmdHead.cmdNo = LEAFPRO_CMD_SET_DRIVERMODE_REQ;
+    //cmd.proCmdHead.transitionId = 0xec00;
+    cmd.proCmdHead.address = pPriv->address;
+    cmd.proCmdRaw.data[0] = 0x01;
+    LeafProWriteCommandWait(pSelf, cmd, LEAFPRO_CMD_MAP_CHANNEL_RESP);
+
     
     CAN4OSX_DEBUG_PRINT("CAN BusOn Command %d\n", hdl);
+    memset(&cmd, 0u, sizeof(cmd));
     
     cmd.proCmdHead.cmdNo = LEAFPRO_CMD_START_CHIP_REQ;
     cmd.proCmdHead.address = pPriv->address;
@@ -524,6 +622,24 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
         default:
             break;
     }
+#if CAN4OSX_DEBUG
+    switch (pCmd->proCmdHead.cmdNo)  {
+        case LEAFPRO_CMD_LOG_MESSAGE:
+            CAN4OSX_DEBUG_PRINT("LEAFPRO_CMD_LOG_MESSAGE\n");
+            break;
+        case LEAFPRO_CMD_MAP_CHANNEL_RESP:
+            CAN4OSX_DEBUG_PRINT("LEAFPRO_CMD_MAP_CHANNEL_RESP\n");
+            break;
+        case LEAFPRO_CMD_GET_CARD_INFO_RESP:
+            CAN4OSX_DEBUG_PRINT("LEAFPRO_CMD_GET_CARD_INFO_RESP\n");
+            break;
+        default:
+            CAN4OSX_DEBUG_PRINT("Not implemented message\n");
+            break;
+        
+    }
+    
+#endif /* CAN4OSX_DEBUG */
 }
 
 
@@ -539,16 +655,42 @@ static void LeafProMapChannels(
     )
 {
 proCommand_t cmd;
+
+    memset(&cmd, 0, 32);
     
     cmd.proCmdHead.cmdNo = LEAFPRO_CMD_MAP_CHANNEL_REQ;
-    cmd.proCmdHead.transitionId = 0x40;
-    cmd.proCmdHead.address = 0x00;
-    
+    cmd.proCmdHead.address = LEAFPRO_HE_ROUTER;
     cmd.proCmdMapChannelReq.channel = 0;
     
     strcpy(cmd.proCmdMapChannelReq.name, "CAN");
-        
+    cmd.proCmdHead.transitionId = 0x40;
     LeafProWriteCommandWait(pSelf, cmd, LEAFPRO_CMD_MAP_CHANNEL_RESP);
+    
+    strcpy(cmd.proCmdMapChannelReq.name, "SYSDBG");
+    cmd.proCmdHead.transitionId = 0x61;
+    LeafProWriteCommandWait(pSelf, cmd, LEAFPRO_CMD_MAP_CHANNEL_RESP);
+    
+    return;
+}
+
+
+#pragma mark card info request
+static void LeafProGetCardInfo(Can4osxUsbDeviceHandleEntry *pSelf)
+{
+proCommand_t cmd;
+
+    memset(&cmd, 0u, sizeof(cmd));
+    cmd.proCmdHead.address = LEAFPRO_HE_ILLEGAL;
+
+    cmd.proCmdHead.cmdNo = LEAFPRO_CMD_GET_CARD_INFO_REQ;
+    LeafProWriteCommandWait(pSelf, cmd, LEAFPRO_CMD_GET_CARD_INFO_RESP);
+    
+    cmd.proCmdHead.cmdNo = LEAFPRO_CMD_GET_SOFTWARE_INFO_REQ;
+    cmd.proCmdGetSoftwareDetailsReq.useExt = 1u;
+    LeafProWriteCommandWait(pSelf, cmd, LEAFPRO_CMD_GET_SOFTWARE_INFO_RESP);
+    
+    cmd.proCmdHead.cmdNo = LEAFPRO_CMD_GET_SOFTWARE_DETAILS_REQ;
+    LeafProWriteCommandWait(pSelf, cmd, LEAFPRO_CMD_GET_SOFTWARE_INFO_RESP);
 
 }
 
@@ -705,6 +847,7 @@ IOUSBInterfaceInterface **interface = self->can4osxInterfaceInterface;
     
 }
 
+
 static IOReturn LeafProWriteBulkPipe(
         Can4osxUsbDeviceHandleEntry *pSelf
     )
@@ -769,7 +912,6 @@ UInt16 fillState = 0;
     
     return fillState;
 }
-
 
 
 static IOReturn LeafProWriteCommandWait(
