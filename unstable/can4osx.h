@@ -119,6 +119,8 @@
 #define canOPEN_EXCLUSIVE           0x0008
 #define canOPEN_REQUIRE_EXTENDED    0x0010
 
+# define canOPEN_CAN_FD             0x0400
+
 
 #define canCHANNELDATA_CHANNEL_CAP                1
 #define canCHANNELDATA_TRANS_CAP                  2
