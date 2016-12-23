@@ -169,10 +169,21 @@ typedef struct {
 } __attribute__ ((packed)) proCmdFdTxMessage_t;
 
 typedef struct {
+    proCmdHead_t    header;
     UInt8           useExt;
     UInt8           reserved[27];
 } __attribute__ ((packed)) proCmdGetSoftwareDetailsReq_t;
 
+
+typedef struct {
+    proCmdHead_t    header;
+    UInt32    swOptions;
+    UInt32    swVersion;
+    UInt32    swName;
+    UInt32    EAN[2];
+    UInt32    maxBitrate;
+    UInt32    padding[1];
+} __attribute__ ((packed)) proCcmdGetSoftwareDetailsResp_t;
 
 typedef struct  {
     UInt8   data[32];
@@ -190,6 +201,7 @@ typedef union {
     proCmdLogMessage_t              proCmdLogMessage;
     proCmdTxMessage_t               proCmdTxMessage;
     proCmdGetSoftwareDetailsReq_t   proCmdGetSoftwareDetailsReq;
+    proCcmdGetSoftwareDetailsResp_t proCcmdGetSoftwareDetailsResp;
 } __attribute__ ((packed)) proCommand_t;
 
 
