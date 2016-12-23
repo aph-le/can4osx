@@ -298,27 +298,27 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
         
         
             cmd.proCmdSetBusparamsReq.bitRate = 500000;
-    cmd.proCmdSetBusparamsReq.sjw     = (UInt8)1;
-    cmd.proCmdSetBusparamsReq.tseg1   = (UInt8)5;
-    cmd.proCmdSetBusparamsReq.tseg2   = (UInt8)2;
+    cmd.proCmdSetBusparamsReq.sjw     = 8;//(UInt8)1;
+    cmd.proCmdSetBusparamsReq.tseg1   = 64;//(UInt8)5;
+    cmd.proCmdSetBusparamsReq.tseg2   = 16;//(UInt8)2;
     cmd.proCmdSetBusparamsReq.noSamp  = 0;
         cmd.proCmdSetBusparamsReq.bitRateFd = 1000000L;
-        cmd.proCmdSetBusparamsReq.tseg1Fd = 15;
-        cmd.proCmdSetBusparamsReq.tseg2Fd = 4;
-        cmd.proCmdSetBusparamsReq.sjwFd = 4;
+        cmd.proCmdSetBusparamsReq.tseg1Fd = 32;//15;
+        cmd.proCmdSetBusparamsReq.tseg2Fd = 8;//4;
+        cmd.proCmdSetBusparamsReq.sjwFd = 2;//4;
         cmd.proCmdSetBusparamsReq.noSampFd = 0;
             retVal = LeafProWriteCommandWait( pSelf, cmd,
                 LEAFPRO_CMD_SET_BUSPARAMS_FD_RESP);
         
-            cmd.proCmdHead.cmdNo = 0x1e;
+           // cmd.proCmdHead.cmdNo = 0x1e;
         
                 retVal = LeafProWriteCommandWait( pSelf, cmd,
                 LEAFPRO_CMD_SET_BUSPARAMS_FD_RESP);
-            cmd.proCmdHead.cmdNo = 0x61;
+            //cmd.proCmdHead.cmdNo = 0x61;
         
                 retVal = LeafProWriteCommandWait( pSelf, cmd,
                 LEAFPRO_CMD_SET_BUSPARAMS_FD_RESP);
-        cmd.proCmdSetBusparamsReq.header.cmdNo = LEAFPRO_CMD_SET_BUSPARAMS_FD_REQ;
+        //cmd.proCmdSetBusparamsReq.header.cmdNo = LEAFPRO_CMD_SET_BUSPARAMS_FD_REQ;
         
                 retVal = LeafProWriteCommandWait( pSelf, cmd,
                 LEAFPRO_CMD_SET_BUSPARAMS_FD_RESP);
@@ -471,8 +471,8 @@ static canStatus LeafProCanTranslateBaud (
             
         case canBITRATE_500K:
             *freq     = 500000L;
-            *tseg1    = 6;
-            *tseg2    = 1;
+            *tseg1    = 12;//6;
+            *tseg2    = 3;//1;
             *sjw      = 1;
             *nosamp   = 1;
             *syncMode = 0;
@@ -616,29 +616,21 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
                                 pCmd->proCmdHead.transitionId);
             CAN4OSX_DEBUG_PRINT("LEAFPRO_CMD_MAP_CHANNEL_RESP adr %X\n",
                                 pCmd->proCmdHead.address);
-            pPriv->address = (UInt8)pCmd->proCmdMapChannelResp.heAddress;
+            if ((pCmd->proCmdHead.transitionId & 0xff) == 0x40u)  {
+                CAN4OSX_DEBUG_PRINT("LEAFPRO_CMD_MAP_CHANNEL_RESP CAN\n");
+                pPriv->address = (UInt8)pCmd->proCmdMapChannelResp.heAddress;
+            }
+            break;
+        case LEAFPRO_CMD_GET_SOFTWARE_DETAILS_RESP:
+            CAN4OSX_DEBUG_PRINT("LEAFPRO_CMD_GET_SOFTWARE_DETAILS_RESP\n");
+
             break;
             
         default:
             break;
     }
 #if CAN4OSX_DEBUG
-    switch (pCmd->proCmdHead.cmdNo)  {
-        case LEAFPRO_CMD_LOG_MESSAGE:
-            CAN4OSX_DEBUG_PRINT("LEAFPRO_CMD_LOG_MESSAGE\n");
-            break;
-        case LEAFPRO_CMD_MAP_CHANNEL_RESP:
-            CAN4OSX_DEBUG_PRINT("LEAFPRO_CMD_MAP_CHANNEL_RESP\n");
-            break;
-        case LEAFPRO_CMD_GET_CARD_INFO_RESP:
-            CAN4OSX_DEBUG_PRINT("LEAFPRO_CMD_GET_CARD_INFO_RESP\n");
-            break;
-        default:
-            CAN4OSX_DEBUG_PRINT("Not implemented message\n");
-            break;
-        
-    }
-    
+    CAN4OSX_DEBUG_PRINT("LEAFPRO_MESSAGE %d\n", pCmd->proCmdHead.cmdNo);
 #endif /* CAN4OSX_DEBUG */
 }
 
