@@ -59,7 +59,10 @@ static UInt8 CAN4OSX_TestFullCanEventBuffer(CanEventMsgBuf* bufferRef);
 static UInt8 CAN4OSX_TestEmptyCanEventBuffer(CanEventMsgBuf* bufferRef);
 
 
-CanEventMsgBuf* CAN4OSX_CreateCanEventBuffer( UInt32 bufferSize )
+/******************************************************************************/
+CanEventMsgBuf* CAN4OSX_CreateCanEventBuffer(
+        UInt32 bufferSize
+        )
 {
 	CanEventMsgBuf* bufferRef = malloc(sizeof(CanEventMsgBuf));
 	if ( bufferRef == NULL ) {
@@ -87,7 +90,10 @@ CanEventMsgBuf* CAN4OSX_CreateCanEventBuffer( UInt32 bufferSize )
 }
 
 
-void CAN4OSX_ReleaseCanEventBuffer( CanEventMsgBuf* bufferRef )
+/******************************************************************************/
+void CAN4OSX_ReleaseCanEventBuffer(
+        CanEventMsgBuf* bufferRef
+        )
 {
 	if ( bufferRef != NULL ) {
         if (bufferRef->bufferGDCqueueRef != NULL) {
@@ -99,7 +105,10 @@ void CAN4OSX_ReleaseCanEventBuffer( CanEventMsgBuf* bufferRef )
 }
 
 
-static UInt8 CAN4OSX_TestFullCanEventBuffer(CanEventMsgBuf* bufferRef)
+/******************************************************************************/
+static UInt8 CAN4OSX_TestFullCanEventBuffer(
+        CanEventMsgBuf* bufferRef
+        )
 {
 	if (bufferRef->bufferCount == bufferRef->bufferSize) {
 		return 1;
@@ -109,7 +118,10 @@ static UInt8 CAN4OSX_TestFullCanEventBuffer(CanEventMsgBuf* bufferRef)
 }
 
 
-static UInt8 CAN4OSX_TestEmptyCanEventBuffer(CanEventMsgBuf* bufferRef)
+/******************************************************************************/
+static UInt8 CAN4OSX_TestEmptyCanEventBuffer(
+        CanEventMsgBuf* bufferRef
+        )
 {
     if ( bufferRef->bufferCount == 0 ) {
         return 1;
@@ -119,7 +131,11 @@ static UInt8 CAN4OSX_TestEmptyCanEventBuffer(CanEventMsgBuf* bufferRef)
 }
 
 
-UInt8 CAN4OSX_WriteCanEventBuffer(CanEventMsgBuf* bufferRef, CanMsg newEvent)
+/******************************************************************************/
+UInt8 CAN4OSX_WriteCanEventBuffer(
+        CanEventMsgBuf* bufferRef,
+        CanMsg newEvent
+        )
 {
     __block UInt8 retval = 1;
     
@@ -135,7 +151,11 @@ UInt8 CAN4OSX_WriteCanEventBuffer(CanEventMsgBuf* bufferRef, CanMsg newEvent)
 }
 
 
-UInt8 CAN4OSX_ReadCanEventBuffer(CanEventMsgBuf* bufferRef, CanMsg* readEvent)
+/******************************************************************************/
+UInt8 CAN4OSX_ReadCanEventBuffer(
+        CanEventMsgBuf* bufferRef,
+        CanMsg* readEvent
+        )
 {
     __block UInt8 retval = 1;
     
@@ -154,8 +174,13 @@ UInt8 CAN4OSX_ReadCanEventBuffer(CanEventMsgBuf* bufferRef, CanMsg* readEvent)
 }
 
 
-//**************************************************
-canStatus CAN4OSX_GetChannelData(Can4osxUsbDeviceHandleEntry* pSelf, SInt32 cmd, void* pBuffer, size_t bufsize)
+/******************************************************************************/
+canStatus CAN4OSX_GetChannelData(
+        Can4osxUsbDeviceHandleEntry* pSelf,
+        SInt32 cmd,
+        void* pBuffer,
+        size_t bufsize
+        )
 {
 
     switch(cmd) {
