@@ -2,7 +2,7 @@
 //  can4osx_debug.h
 //
 //
-// Copyright (c) 2014 - 2016 Alexander Philipp. All rights reserved.
+// Copyright (c) 2014 - 2017 Alexander Philipp. All rights reserved.
 //
 //
 // License: GPLv2
@@ -46,7 +46,7 @@
 #ifndef can4osx_cmd_can4osx_debug_h
 #define can4osx_cmd_can4osx_debug_h
 
-#define CAN4OSX_DEBUG 0
+#define CAN4OSX_DEBUG 1
 
 #if CAN4OSX_DEBUG
 #ifndef CAN4OSX_DEBUG_PRINT

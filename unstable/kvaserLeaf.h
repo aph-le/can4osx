@@ -2,7 +2,7 @@
 //  kvaserLeaf.h
 //
 //
-// Copyright (c) 2014 - 2016 Alexander Philipp. All rights reserved.
+// Copyright (c) 2014 - 2017 Alexander Philipp. All rights reserved.
 //
 //
 // License: GPLv2
