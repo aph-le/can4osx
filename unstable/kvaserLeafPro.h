@@ -58,6 +58,12 @@ Can4osxHwFunctions leafProHardwareFunctions;
 # define LEAFPRO_MSG_FLAG_TXACK         0x40
 # define LEAFPRO_MSG_FLAG_TXRQ          0x80
 
+#define LEAFPRO_MSGFLAG_SSM_NACK        0x001000        // Single shot transmission failed.
+#define LEAFPRO_MSGFLAG_ABL             0x002000        // Single shot transmission failed due to ArBitration Loss.
+#define LEAFPRO_MSGFLAG_FDF             0x010000        // Message is an FD message (CAN FD)
+#define LEAFPRO_MSGFLAG_BRS             0x020000        // Message is sent/received with bit rate switch (CAN FD)
+#define LEAFPRO_MSGFLAG_ESI             0x040000        // Sender of the message is in error passive mode (CAN FD)
+
 # define LEAFPRO_EXT_MSG 0x80000000
 
 
@@ -203,6 +209,12 @@ typedef union {
     proCmdGetSoftwareDetailsReq_t   proCmdGetSoftwareDetailsReq;
     proCcmdGetSoftwareDetailsResp_t proCcmdGetSoftwareDetailsResp;
 } __attribute__ ((packed)) proCommand_t;
+
+typedef union  {
+    proCmdFdHead_t      proCmdFdHead;
+    proCmdFdRxMessage_t proCmdFdRxMessage;
+    proCmdFdTxMessage_t proCmdFdTxMessage;
+} __attribute__ ((packed)) proCommandExt_t;
 
 
 //holds the actual cmd buffer
