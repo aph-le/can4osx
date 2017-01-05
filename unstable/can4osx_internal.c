@@ -77,6 +77,7 @@ CanEventMsgBuf* CAN4OSX_CreateCanEventBuffer(
     
 	if ( bufferRef->canMsgRef == NULL ) {
 		free(bufferRef);
+        bufferRef = NULL;
 		return NULL;
 	}
     
@@ -101,6 +102,9 @@ void CAN4OSX_ReleaseCanEventBuffer(
         }
 		free(bufferRef->canMsgRef);
 		free(bufferRef);
+        
+        bufferRef->canMsgRef = NULL;
+        bufferRef = NULL;
 	}
 }
 
