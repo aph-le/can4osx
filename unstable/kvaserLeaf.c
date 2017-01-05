@@ -418,7 +418,6 @@ void LeafDecodeCommand(Can4osxUsbDeviceHandleEntry *self, leafCmd *cmd) {
                 CFNotificationCenterPostNotification (self->canNotification.notifacionCenter, self->canNotification.notificationString, NULL, NULL, true);
             }
             
-            
             CAN4OSX_DEBUG_PRINT("CMD_LOG_MESSAGE Channel: %d Id: %X Flags: %X\n", cmd->logMessage.channel, cmd->logMessage.ident, cmd->logMessage.flags);
             
         }

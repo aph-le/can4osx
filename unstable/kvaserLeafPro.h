@@ -46,7 +46,7 @@
 #ifndef can4osx_kvaserLeafPro_h
 #define can4osx_kvaserLeafPro_h
 
-Can4osxHwFunctions leafProHardwareFunctions;
+extern Can4osxHwFunctions leafProHardwareFunctions;
 
 
 # define LEAFPRO_MSG_FLAG_ERROR_FRAME   0x01
@@ -209,6 +209,7 @@ typedef union {
     proCmdGetSoftwareDetailsReq_t   proCmdGetSoftwareDetailsReq;
     proCcmdGetSoftwareDetailsResp_t proCcmdGetSoftwareDetailsResp;
 } __attribute__ ((packed)) proCommand_t;
+
 
 typedef union  {
     proCmdFdHead_t      proCmdFdHead;

@@ -60,38 +60,30 @@
 
 #include "kvaserLeafPro.h"
 
-#define LEAFPRO_CMD_SET_BUSPARAMS_REQ           16
-#define LEAFPRO_CMD_SET_BUSPARAMS_RESP          85
+#define LEAFPRO_COMMAND_SIZE 32u
 
-#define LEAFPRO_CMD_SET_DRIVERMODE_REQ          21
+#define LEAFPRO_CMD_SET_BUSPARAMS_REQ           16u
+#define LEAFPRO_CMD_CHIP_STATE_EVENT            20u
+#define LEAFPRO_CMD_SET_DRIVERMODE_REQ          21u
+#define LEAFPRO_CMD_START_CHIP_REQ              26u
+#define LEAFPRO_CMD_START_CHIP_RESP             27u
+#define LEAFPRO_CMD_TX_CAN_MESSAGE              33u
+#define LEAFPRO_CMD_GET_CARD_INFO_REQ           34u
+#define LEAFPRO_CMD_GET_CARD_INFO_RESP          35u
+#define LEAFPRO_CMD_GET_SOFTWARE_INFO_REQ       38u
+#define LEAFPRO_CMD_GET_SOFTWARE_INFO_RESP      39u
+#define LEAFPRO_CMD_SET_BUSPARAMS_FD_REQ        69u
+#define LEAFPRO_CMD_SET_BUSPARAMS_FD_RESP       70u
+#define LEAFPRO_CMD_SET_BUSPARAMS_RESP          85u
+#define LEAFPRO_CMD_LOG_MESSAGE                 106u
+#define LEAFPRO_CMD_MAP_CHANNEL_REQ             200u
+#define LEAFPRO_CMD_MAP_CHANNEL_RESP            201u
+#define LEAFPRO_CMD_GET_SOFTWARE_DETAILS_REQ    202u
+#define LEAFPRO_CMD_GET_SOFTWARE_DETAILS_RESP   203u
+#define LEAFPRO_CMD_RX_MESSAGE_FD               226u
 
-#define LEAFPRO_CMD_SET_BUSPARAMS_FD_REQ        69
-#define LEAFPRO_CMD_SET_BUSPARAMS_FD_RESP       70
-
-#define LEAFPRO_CMD_CHIP_STATE_EVENT            20
-#define LEAFPRO_CMD_START_CHIP_REQ              26
-#define LEAFPRO_CMD_START_CHIP_RESP             27
-
-#define LEAFPRO_CMD_TX_CAN_MESSAGE              33
-#define LEAFPRO_CMD_GET_CARD_INFO_REQ           34
-#define LEAFPRO_CMD_GET_CARD_INFO_RESP          35
-
-#define LEAFPRO_CMD_GET_SOFTWARE_INFO_REQ       38
-#define LEAFPRO_CMD_GET_SOFTWARE_INFO_RESP      39
-
-
-
-#define LEAFPRO_CMD_LOG_MESSAGE                 106
-
-#define LEAFPRO_CMD_MAP_CHANNEL_REQ             200
-#define LEAFPRO_CMD_MAP_CHANNEL_RESP            201
-#define LEAFPRO_CMD_GET_SOFTWARE_DETAILS_REQ    202
-#define LEAFPRO_CMD_GET_SOFTWARE_DETAILS_RESP   203
-
-#define LEAFPRO_CMD_RX_MESSAGE_FD               226
-
-
-#define LEAFPRO_CMD_CAN_FD                      255
+/* extended FD able command code */
+#define LEAFPRO_CMD_CAN_FD                      255u
 
 
 
@@ -99,9 +91,8 @@
 #define LEAFPRO_HE_ILLEGAL      0x3eu
 #define LEAFPRO_HE_ROUTER       0x00u
 
-#define LEAFPRO_COMMAND_SIZE 32
-# define LEAFPRO_TIMEOUT_ONE_MS 1000000
-# define LEAFPRO_TIMEOUT_TEN_MS 10*LEAFPRO_TIMEOUT_ONE_MS
+#define LEAFPRO_TIMEOUT_ONE_MS 1000000
+#define LEAFPRO_TIMEOUT_TEN_MS 10*LEAFPRO_TIMEOUT_ONE_MS
 
 static char* pDeviceString = "Kvaser Leaf Pro v2";
 
@@ -369,6 +360,7 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
     return retVal;
 }
 
+
 /******************************************************************************/
 static canStatus LeafProCanRead (
         const   CanHandle hnd,
@@ -439,7 +431,6 @@ Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
         cmd.proCmdHead.cmdNo = LEAFPRO_CMD_TX_CAN_MESSAGE;
         cmd.proCmdHead.address = pPriv->address;
         cmd.proCmdHead.transitionId = 10;
-        
         
         LeafProWriteCommandBuffer(pPriv->cmdBufferRef, cmd);
 
@@ -562,7 +553,7 @@ static UInt32 getCommandSize(proCommand_t *pCmd)
     }
 }
 
-
+/******************************************************************************/
 /**
 * \brief decodeFdDlc - decode the dlc to data length
 *
@@ -610,6 +601,7 @@ static UInt8 decodeFdDlc(UInt8 dlc)
 }
 
 
+/******************************************************************************/
 static void LeafProDecodeCommand(
         Can4osxUsbDeviceHandleEntry *pSelf,
         proCommand_t *pCmd
@@ -697,6 +689,7 @@ CanMsg canMsg;
 }
 
 
+/******************************************************************************/
 static void LeafProDecodeCommandExt(
         Can4osxUsbDeviceHandleEntry *pSelf,
         proCommandExt_t *pCmd
@@ -731,7 +724,7 @@ CanMsg canMsg;
                     CAN4OSX_DEBUG_PRINT("LEAFPRO_MESSAGE CAN-FD - BRS\n");
                     canMsg.canFlags |= canFDMSG_BRS;
                 }
-                /* correct dlc */
+                /* decode dlc to length */
                 canMsg.canDlc = decodeFdDlc(canMsg.canDlc);
                 
             } else {
@@ -795,6 +788,7 @@ proCommand_t cmd;
 
 
 #pragma mark card info request
+/******************************************************************************/
 static void LeafProGetCardInfo(Can4osxUsbDeviceHandleEntry *pSelf)
 {
 proCommand_t cmd;
@@ -817,6 +811,7 @@ proCommand_t cmd;
 
 
 #pragma mark Command Buffer
+/******************************************************************************/
 static LeafProCommandMsgBuf_t* LeafProCreateCommandBuffer(
         UInt32 bufferSize
     )
@@ -849,6 +844,7 @@ LeafProCommandMsgBuf_t* pBufferRef = malloc(sizeof(LeafProCommandMsgBuf_t));
 }
 
 
+/******************************************************************************/
 static void LeafProReleaseCommandBuffer(
         LeafProCommandMsgBuf_t* pBufferRef
     )
@@ -864,6 +860,7 @@ static void LeafProReleaseCommandBuffer(
 }
 
 
+/******************************************************************************/
 static UInt8 LeafProWriteCommandBuffer(
         LeafProCommandMsgBuf_t* pBufferRef,
         proCommand_t newCommand
@@ -885,6 +882,7 @@ __block UInt8 retval = 1;
 }
 
 
+/******************************************************************************/
 static UInt8 LeafReadCommandBuffer(
         LeafProCommandMsgBuf_t* pBufferRef,
         proCommand_t* pReadCommand
@@ -908,6 +906,7 @@ __block UInt8 retval = 1;
 }
 
 
+/******************************************************************************/
 static UInt8 LeafProTestFullCommandBuffer(
         LeafProCommandMsgBuf_t* pBufferRef
         )
@@ -920,6 +919,7 @@ static UInt8 LeafProTestFullCommandBuffer(
 }
 
 
+/******************************************************************************/
 static UInt8 LeafProTestEmptyCommandBuffer(
         LeafProCommandMsgBuf_t* pBufferRef
     )
@@ -939,6 +939,7 @@ static UInt8 LeafProTestEmptyCommandBuffer(
 /******************************************************************************/
 /******************************************************************************/
 
+/******************************************************************************/
 static void LeafProBulkWriteCompletion(
         void *refCon,
         IOReturn result,
@@ -971,6 +972,7 @@ IOUSBInterfaceInterface **interface = self->can4osxInterfaceInterface;
 }
 
 
+/******************************************************************************/
 static IOReturn LeafProWriteBulkPipe(
         Can4osxUsbDeviceHandleEntry *pSelf
     )
@@ -1007,6 +1009,7 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
 }
 
 
+/******************************************************************************/
 static UInt16 LeafProFillBulkPipeBuffer(
         LeafProCommandMsgBuf_t* bufferRef,
         UInt8 *pPipe,
@@ -1037,6 +1040,7 @@ UInt16 fillState = 0;
 }
 
 
+/******************************************************************************/
 static IOReturn LeafProWriteCommandWait(
         Can4osxUsbDeviceHandleEntry *pSelf,
         proCommand_t cmd,
