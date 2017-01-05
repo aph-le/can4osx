@@ -103,6 +103,11 @@
 #define canMSG_TXACK            0x0040      // Message is a TX ACK (msg is really sent)
 #define canMSG_TXRQ             0x0080      // Message is a TX REQUEST (msg is transfered to the chip)
 
+#define canFDMSG_MASK            0xff0000
+#define canFDMSG_FDF             0x010000    ///< Message is an FD message (CAN FD)
+#define canFDMSG_BRS             0x020000    ///< Message is sent/received with bit rate switch (CAN FD)
+#define canFDMSG_ESI             0x040000    ///< Sender of the message is in error passive mode (CAN FD)
+
 #define canSTAT_ERROR_PASSIVE   0x00000001  // The circuit is error passive
 #define canSTAT_BUS_OFF         0x00000002  // The circuit is Off Bus
 #define canSTAT_ERROR_WARNING   0x00000004  // At least one error counter > 96
@@ -213,9 +218,9 @@ canStatus canSetBusParams (const CanHandle hnd, SInt32 freq, UInt32 tseg1, UInt3
 
 canStatus canSetBusParamsFd(const CanHandle hnd, SInt64 freq_brs, UInt32 tseg1, UInt32 tseg2, UInt32 sjw);
 
-canStatus canRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt16 *flag, UInt32 *time);
+canStatus canRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt32 *flag, UInt32 *time);
 
-canStatus canWrite (const CanHandle hnd,UInt32 id, void *msg, UInt16 dlc, UInt16 flag);
+canStatus canWrite (const CanHandle hnd,UInt32 id, void *msg, UInt16 dlc, UInt32 flag);
 
 canStatus canReadStatus	(const CanHandle hnd, UInt32 *const flags);
 

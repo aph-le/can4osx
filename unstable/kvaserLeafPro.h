@@ -43,8 +43,8 @@
 //
 //
 
-#ifndef can4osx_logExample_kvaserLeafPro_h
-#define can4osx_logExample_kvaserLeafPro_h
+#ifndef can4osx_kvaserLeafPro_h
+#define can4osx_kvaserLeafPro_h
 
 Can4osxHwFunctions leafProHardwareFunctions;
 
@@ -235,4 +235,4 @@ typedef struct {
     UInt8 canFd;
 } LeafProPrivateData_t;
 
-#endif
+#endif /* can4osx_kvaserLeafPro_h */

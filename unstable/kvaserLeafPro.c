@@ -128,11 +128,11 @@ static canStatus LeafProCanRead (const CanHandle hnd,
                                  UInt32 *id,
                                  void *msg,
                                  UInt16 *dlc,
-                                 UInt16 *flag,
+                                 UInt32 *flag,
                                  UInt32 *time);
 
 static canStatus LeafProCanWrite(const CanHandle hnd, UInt32 id, void *msg,
-                                 UInt16 dlc, UInt16 flag);
+                                 UInt16 dlc, UInt32 flag);
 
 
 static canStatus LeafProCanTranslateBaud (SInt32 *const freq,
@@ -375,7 +375,7 @@ static canStatus LeafProCanRead (
         UInt32  *id,
         void    *msg,
         UInt16  *dlc,
-        UInt16  *flag,
+        UInt32  *flag,
         UInt32  *time
         )
 {
@@ -412,7 +412,7 @@ static canStatus LeafProCanWrite(
         UInt32 id,
         void *msg,
         UInt16 dlc,
-        UInt16 flag
+        UInt32 flag
     )
 {
 Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
@@ -563,9 +563,25 @@ static UInt32 getCommandSize(proCommand_t *pCmd)
 }
 
 
+/**
+* \brief decodeFdDlc - decode the dlc to data length
+*
+* \return the datalength
+*/
 static UInt8 decodeFdDlc(UInt8 dlc)
 {
     switch(dlc)  {
+        case 0u:
+        case 1u:
+        case 2u:
+        case 3u:
+        case 4u:
+        case 5u:
+        case 6u:
+        case 7u:
+        case 8u:
+            return dlc;
+            break;
         case 9u:
             return 12u;
             break;
@@ -588,13 +604,10 @@ static UInt8 decodeFdDlc(UInt8 dlc)
             return 64u;
             break;
         default:
-            return dlc;
             break;
     }
-    return dlc;
+    return 0u;
 }
-
-
 
 
 static void LeafProDecodeCommand(
@@ -689,6 +702,7 @@ static void LeafProDecodeCommandExt(
         proCommandExt_t *pCmd
     )
 {
+LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
 CanMsg canMsg;
 
     switch (pCmd->proCmdFdHead.header.cmdNo)  {
@@ -704,14 +718,21 @@ CanMsg canMsg;
             canMsg.canFlags = 0u;
             
             if (pCmd->proCmdFdRxMessage.flags & LEAFPRO_MSGFLAG_FDF)  {
+                /* insanity check */
+                if (pPriv->canFd == 0)  {
+                    return;
+                }
+            
                 CAN4OSX_DEBUG_PRINT("LEAFPRO_MESSAGE CAN-FD\n");
-                /* correct dlc */
-                canMsg.canDlc = decodeFdDlc(canMsg.canDlc);
+                canMsg.canFlags |= canFDMSG_FDF;
                 
                 /* test for other FD flags */
                 if (pCmd->proCmdFdRxMessage.flags & LEAFPRO_MSGFLAG_BRS)  {
                     CAN4OSX_DEBUG_PRINT("LEAFPRO_MESSAGE CAN-FD - BRS\n");
+                    canMsg.canFlags |= canFDMSG_BRS;
                 }
+                /* correct dlc */
+                canMsg.canDlc = decodeFdDlc(canMsg.canDlc);
                 
             } else {
                 CAN4OSX_DEBUG_PRINT("LEAFPRO_MESSAGE CLASSIC\n");
@@ -722,12 +743,11 @@ CanMsg canMsg;
             
             if (pCmd->proCmdFdRxMessage.flags & LEAFPRO_MSG_FLAG_EXTENDED) {
                 CAN4OSX_DEBUG_PRINT("LEAFPRO_MESSAGE EXTENDED\n");
-                canMsg.canFlags = canMSG_EXT;
+                canMsg.canFlags |= canMSG_EXT;
             } else {
                 CAN4OSX_DEBUG_PRINT("LEAFPRO_MESSAGE STD\n");
-                canMsg.canFlags = canMSG_STD;
+                canMsg.canFlags |= canMSG_STD;
             }
-
             
             memcpy(canMsg.canData, pCmd->proCmdFdRxMessage.data, canMsg.canDlc);
             

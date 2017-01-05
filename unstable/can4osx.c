@@ -254,7 +254,7 @@ canStatus canSetBusParamsFd(const CanHandle hnd, SInt64 freq_brs, UInt32 tseg1, 
  * \return canStatus
  *
  */
-canStatus canRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt16 *flag, UInt32 *time)
+canStatus canRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt32 *flag, UInt32 *time)
 {
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
         return canERR_INVHANDLE;
@@ -265,7 +265,7 @@ canStatus canRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt
 }
 
 
-canStatus canWrite (const CanHandle hnd,UInt32 id, void *msg, UInt16 dlc, UInt16 flag)
+canStatus canWrite (const CanHandle hnd,UInt32 id, void *msg, UInt16 dlc, UInt32 flag)
 {
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
         return canERR_INVHANDLE;

@@ -69,8 +69,8 @@ static canStatus LeafCanStartChip(CanHandle hdl);
 static canStatus LeafCanStopChip(CanHandle hdl);
 
 static canStatus LeafCanSetBusParams (const CanHandle hnd, SInt32 freq, UInt32 tseg1, UInt32 tseg2, UInt32 sjw, UInt32 noSamp, UInt32 syncmode);
-static canStatus LeafCanWrite (const CanHandle hnd,UInt32 id, void *msg, UInt16 dlc, UInt16 flag);
-static canStatus LeafCanRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt16 *flag, UInt32 *time);
+static canStatus LeafCanWrite (const CanHandle hnd,UInt32 id, void *msg, UInt16 dlc, UInt32 flag);
+static canStatus LeafCanRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt32 *flag, UInt32 *time);
 static canStatus LeafCanClose(const CanHandle hnd);
 
 
@@ -155,7 +155,7 @@ static canStatus LeafCanClose(const CanHandle hnd)
 }
 
 
-static canStatus LeafCanWrite (const CanHandle hnd,UInt32 id, void *msg, UInt16 dlc, UInt16 flag)
+static canStatus LeafCanWrite (const CanHandle hnd,UInt32 id, void *msg, UInt16 dlc, UInt32 flag)
 {
     Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
     
@@ -206,7 +206,7 @@ static canStatus LeafCanWrite (const CanHandle hnd,UInt32 id, void *msg, UInt16 
 
 }
 
-static canStatus LeafCanRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt16 *flag, UInt32 *time)
+static canStatus LeafCanRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt32 *flag, UInt32 *time)
 {
     Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
 
