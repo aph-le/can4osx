@@ -68,7 +68,7 @@ typedef struct{
 
 
 //internal buffers
-#define CAN4OSX_CAN_MAX_MSG_LEN 8
+#define CAN4OSX_CAN_MAX_MSG_LEN 64
 
 
 typedef struct {
