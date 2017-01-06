@@ -74,7 +74,7 @@ typedef struct{
 typedef struct {
     UInt32 canTimestamp;
     UInt32 canId;
-    UInt8  canFlags;
+    UInt32  canFlags;
     UInt8  canDlc;
     UInt8  canChannel;
     UInt8  padding;
