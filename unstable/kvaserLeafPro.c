@@ -193,18 +193,17 @@ pSelf->privateData = calloc(1,sizeof(LeafProPrivateData_t));
     }
 
     
-    // Set some device Infos
+    /* Set some device Infos */
     sprintf((char*)pSelf->devInfo.deviceString, "%s",pDeviceString);
     
-    // Trigger next read
+    /* Trigger next read */
     LeafProReadFromBulkInPipe(pSelf);
     
-    // Set up channels
+    /* Set up channels */
     LeafProMapChannels(pSelf);
     
-    // Get channel info
+    /* Get channel info */
     LeafProGetCardInfo(pSelf);
-    
     
     return canOK;
 }
@@ -277,18 +276,18 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
     cmd.proCmdSetBusparamsReq.header.address = pPriv->address;
     cmd.proCmdSetBusparamsReq.header.transitionId = 0x0000;
     
-    cmd.proCmdSetBusparamsReq.bitRate = freq;
-    cmd.proCmdSetBusparamsReq.sjw     = (UInt8)sjw;
-    cmd.proCmdSetBusparamsReq.tseg1   = (UInt8)tseg1;
-    cmd.proCmdSetBusparamsReq.tseg2   = (UInt8)tseg2;
-    cmd.proCmdSetBusparamsReq.noSamp  = 1;
+    cmd.proCmdSetBusparamsReq.bitRate = 5000000;//freq;
+    cmd.proCmdSetBusparamsReq.sjw     = 16;//(UInt8)sjw;
+    cmd.proCmdSetBusparamsReq.tseg1   = 63;//(UInt8)tseg1;
+    cmd.proCmdSetBusparamsReq.tseg2   = 16;//(UInt8)tseg2;
+    cmd.proCmdSetBusparamsReq.noSamp  = 0;//1;
     
     retVal = LeafProWriteCommandWait( pSelf, cmd,
                 LEAFPRO_CMD_SET_BUSPARAMS_RESP);
     
     // FIXME
 #warning remove static FD
-    pPriv->canFd = 1;
+    pPriv->canFd = 1u;
     
     if (pPriv->canFd) {
         cmd.proCmdSetBusparamsReq.header.cmdNo = LEAFPRO_CMD_SET_BUSPARAMS_FD_REQ;
@@ -296,14 +295,14 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
         
         
             cmd.proCmdSetBusparamsReq.bitRate = 500000;
-    cmd.proCmdSetBusparamsReq.sjw     = 8;//(UInt8)1;
-    cmd.proCmdSetBusparamsReq.tseg1   = 64;//(UInt8)5;
+    cmd.proCmdSetBusparamsReq.sjw     = 16;//(UInt8)1;
+    cmd.proCmdSetBusparamsReq.tseg1   = 63;//(UInt8)5;
     cmd.proCmdSetBusparamsReq.tseg2   = 16;//(UInt8)2;
     cmd.proCmdSetBusparamsReq.noSamp  = 0;
         cmd.proCmdSetBusparamsReq.bitRateFd = 1000000L;
-        cmd.proCmdSetBusparamsReq.tseg1Fd = 32;//15;
+        cmd.proCmdSetBusparamsReq.tseg1Fd = 31;//15;
         cmd.proCmdSetBusparamsReq.tseg2Fd = 8;//4;
-        cmd.proCmdSetBusparamsReq.sjwFd = 2;//4;
+        cmd.proCmdSetBusparamsReq.sjwFd = 8;//4;
         cmd.proCmdSetBusparamsReq.noSampFd = 0;
             retVal = LeafProWriteCommandWait( pSelf, cmd,
                 LEAFPRO_CMD_SET_BUSPARAMS_FD_RESP);
@@ -343,7 +342,6 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
 
     memset(&cmd, 0u, sizeof(cmd));
     cmd.proCmdHead.cmdNo = LEAFPRO_CMD_SET_DRIVERMODE_REQ;
-    //cmd.proCmdHead.transitionId = 0xec00;
     cmd.proCmdHead.address = pPriv->address;
     cmd.proCmdRaw.data[0] = 0x01;
     LeafProWriteCommandWait(pSelf, cmd, LEAFPRO_CMD_MAP_CHANNEL_RESP);
@@ -544,7 +542,9 @@ static canStatus LeafProCanTranslateBaud (
 /**************************** Command Stuff ***********************************/
 /******************************************************************************/
 /******************************************************************************/
-static UInt32 getCommandSize(proCommand_t *pCmd)
+static UInt32 getCommandSize(
+        proCommand_t *pCmd
+        )
 {
     if (pCmd->proCmdHead.cmdNo == LEAFPRO_CMD_CAN_FD)  {
         return(((proCmdFdHead_t *)(pCmd))->len);
@@ -552,6 +552,7 @@ static UInt32 getCommandSize(proCommand_t *pCmd)
         return(LEAFPRO_COMMAND_SIZE);
     }
 }
+
 
 /******************************************************************************/
 /**
@@ -603,7 +604,7 @@ static UInt8 decodeFdDlc(UInt8 dlc)
 
 /******************************************************************************/
 static void LeafProDecodeCommand(
-        Can4osxUsbDeviceHandleEntry *pSelf,
+        Can4osxUsbDeviceHandleEntry *pSelf, /**< pointer to my reference */
         proCommand_t *pCmd
     )
 {
@@ -691,7 +692,7 @@ CanMsg canMsg;
 
 /******************************************************************************/
 static void LeafProDecodeCommandExt(
-        Can4osxUsbDeviceHandleEntry *pSelf,
+        Can4osxUsbDeviceHandleEntry *pSelf, /**< pointer to my reference */
         proCommandExt_t *pCmd
     )
 {
@@ -712,7 +713,7 @@ CanMsg canMsg;
             
             if (pCmd->proCmdFdRxMessage.flags & LEAFPRO_MSGFLAG_FDF)  {
                 /* insanity check */
-                if (pPriv->canFd == 0)  {
+                if (pPriv->canFd == 0u)  {
                     return;
                 }
             
@@ -763,22 +764,22 @@ CanMsg canMsg;
 /******************************************************************************/
 /******************************************************************************/
 static void LeafProMapChannels(
-        Can4osxUsbDeviceHandleEntry
-        *pSelf
+        Can4osxUsbDeviceHandleEntry *pSelf /**< pointer to my reference */
     )
 {
 proCommand_t cmd;
 
-    memset(&cmd, 0, 32);
+    memset(&cmd, 0u, 32u);
     
     cmd.proCmdHead.cmdNo = LEAFPRO_CMD_MAP_CHANNEL_REQ;
     cmd.proCmdHead.address = LEAFPRO_HE_ROUTER;
-    cmd.proCmdMapChannelReq.channel = 0;
+    cmd.proCmdMapChannelReq.channel = 0u;
     
     strcpy(cmd.proCmdMapChannelReq.name, "CAN");
     cmd.proCmdHead.transitionId = 0x40;
     LeafProWriteCommandWait(pSelf, cmd, LEAFPRO_CMD_MAP_CHANNEL_RESP);
-        
+    
+    /* do we really need that? */
     strcpy(cmd.proCmdMapChannelReq.name, "SYSDBG");
     cmd.proCmdHead.transitionId = 0x61;
     LeafProWriteCommandWait(pSelf, cmd, LEAFPRO_CMD_MAP_CHANNEL_RESP);
@@ -789,7 +790,9 @@ proCommand_t cmd;
 
 #pragma mark card info request
 /******************************************************************************/
-static void LeafProGetCardInfo(Can4osxUsbDeviceHandleEntry *pSelf)
+static void LeafProGetCardInfo(
+        Can4osxUsbDeviceHandleEntry *pSelf /**< pointer to my reference */
+        )
 {
 proCommand_t cmd;
 
@@ -823,8 +826,8 @@ LeafProCommandMsgBuf_t* pBufferRef = malloc(sizeof(LeafProCommandMsgBuf_t));
     }
     
     pBufferRef->bufferSize = bufferSize;
-    pBufferRef->bufferCount = 0;
-    pBufferRef->bufferFirst = 0;
+    pBufferRef->bufferCount = 0u;
+    pBufferRef->bufferFirst = 0u;
     
     pBufferRef->commandRef = malloc(bufferSize * sizeof(proCommand_t));
     
@@ -834,7 +837,7 @@ LeafProCommandMsgBuf_t* pBufferRef = malloc(sizeof(LeafProCommandMsgBuf_t));
     }
     
     pBufferRef->bufferGDCqueueRef = dispatch_queue_create(
-                                        "com.can4osx.leafprocommandqueue", 0);
+                                        "com.can4osx.leafprocommandqueue", 0u);
     if ( pBufferRef->bufferGDCqueueRef == NULL ) {
         LeafProReleaseCommandBuffer(pBufferRef);
         return NULL;
@@ -866,11 +869,11 @@ static UInt8 LeafProWriteCommandBuffer(
         proCommand_t newCommand
     )
 {
-__block UInt8 retval = 1;
+__block UInt8 retval = 1u;
     
     dispatch_sync(pBufferRef->bufferGDCqueueRef, ^{
         if (LeafProTestFullCommandBuffer(pBufferRef)) {
-            retval = 0;
+            retval = 0u;
         } else {
             pBufferRef->commandRef[(pBufferRef->bufferFirst +
                                     pBufferRef->bufferCount++)
@@ -888,33 +891,32 @@ static UInt8 LeafReadCommandBuffer(
         proCommand_t* pReadCommand
     )
 {
-__block UInt8 retval = 1;
+__block UInt8 retval = 1u;
     
     dispatch_sync(pBufferRef->bufferGDCqueueRef, ^{
         if (LeafProTestEmptyCommandBuffer(pBufferRef)) {
-            retval = 0;
+            retval = 0u;
         } else {
             pBufferRef->bufferCount--;
             *pReadCommand = pBufferRef->commandRef[pBufferRef->bufferFirst++
-                                                   % pBufferRef->bufferSize];
+                % pBufferRef->bufferSize];
         }
         
     });
     
     return retval;
-    
 }
 
 
 /******************************************************************************/
 static UInt8 LeafProTestFullCommandBuffer(
         LeafProCommandMsgBuf_t* pBufferRef
-        )
+    )
 {
     if (pBufferRef->bufferCount == pBufferRef->bufferSize) {
-        return 1;
+        return 1u;
     } else {
-        return 0;
+        return 0u;
     }
 }
 
@@ -924,10 +926,10 @@ static UInt8 LeafProTestEmptyCommandBuffer(
         LeafProCommandMsgBuf_t* pBufferRef
     )
 {
-    if ( pBufferRef->bufferCount == 0 ) {
-        return 1;
+    if ( pBufferRef->bufferCount == 0u ) {
+        return 1u;
     } else {
-        return 0;
+        return 0u;
     }
 }
 
@@ -948,8 +950,7 @@ static void LeafProBulkWriteCompletion(
 {
 Can4osxUsbDeviceHandleEntry *self = (Can4osxUsbDeviceHandleEntry *)refCon;
 IOUSBInterfaceInterface **interface = self->can4osxInterfaceInterface;
-    
-    UInt32 numBytesWritten = (UInt32) arg0;
+UInt32 numBytesWritten = (UInt32)arg0;
     
     (void)numBytesWritten;
     
@@ -957,8 +958,8 @@ IOUSBInterfaceInterface **interface = self->can4osxInterfaceInterface;
     
     if (result != kIOReturnSuccess) {
         CAN4OSX_DEBUG_PRINT("error from asynchronous bulk write (%08x)\n", result);
-        (void) (*interface)->USBInterfaceClose(interface);
-        (void) (*interface)->Release(interface);
+        (void)(*interface)->USBInterfaceClose(interface);
+        (void)(*interface)->Release(interface);
         return;
     }
     
@@ -974,7 +975,7 @@ IOUSBInterfaceInterface **interface = self->can4osxInterfaceInterface;
 
 /******************************************************************************/
 static IOReturn LeafProWriteBulkPipe(
-        Can4osxUsbDeviceHandleEntry *pSelf
+        Can4osxUsbDeviceHandleEntry *pSelf /**< pointer to my reference */
     )
 {
 IOReturn retval = kIOReturnSuccess;
@@ -1014,9 +1015,9 @@ static UInt16 LeafProFillBulkPipeBuffer(
         LeafProCommandMsgBuf_t* bufferRef,
         UInt8 *pPipe,
         UInt16 maxPipeSize
-        )
+    )
 {
-UInt16 fillState = 0;
+UInt16 fillState = 0u;
     
     while ( fillState < maxPipeSize ) {
         proCommand_t cmd;
@@ -1026,12 +1027,12 @@ UInt16 fillState = 0;
             pPipe += LEAFPRO_COMMAND_SIZE;
             //Will another command for in the pipe?
             if ( (fillState + LEAFPRO_COMMAND_SIZE) >= maxPipeSize ) {
-                *pPipe = 0;
+                *pPipe = 0u;
                 break;
             }
             
         } else {
-            *pPipe = 0;
+            *pPipe = 0u;
             break;
         }
     }
@@ -1042,10 +1043,10 @@ UInt16 fillState = 0;
 
 /******************************************************************************/
 static IOReturn LeafProWriteCommandWait(
-        Can4osxUsbDeviceHandleEntry *pSelf,
+        Can4osxUsbDeviceHandleEntry *pSelf,  /**< pointer to my reference */
         proCommand_t cmd,
         UInt8 reason
-        )
+    )
 {
 IOReturn retVal = kIOReturnSuccess;
 IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
@@ -1061,22 +1062,20 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
         
         if (retVal != kIOReturnSuccess) {
             CAN4OSX_DEBUG_PRINT("Unable to perform synchronous bulk write (%08x)\n", retVal);
-            (void) (*interface)->USBInterfaceClose(interface);
-            (void) (*interface)->Release(interface);
+            (void)(*interface)->USBInterfaceClose(interface);
+            (void)(*interface)->Release(interface);
         }
         
         pSelf->endpoitBulkOutBusy = FALSE;
     } else {
-        //Endpoint busy
+        /* endpoint busy */
         LeafProWriteCommandBuffer(pPriv->cmdBufferRef, cmd);
     }
     
     pPriv->timeOutReason = reason;
     
-    if ( dispatch_semaphore_wait(pPriv->semaTimeout,
-                                 dispatch_time(DISPATCH_TIME_NOW,
-                                               LEAFPRO_TIMEOUT_TEN_MS)) )
-    {
+    if (dispatch_semaphore_wait(pPriv->semaTimeout,
+            dispatch_time(DISPATCH_TIME_NOW, LEAFPRO_TIMEOUT_TEN_MS)))  {
         return canERR_TIMEOUT;
     } else {
         return retVal;
@@ -1084,11 +1083,12 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
 }
 
 
+/******************************************************************************/
 static void LeafProBulkReadCompletion(
         void *refCon,
         IOReturn result,
         void *arg0
-        )
+    )
 {
 Can4osxUsbDeviceHandleEntry *pSelf = (Can4osxUsbDeviceHandleEntry *)refCon;
 LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
@@ -1100,8 +1100,8 @@ UInt32 numBytesRead = (UInt32) arg0;
     
     if (result != kIOReturnSuccess) {
         printf("Error from async bulk read (%08x)\n", result);
-        (void) (*interface)->USBInterfaceClose(interface);
-        (void) (*interface)->Release(interface);
+        (void)(*interface)->USBInterfaceClose(interface);
+        (void)(*interface)->Release(interface);
         return;
     }
     
@@ -1132,12 +1132,14 @@ UInt32 numBytesRead = (UInt32) arg0;
         }
     }
     
-    // Trigger next read
+    /* Trigger next read */
     LeafProReadFromBulkInPipe(pSelf);
 }
 
+
+/******************************************************************************/
 static void LeafProReadFromBulkInPipe(
-        Can4osxUsbDeviceHandleEntry *pSelf
+        Can4osxUsbDeviceHandleEntry *pSelf /**< pointer to my reference */
         )
 {
     IOReturn ret = (*(pSelf->can4osxInterfaceInterface))->ReadPipeAsync(pSelf->can4osxInterfaceInterface, pSelf->endpointNumberBulkIn, pSelf->endpointBufferBulkInRef, pSelf->endpointMaxSizeBulkIn, LeafProBulkReadCompletion, (void*)pSelf);
