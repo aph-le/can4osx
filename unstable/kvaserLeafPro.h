@@ -231,9 +231,19 @@ typedef struct {
 typedef struct {
     LeafProCommandMsgBuf_t *cmdBufferRef;
     dispatch_semaphore_t semaTimeout;
-    UInt8 timeOutReason;
-    UInt8 address;
-    UInt8 canFd;
+    UInt8   timeOutReason;
+    UInt8   address;
+    UInt8   canFd;
+    UInt32  freq;
+    UInt8   tseg1;
+    UInt8   tseg2;
+    UInt8   sjw;
+    UInt8   nosamp;
+    UInt32  fd_freq;
+    UInt8   fd_tseg1;
+    UInt8   fd_tseg2;
+    UInt8   fd_sjw;
+    UInt8   fd_nosamp;
 } LeafProPrivateData_t;
 
 #endif /* can4osx_kvaserLeafPro_h */
