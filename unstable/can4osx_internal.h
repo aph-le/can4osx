@@ -119,7 +119,7 @@ typedef struct {
     canStatus (*can4osxhwCanBusOnRef) (const CanHandle hndl);
     canStatus (*can4osxhwCanBusOffRef) (const CanHandle hnd);
     canStatus (*can4osxhwCanSetBusParamsRef) (const CanHandle hnd, SInt32 freq, UInt32 tseg1, UInt32 tseg2, UInt32 sjw, UInt32 noSamp, UInt32 syncmode);
-    canStatus (*can4osxhwCanSetBusParamsFdRef) (const CanHandle hnd, SInt64 freq, UInt32 tseg1, UInt32 tseg2, UInt32 sjw);
+    canStatus (*can4osxhwCanSetBusParamsFdRef) (const CanHandle hnd, SInt32 freq, UInt32 tseg1, UInt32 tseg2, UInt32 sjw);
     canStatus (*can4osxhwCanWriteRef) (const CanHandle hnd,UInt32 id, void *msg, UInt16 dlc, UInt32 flag);
     canStatus (*can4osxhwCanReadRef) (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt32 *flag, UInt32 *time);
     canStatus (*can4osxhwCanCloseRef) (const CanHandle hnd);
