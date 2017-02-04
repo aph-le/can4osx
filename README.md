@@ -10,7 +10,7 @@ Based on Kvaser canlib linux driver.
 
 ##Supported Devices
 * [Kvaser Leaf Light v2](http://www.kvaser.com/products/kvaser-leaf-light-v2/)
-* Kvaser Leaf Pro v2 (only receive classical CAN)
+* [Kvaser Leaf Pro v2 (classical CAN and receive CAN-FD)](https://www.kvaser.com/product/kvaser-leaf-pro-hs-v2)
 
 ##Usage
 can4osx is a user space driver, only supporting usb devices right now. So just include the files in your project.
