@@ -115,6 +115,13 @@ static canStatus LeafProCanSetBusParams ( const CanHandle hnd, SInt32 freq,
                                          unsigned int noSamp,
                                          unsigned int syncmode );
 
+static canStatus LeafProCanSetBusParamsFd(const CanHandle hnd,
+                                        SInt32 freq_brs,
+                                        UInt32 tseg1,
+                                        UInt32 tseg2,
+                                        UInt32 sjw);
+
+
 static canStatus LeafProCanRead (const CanHandle hnd,
                                  UInt32 *id,
                                  void *msg,
@@ -162,6 +169,7 @@ Can4osxHwFunctions leafProHardwareFunctions = {
     .can4osxhwInitRef = LeafProInitHardware,
     .can4osxhwCanOpenChannel = LeafProCanOpenChannel,
     .can4osxhwCanSetBusParamsRef = LeafProCanSetBusParams,
+    .can4osxhwCanSetBusParamsFdRef = LeafProCanSetBusParamsFd,
     .can4osxhwCanBusOnRef = LeafProCanStartChip,
     .can4osxhwCanBusOffRef = NULL,
     .can4osxhwCanWriteRef = LeafProCanWrite,
@@ -240,7 +248,7 @@ static canStatus LeafProCanSetBusParams (
         )
 {
 proCommand_t   cmd;
-UInt32         tmp, PScl;
+// FIXME UInt32         tmp, PScl;
 int            retVal;
     
 Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
@@ -255,7 +263,7 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
         return -1;
     }
     
-    
+#if 0 //FIXME
     // Check bus parameters
     tmp = freq * (tseg1 + tseg2 + 1);
     if (tmp == 0) {
@@ -270,20 +278,32 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
                 PScl & 1 /* even */);
         return VCAN_STAT_BAD_PARAMETER;
     }
+#endif
+
     memset(&cmd, 0 , sizeof(cmd));
     
     cmd.proCmdSetBusparamsReq.header.cmdNo = LEAFPRO_CMD_SET_BUSPARAMS_REQ;
     cmd.proCmdSetBusparamsReq.header.address = pPriv->address;
     cmd.proCmdSetBusparamsReq.header.transitionId = 0x0000;
     
-    cmd.proCmdSetBusparamsReq.bitRate = 5000000;//freq;
-    cmd.proCmdSetBusparamsReq.sjw     = 16;//(UInt8)sjw;
-    cmd.proCmdSetBusparamsReq.tseg1   = 63;//(UInt8)tseg1;
-    cmd.proCmdSetBusparamsReq.tseg2   = 16;//(UInt8)tseg2;
-    cmd.proCmdSetBusparamsReq.noSamp  = 0;//1;
+    cmd.proCmdSetBusparamsReq.bitRate = freq;
+    cmd.proCmdSetBusparamsReq.sjw     = (UInt8)sjw;
+    cmd.proCmdSetBusparamsReq.tseg1   = (UInt8)tseg1;
+    cmd.proCmdSetBusparamsReq.tseg2   = (UInt8)tseg2;
+    cmd.proCmdSetBusparamsReq.noSamp  = noSamp;
     
     retVal = LeafProWriteCommandWait( pSelf, cmd,
                 LEAFPRO_CMD_SET_BUSPARAMS_RESP);
+    
+    /* save locally */
+    pPriv->freq = freq;
+    pPriv->sjw = sjw;
+    pPriv->tseg1 = tseg1;
+    pPriv->tseg2 = tseg2;
+    pPriv->nosamp = noSamp;
+    
+    return retVal;
+    
     
     // FIXME
 #warning remove static FD
@@ -328,6 +348,63 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
     
     
     return retVal;
+}
+
+
+static canStatus LeafProCanSetBusParamsFd(
+        const CanHandle hnd,
+        SInt32 freq_brs,
+        UInt32 tseg1,
+        UInt32 tseg2,
+        UInt32 sjw
+    )
+{
+unsigned int syncmode;
+unsigned int noSamp;
+proCommand_t   cmd;
+int            retVal;
+    
+Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
+LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
+    
+    CAN4OSX_DEBUG_PRINT("leaf pro: _set_FD_busparam\n");
+    
+    if (pPriv->canFd == 0u)  {
+        return canERR_NOTINITIALIZED;
+    }
+    
+    if ( canOK != LeafProCanTranslateBaud(&freq_brs, &tseg1, &tseg2, &sjw,
+                                          &noSamp, &syncmode)) {
+        // TODO
+        CAN4OSX_DEBUG_PRINT(" can4osx strange bitrate\n");
+        return canERR_PARAM;
+    }
+    
+    cmd.proCmdSetBusparamsReq.header.cmdNo = LEAFPRO_CMD_SET_BUSPARAMS_FD_REQ;
+    cmd.proCmdSetBusparamsReq.open_as_canfd = 1;
+    
+    cmd.proCmdSetBusparamsReq.bitRate = pPriv->freq;
+    cmd.proCmdSetBusparamsReq.sjw     = pPriv->sjw;
+    cmd.proCmdSetBusparamsReq.tseg1   = pPriv->tseg1;
+    cmd.proCmdSetBusparamsReq.tseg2   = pPriv->tseg2;
+    cmd.proCmdSetBusparamsReq.noSamp  = 0;
+    cmd.proCmdSetBusparamsReq.bitRateFd = freq_brs;
+    cmd.proCmdSetBusparamsReq.tseg1Fd = tseg1;
+    cmd.proCmdSetBusparamsReq.tseg2Fd = tseg2;
+    cmd.proCmdSetBusparamsReq.sjwFd = sjw;
+    cmd.proCmdSetBusparamsReq.noSampFd = 0;
+    
+    retVal = LeafProWriteCommandWait( pSelf, cmd,
+                LEAFPRO_CMD_SET_BUSPARAMS_FD_RESP);
+
+    /* save locally */
+    pPriv->fd_freq = freq_brs;
+    pPriv->fd_sjw = sjw;
+    pPriv->fd_tseg1 = tseg1;
+    pPriv->fd_tseg2 = tseg2;
+    pPriv->fd_nosamp = 0;
+
+    return canOK;
 }
 
 //Go bus on
@@ -456,6 +533,42 @@ static canStatus LeafProCanTranslateBaud (
     )
 {
     switch (*freq) {
+    
+        case canFD_BITRATE_8M_60P:
+            *freq     = 8000000L;
+            *tseg1    = 2;
+            *tseg2    = 2;
+            *sjw      = 1;
+            break;
+
+        case canFD_BITRATE_4M_80P:
+            *freq     = 4000000L;
+            *tseg1    = 7;
+            *tseg2    = 2;
+            *sjw      = 2;
+            break;
+
+        case canFD_BITRATE_2M_80P:
+            *freq     = 2000000L;
+            *tseg1    = 15;
+            *tseg2    = 4;
+            *sjw      = 4;
+            break;
+
+        case canFD_BITRATE_1M_80P:
+            *freq     = 1000000L;
+            *tseg1    = 31;
+            *tseg2    = 8;
+            *sjw      = 8;
+            break;
+
+        case canFD_BITRATE_500K_80P:
+            *freq     = 500000L;
+            *tseg1    = 63;
+            *tseg2    = 16;
+            *sjw      = 16;
+            break;
+
         case canBITRATE_1M:
             *freq     = 1000000L;
             *tseg1    = 6;
@@ -1075,7 +1188,7 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
     pPriv->timeOutReason = reason;
     
     if (dispatch_semaphore_wait(pPriv->semaTimeout,
-            dispatch_time(DISPATCH_TIME_NOW, LEAFPRO_TIMEOUT_TEN_MS)))  {
+            dispatch_time(DISPATCH_TIME_NOW, LEAFPRO_TIMEOUT_TEN_MS * 10u)))  {
         return canERR_TIMEOUT;
     } else {
         return retVal;

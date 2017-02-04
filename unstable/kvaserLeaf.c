@@ -94,6 +94,7 @@ Can4osxHwFunctions leafHardwareFunctions = {
     .can4osxhwInitRef = LeafInitHardware,
     .can4osxhwCanOpenChannel = NULL,
     .can4osxhwCanSetBusParamsRef = LeafCanSetBusParams,
+    .can4osxhwCanSetBusParamsFdRef = NULL,
     .can4osxhwCanBusOnRef = LeafCanStartChip,
     .can4osxhwCanBusOffRef = LeafCanStopChip,
     .can4osxhwCanWriteRef = LeafCanWrite,
