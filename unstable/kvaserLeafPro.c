@@ -675,43 +675,9 @@ static UInt32 getCommandSize(
 */
 static UInt8 decodeFdDlc(UInt8 dlc)
 {
-    switch(dlc)  {
-        case 0u:
-        case 1u:
-        case 2u:
-        case 3u:
-        case 4u:
-        case 5u:
-        case 6u:
-        case 7u:
-        case 8u:
-            return dlc;
-            break;
-        case 9u:
-            return 12u;
-            break;
-        case 10u:
-            return 16u;
-            break;
-        case 11u:
-            return 20u;
-            break;
-        case 12u:
-            return 24u;
-            break;
-        case 13u:
-            return 32u;
-            break;
-        case 14u:
-            return 48u;
-            break;
-        case 15u:
-            return 64u;
-            break;
-        default:
-            break;
-    }
-    return 0u;
+static const UInt8 len[16] = {0u,1u,2u,3u,4u,5u,6u,7u,8u,12u,16u,20u,24u,32u,48u,64u};
+
+    return len[dlc];
 }
 
 
