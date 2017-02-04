@@ -82,6 +82,28 @@
 /** Used in \ref canSetBusParams() and \ref canSetBusParamsC200(). Indicate a bitrate of 10 kbit/s. */
 #define canBITRATE_10K       (-9)
 
+/** Used in \ref canSetBusParams() and \ref canSetBusParamsFd() when using the
+    CAN FD protocol. Indicates a bitrate of 0.5 Mbit/s and sampling point at
+    80%. */
+#define canFD_BITRATE_500K_80P     (-1000)
+/** Used in \ref canSetBusParams() and \ref canSetBusParamsFd() when using the
+    CAN FD protocol. Indicates a bitrate of 1.0 Mbit/s and sampling point at
+    80%. */
+#define canFD_BITRATE_1M_80P       (-1001)
+/** Used in \ref canSetBusParams() and \ref canSetBusParamsFd() when using the
+    CAN FD protocol. Indicates a bitrate of 2.0 Mbit/s and sampling point at
+    80%. */
+#define canFD_BITRATE_2M_80P       (-1002)
+/** Used in \ref canSetBusParams() and \ref canSetBusParamsFd() when using the
+    CAN FD protocol. Indicates a bitrate of 4.0 Mbit/s and sampling point at
+    80%. */
+#define canFD_BITRATE_4M_80P       (-1003)
+/** Used in \ref canSetBusParams() and \ref canSetBusParamsFd() when using the
+    CAN FD protocol. Indicates a bitrate of 8.0 Mbit/s and sampling point at
+    60%. */
+#define canFD_BITRATE_8M_60P       (-1004)
+
+
 //
 // These are used in the call to canSetNotify().
 //
@@ -216,7 +238,7 @@ canStatus canSetNotify (const CanHandle hnd, CanNotificationType notifyStruct, u
 
 canStatus canSetBusParams (const CanHandle hnd, SInt32 freq, UInt32 tseg1, UInt32 tseg2, UInt32 sjw, UInt32 noSamp, UInt32 syncmode);
 
-canStatus canSetBusParamsFd(const CanHandle hnd, SInt64 freq_brs, UInt32 tseg1, UInt32 tseg2, UInt32 sjw);
+canStatus canSetBusParamsFd(const CanHandle hnd, SInt32 freq_brs, UInt32 tseg1, UInt32 tseg2, UInt32 sjw);
 
 canStatus canRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt32 *flag, UInt32 *time);
 

@@ -230,7 +230,7 @@ canStatus canSetBusParams (const CanHandle hnd, SInt32 freq, UInt32 tseg1, UInt3
 }
 
 
-canStatus canSetBusParamsFd(const CanHandle hnd, SInt64 freq_brs, UInt32 tseg1, UInt32 tseg2, UInt32 sjw)
+canStatus canSetBusParamsFd(const CanHandle hnd, SInt32 freq_brs, UInt32 tseg1, UInt32 tseg2, UInt32 sjw)
 {
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
         return canERR_INVHANDLE;
