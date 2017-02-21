@@ -135,6 +135,10 @@ static canStatus LeafProCanRead (const CanHandle hnd,
 static canStatus LeafProCanWrite(const CanHandle hnd, UInt32 id, void *msg,
                                  UInt16 dlc, UInt32 flag);
 
+static canStatus LeafProCanWriteExt(Can4osxUsbDeviceHandleEntry *pSelf, UInt32 id, void *pMsg,
+                                 UInt16 dlc, UInt32 flag);
+
+
 
 static canStatus LeafProCanTranslateBaud (SInt32 *const freq,
                                           unsigned int *const tseg1,
@@ -473,8 +477,24 @@ Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
         LeafProWriteCommandBuffer(pPriv->cmdBufferRef, cmd);
 
         LeafProWriteBulkPipe(pSelf);
+    } else {
+        (void)LeafProCanWriteExt(pSelf, id, msg, dlc, flag);
     }
         
+    return(canOK);
+}
+
+
+static canStatus LeafProCanWriteExt(Can4osxUsbDeviceHandleEntry *pSelf, UInt32 id, void *pMsg,
+                                 UInt16 dlc, UInt32 flag)
+{
+LeafProPrivateData_t *pPriv = (LeafProPrivateData_t*)pSelf->privateData;
+    proCommand_t extCmd;
+
+
+    LeafProWriteCommandBuffer(pPriv->cmdBufferRef, extCmd);
+
+    LeafProWriteBulkPipe(pSelf);
     return(canOK);
 }
 
@@ -644,7 +664,9 @@ static UInt8 calcExtendedCommandSize(
 *
 * \return the datalength
 */
-static UInt8 decodeFdDlc(UInt8 dlc)
+static UInt8 decodeFdDlc(
+    UInt8 dlc
+    )
 {
 static const UInt8 len[16u] = {0u,1u,2u,3u,4u,5u,6u,7u,8u,12u,16u,20u,24u,32u,48u,64u};
 
@@ -728,6 +750,9 @@ CanMsg canMsg;
             break;
         case LEAFPRO_CMD_GET_SOFTWARE_DETAILS_RESP:
             CAN4OSX_DEBUG_PRINT("LEAFPRO_CMD_GET_SOFTWARE_DETAILS_RESP\n");
+            if (pCmd->proCcmdGetSoftwareDetailsResp.swOptions & LEASPRO_SUPPORT_EXTENDED)  {
+                pPriv->extendedMode = 1u;
+            }
 
             break;
         case LEAFPRO_CMD_GET_SOFTWARE_INFO_RESP:
