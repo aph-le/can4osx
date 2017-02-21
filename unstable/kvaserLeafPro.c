@@ -85,6 +85,9 @@
 /* extended FD able command code */
 #define LEAFPRO_CMD_CAN_FD                      255u
 
+/* extended capabilty flag */
+#define LEASPRO_SUPPORT_EXTENDED                0x200u
+
 
 
 
@@ -303,51 +306,6 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
     pPriv->nosamp = noSamp;
     
     return retVal;
-    
-    
-    // FIXME
-#warning remove static FD
-    pPriv->canFd = 1u;
-    
-    if (pPriv->canFd) {
-        cmd.proCmdSetBusparamsReq.header.cmdNo = LEAFPRO_CMD_SET_BUSPARAMS_FD_REQ;
-        cmd.proCmdSetBusparamsReq.open_as_canfd = 1;
-        
-        
-            cmd.proCmdSetBusparamsReq.bitRate = 500000;
-    cmd.proCmdSetBusparamsReq.sjw     = 16;//(UInt8)1;
-    cmd.proCmdSetBusparamsReq.tseg1   = 63;//(UInt8)5;
-    cmd.proCmdSetBusparamsReq.tseg2   = 16;//(UInt8)2;
-    cmd.proCmdSetBusparamsReq.noSamp  = 0;
-        cmd.proCmdSetBusparamsReq.bitRateFd = 1000000L;
-        cmd.proCmdSetBusparamsReq.tseg1Fd = 31;//15;
-        cmd.proCmdSetBusparamsReq.tseg2Fd = 8;//4;
-        cmd.proCmdSetBusparamsReq.sjwFd = 8;//4;
-        cmd.proCmdSetBusparamsReq.noSampFd = 0;
-            retVal = LeafProWriteCommandWait( pSelf, cmd,
-                LEAFPRO_CMD_SET_BUSPARAMS_FD_RESP);
-        
-           // cmd.proCmdHead.cmdNo = 0x1e;
-        
-                retVal = LeafProWriteCommandWait( pSelf, cmd,
-                LEAFPRO_CMD_SET_BUSPARAMS_FD_RESP);
-            //cmd.proCmdHead.cmdNo = 0x61;
-        
-                retVal = LeafProWriteCommandWait( pSelf, cmd,
-                LEAFPRO_CMD_SET_BUSPARAMS_FD_RESP);
-        //cmd.proCmdSetBusparamsReq.header.cmdNo = LEAFPRO_CMD_SET_BUSPARAMS_FD_REQ;
-        
-                retVal = LeafProWriteCommandWait( pSelf, cmd,
-                LEAFPRO_CMD_SET_BUSPARAMS_FD_RESP);
-
-
-    } else {
-        retVal = LeafProWriteCommandWait( pSelf, cmd,
-                LEAFPRO_CMD_SET_BUSPARAMS_RESP);
-    }
-    
-    
-    return retVal;
 }
 
 
@@ -483,9 +441,14 @@ static canStatus LeafProCanWrite(
     )
 {
 Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
+
+    if ( pSelf->privateData == NULL ) {
+        return(canERR_INTERNAL);
+    }
     
-    if ( pSelf->privateData != NULL ) {
-        LeafProPrivateData_t *pPriv = (LeafProPrivateData_t*)pSelf->privateData;
+    LeafProPrivateData_t *pPriv = (LeafProPrivateData_t*)pSelf->privateData;
+        
+    if (pPriv->extendedMode == 0u)  {
         proCommand_t cmd;
         
         if (flag & canMSG_EXT)  {
@@ -498,11 +461,11 @@ Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
         memcpy(cmd.proCmdTxMessage.data, msg, 8);
         
         cmd.proCmdTxMessage.flags = 0;
-        // RTR Frame
+
         if ( flag & canMSG_RTR ) {
             cmd.proCmdTxMessage.flags |= LEAFPRO_MSG_FLAG_REMOTE_FRAME;
         }
-        
+    
         cmd.proCmdHead.cmdNo = LEAFPRO_CMD_TX_CAN_MESSAGE;
         cmd.proCmdHead.address = pPriv->address;
         cmd.proCmdHead.transitionId = 10;
@@ -510,13 +473,9 @@ Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
         LeafProWriteCommandBuffer(pPriv->cmdBufferRef, cmd);
 
         LeafProWriteBulkPipe(pSelf);
-        
-        return canOK;
-        
-    } else {
-        return canERR_INTERNAL;
     }
-    
+        
+    return(canOK);
 }
 
                                  
@@ -655,6 +614,8 @@ static canStatus LeafProCanTranslateBaud (
 /**************************** Command Stuff ***********************************/
 /******************************************************************************/
 /******************************************************************************/
+
+
 static UInt32 getCommandSize(
         proCommand_t *pCmd
         )
@@ -667,6 +628,16 @@ static UInt32 getCommandSize(
 }
 
 
+static UInt8 calcExtendedCommandSize(
+    UInt8 dlc
+    )
+{
+
+
+    return(8u);
+}
+
+
 /******************************************************************************/
 /**
 * \brief decodeFdDlc - decode the dlc to data length
@@ -675,7 +646,7 @@ static UInt32 getCommandSize(
 */
 static UInt8 decodeFdDlc(UInt8 dlc)
 {
-static const UInt8 len[16] = {0u,1u,2u,3u,4u,5u,6u,7u,8u,12u,16u,20u,24u,32u,48u,64u};
+static const UInt8 len[16u] = {0u,1u,2u,3u,4u,5u,6u,7u,8u,12u,16u,20u,24u,32u,48u,64u};
 
     return len[dlc];
 }
@@ -759,7 +730,8 @@ CanMsg canMsg;
             CAN4OSX_DEBUG_PRINT("LEAFPRO_CMD_GET_SOFTWARE_DETAILS_RESP\n");
 
             break;
-            
+        case LEAFPRO_CMD_GET_SOFTWARE_INFO_RESP:
+            break;
         default:
             break;
     }
