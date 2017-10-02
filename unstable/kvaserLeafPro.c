@@ -111,45 +111,29 @@ static void LeafProMapChannels(Can4osxUsbDeviceHandleEntry *pSelf);
 
 static void LeafProGetCardInfo(Can4osxUsbDeviceHandleEntry *pSelf);
 
-static canStatus LeafProCanSetBusParams ( const CanHandle hnd, SInt32 freq,
-                                         unsigned int tseg1,
-                                         unsigned int tseg2,
-                                         unsigned int sjw,
-                                         unsigned int noSamp,
-                                         unsigned int syncmode );
+static canStatus LeafProCanSetBusParams (const CanHandle hnd, SInt32 freq,
+            unsigned int tseg1, unsigned int tseg2, unsigned int sjw,
+            unsigned int noSamp, unsigned int syncmode);
 
-static canStatus LeafProCanSetBusParamsFd(const CanHandle hnd,
-                                        SInt32 freq_brs,
-                                        UInt32 tseg1,
-                                        UInt32 tseg2,
-                                        UInt32 sjw);
+static canStatus LeafProCanSetBusParamsFd(const CanHandle hnd, SInt32 freq_brs,
+            UInt32 tseg1, UInt32 tseg2, UInt32 sjw);
 
-
-static canStatus LeafProCanRead (const CanHandle hnd,
-                                 UInt32 *id,
-                                 void *msg,
-                                 UInt16 *dlc,
-                                 UInt32 *flag,
-                                 UInt32 *time);
+static canStatus LeafProCanRead (const CanHandle hnd, UInt32 *id, void *msg,
+            UInt16 *dlc, UInt32 *flag, UInt32 *time);
 
 static canStatus LeafProCanWrite(const CanHandle hnd, UInt32 id, void *msg,
-                                 UInt16 dlc, UInt32 flag);
+            UInt16 dlc, UInt32 flag);
 
-static canStatus LeafProCanWriteExt(Can4osxUsbDeviceHandleEntry *pSelf, UInt32 id, void *pMsg,
-                                 UInt16 dlc, UInt32 flag);
-
-
+static canStatus LeafProCanWriteExt(Can4osxUsbDeviceHandleEntry *pSelf,
+            UInt32 id, void *pMsg, UInt16 dlc, UInt32 flag);
 
 static canStatus LeafProCanTranslateBaud (SInt32 *const freq,
-                                          unsigned int *const tseg1,
-                                          unsigned int *const tseg2,
-                                          unsigned int *const sjw,
-                                          unsigned int *const nosamp,
-                                          unsigned int *const syncMode);
+            unsigned int *const tseg1, unsigned int *const tseg2,
+            unsigned int *const sjw, unsigned int *const nosamp,
+            unsigned int *const syncMode);
 
 static IOReturn LeafProWriteCommandWait(Can4osxUsbDeviceHandleEntry *pSelf,
-                                        proCommand_t cmd,
-                                        UInt8 reason);
+            proCommand_t cmd, UInt8 reason);
 
 static LeafProCommandMsgBuf_t* LeafProCreateCommandBuffer(UInt32 bufferSize);
 static void LeafProReleaseCommandBuffer(LeafProCommandMsgBuf_t* pBufferRef);
@@ -159,12 +143,11 @@ static UInt8 LeafProWriteCommandBuffer(LeafProCommandMsgBuf_t* pBufferRef,
                                        proCommand_t newCommand);
 
 static UInt16 LeafProFillBulkPipeBuffer(LeafProCommandMsgBuf_t* bufferRef,
-                                        UInt8 *pPipe, UInt16 maxPipeSize);
+            UInt8 *pPipe, UInt16 maxPipeSize);
 static IOReturn LeafProWriteBulkPipe(Can4osxUsbDeviceHandleEntry *pSelf);
 static void LeafProReadFromBulkInPipe(Can4osxUsbDeviceHandleEntry *self);
-static void LeafProBulkReadCompletion(void *refCon,
-                                      IOReturn result,
-                                      void *arg0);
+static void LeafProBulkReadCompletion(void *refCon, IOReturn result,
+            void *arg0);
 
 
 //Hardware interface function
@@ -187,7 +170,7 @@ Can4osxHwFunctions leafProHardwareFunctions = {
 
 static canStatus LeafProInitHardware(
         const CanHandle hnd
-        )
+    )
 {
 Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
 pSelf->privateData = calloc(1,sizeof(LeafProPrivateData_t));
@@ -198,13 +181,13 @@ pSelf->privateData = calloc(1,sizeof(LeafProPrivateData_t));
         pPriv->cmdBufferRef = LeafProCreateCommandBuffer(1000);
         if ( pPriv->cmdBufferRef == NULL ) {
             free(pPriv);
-            return canERR_NOMEM;
+            return(canERR_NOMEM);
         }
 
         pPriv->semaTimeout = dispatch_semaphore_create(0);
         
     } else {
-        return canERR_NOMEM;
+        return(canERR_NOMEM);
     }
 
     
@@ -220,14 +203,14 @@ pSelf->privateData = calloc(1,sizeof(LeafProPrivateData_t));
     /* Get channel info */
     LeafProGetCardInfo(pSelf);
     
-    return canOK;
+    return(canOK);
 }
 
 
 static CanHandle LeafProCanOpenChannel(
         int channel,
         int flags
-        )
+    )
 {
 Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[channel];
 LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
@@ -252,7 +235,7 @@ static canStatus LeafProCanSetBusParams (
         unsigned int sjw,
         unsigned int noSamp,
         unsigned int syncmode
-        )
+    )
 {
 proCommand_t   cmd;
 // FIXME UInt32         tmp, PScl;
@@ -267,7 +250,7 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
                                           &noSamp, &syncmode)) {
         // TODO
         CAN4OSX_DEBUG_PRINT(" can4osx strange bitrate\n");
-        return -1;
+        return(-1);
     }
     
 #if 0 //FIXME
@@ -309,7 +292,7 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
     pPriv->tseg2 = tseg2;
     pPriv->nosamp = noSamp;
     
-    return retVal;
+    return(retVal);
 }
 
 
@@ -332,7 +315,7 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
     CAN4OSX_DEBUG_PRINT("leaf pro: _set_FD_busparam\n");
     
     if (pPriv->canFd == 0u)  {
-        return canERR_NOTINITIALIZED;
+        return(canERR_NOTINITIALIZED);
     }
     
     if ( canOK != LeafProCanTranslateBaud(&freq_brs, &tseg1, &tseg2, &sjw,
@@ -366,7 +349,7 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
     pPriv->fd_tseg2 = tseg2;
     pPriv->fd_nosamp = 0;
 
-    return canOK;
+    return(canOK);
 }
 
 //Go bus on
@@ -394,7 +377,7 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
     cmd.proCmdHead.transitionId = 1u;
     retVal = LeafProWriteCommandWait(pSelf, cmd, LEAFPRO_CMD_CHIP_STATE_EVENT);
     
-    return retVal;
+    return(retVal);
 }
 
 
@@ -485,13 +468,20 @@ Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
 }
 
 
-static canStatus LeafProCanWriteExt(Can4osxUsbDeviceHandleEntry *pSelf, UInt32 id, void *pMsg,
-                                 UInt16 dlc, UInt32 flag)
+static canStatus LeafProCanWriteExt(
+        Can4osxUsbDeviceHandleEntry *pSelf,
+        UInt32 id,
+        void *pMsg,
+        UInt16 dlc,
+        UInt32 flag
+    )
 {
 LeafProPrivateData_t *pPriv = (LeafProPrivateData_t*)pSelf->privateData;
     proCommand_t extCmd;
 
-
+    /* in extended mode we alway use this kind of command */
+    extCmd.proCommandExt.proCmdFdHead.header.cmdNo = LEAFPRO_CMD_CAN_FD;
+    
     LeafProWriteCommandBuffer(pPriv->cmdBufferRef, extCmd);
 
     LeafProWriteBulkPipe(pSelf);
@@ -621,10 +611,10 @@ static canStatus LeafProCanTranslateBaud (
             break;
                         
         default:
-            return canERR_PARAM;
+            return(canERR_PARAM);
     }
     
-    return canOK;
+    return(canOK);
 }
 
 
@@ -638,7 +628,7 @@ static canStatus LeafProCanTranslateBaud (
 
 static UInt32 getCommandSize(
         proCommand_t *pCmd
-        )
+    )
 {
     if (pCmd->proCmdHead.cmdNo == LEAFPRO_CMD_CAN_FD)  {
         return(((proCmdFdHead_t *)(pCmd))->len);
