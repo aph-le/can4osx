@@ -639,7 +639,7 @@ static UInt32 getCommandSize(
 
 
 static UInt8 calcExtendedCommandSize(
-    UInt8 dlc
+        UInt8 dlc
     )
 {
 
@@ -655,7 +655,7 @@ static UInt8 calcExtendedCommandSize(
 * \return the datalength
 */
 static UInt8 decodeFdDlc(
-    UInt8 dlc
+        UInt8 dlc
     )
 {
 static const UInt8 len[16u] = {0u,1u,2u,3u,4u,5u,6u,7u,8u,12u,16u,20u,24u,32u,48u,64u};
@@ -947,7 +947,7 @@ __block UInt8 retval = 1u;
         }
     });
     
-    return retval;
+    return(retval);
 }
 
 
@@ -970,7 +970,7 @@ __block UInt8 retval = 1u;
         
     });
     
-    return retval;
+    return(retval);
 }
 
 
@@ -993,9 +993,9 @@ static UInt8 LeafProTestEmptyCommandBuffer(
     )
 {
     if ( pBufferRef->bufferCount == 0u ) {
-        return 1u;
+        return(1u);
     } else {
-        return 0u;
+        return(0u);
     }
 }
 
@@ -1072,7 +1072,7 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
         }
     }
     
-    return retval;
+    return(retval);
 }
 
 
