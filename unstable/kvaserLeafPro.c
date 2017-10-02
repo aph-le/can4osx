@@ -1103,7 +1103,7 @@ UInt16 fillState = 0u;
         }
     }
     
-    return fillState;
+    return(fillState);
 }
 
 
@@ -1142,9 +1142,9 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
     
     if (dispatch_semaphore_wait(pPriv->semaTimeout,
             dispatch_time(DISPATCH_TIME_NOW, LEAFPRO_TIMEOUT_TEN_MS * 10u)))  {
-        return canERR_TIMEOUT;
+        return(canERR_TIMEOUT);
     } else {
-        return retVal;
+        return(retVal);
     }
 }
 
