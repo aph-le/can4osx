@@ -196,6 +196,13 @@ typedef struct  {
 } LeafProRaw_t;
 
 
+typedef union  {
+    proCmdFdHead_t      proCmdFdHead;
+    proCmdFdRxMessage_t proCmdFdRxMessage;
+    proCmdFdTxMessage_t proCmdFdTxMessage;
+} __attribute__ ((packed)) proCommandExt_t;
+
+
 typedef union {
     LeafProRaw_t                    raw;
     proCmdHead_t                    proCmdHead;
@@ -208,14 +215,8 @@ typedef union {
     proCmdTxMessage_t               proCmdTxMessage;
     proCmdGetSoftwareDetailsReq_t   proCmdGetSoftwareDetailsReq;
     proCcmdGetSoftwareDetailsResp_t proCcmdGetSoftwareDetailsResp;
+    proCommandExt_t                 proCommandExt;
 } __attribute__ ((packed)) proCommand_t;
-
-
-typedef union  {
-    proCmdFdHead_t      proCmdFdHead;
-    proCmdFdRxMessage_t proCmdFdRxMessage;
-    proCmdFdTxMessage_t proCmdFdTxMessage;
-} __attribute__ ((packed)) proCommandExt_t;
 
 
 //holds the actual cmd buffer
