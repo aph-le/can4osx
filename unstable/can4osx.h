@@ -165,6 +165,16 @@
 #define canCHANNELDATA_DEVDESCR_ASCII             26
 
 
+#define canCHANNEL_CAP_CAN_FD            0x00080000L ///< CAN-FD ISO compliant channel
+#define canCHANNEL_CAP_CAN_FD_NONISO     0x00100000L ///< CAN-FD NON-ISO compliant channel
+#define canCHANNEL_CAP_SILENT_MODE       0x00200000L ///< Channel supports Silent mode
+#define canCHANNEL_CAP_SINGLE_SHOT       0x00400000L ///< Channel supports Single Shot messages
+#define canCHANNEL_CAP_LOGGER            0x00800000L ///< Channel has logger capabilities.
+#define canCHANNEL_CAP_REMOTE_ACCESS     0x01000000L ///< Channel has remote capabilities
+#define canCHANNEL_CAP_SCRIPT            0x02000000L ///< Channel has script capabilities.
+#define canCHANNEL_CAP_LIN_FLEX          0x04000000L ///< Channel has LIN capabilities.
+
+
 
 
 //

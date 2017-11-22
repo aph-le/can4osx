@@ -134,6 +134,7 @@ typedef struct {
 
 typedef struct {
     UInt64 serialNumber;
+    UInt32 capability;
     UInt8  deviceString[128];
 } Can4osxDeviceInfo_T;
 

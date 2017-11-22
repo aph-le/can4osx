@@ -154,6 +154,7 @@ static void LeafProBulkReadCompletion(void *refCon, IOReturn result,
 static canStatus LeafProInitHardware(const CanHandle hnd);
 static CanHandle LeafProCanOpenChannel(int channel, int flags);
 static canStatus LeafProCanStartChip(CanHandle hdl);
+static canStatus LeafProCanStopChip(CanHandle hdl);
 
 Can4osxHwFunctions leafProHardwareFunctions = {
     .can4osxhwInitRef = LeafProInitHardware,
@@ -161,7 +162,7 @@ Can4osxHwFunctions leafProHardwareFunctions = {
     .can4osxhwCanSetBusParamsRef = LeafProCanSetBusParams,
     .can4osxhwCanSetBusParamsFdRef = LeafProCanSetBusParamsFd,
     .can4osxhwCanBusOnRef = LeafProCanStartChip,
-    .can4osxhwCanBusOffRef = NULL,
+    .can4osxhwCanBusOffRef = LeafProCanStopChip,
     .can4osxhwCanWriteRef = LeafProCanWrite,
     .can4osxhwCanReadRef = LeafProCanRead,
     .can4osxhwCanCloseRef = NULL,
@@ -193,6 +194,8 @@ pSelf->privateData = calloc(1,sizeof(LeafProPrivateData_t));
     
     /* Set some device Infos */
     sprintf((char*)pSelf->devInfo.deviceString, "%s",pDeviceString);
+    pSelf->devInfo.capability = 0u;
+    pSelf->devInfo.capability |= canCHANNEL_CAP_CAN_FD;
     
     /* Trigger next read */
     LeafProReadFromBulkInPipe(pSelf);
@@ -379,6 +382,14 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
     
     return(retVal);
 }
+
+
+static canStatus LeafProCanStopChip(
+        CanHandle hdl
+        )
+        {
+        return 0;
+        }
 
 
 /******************************************************************************/
@@ -858,7 +869,7 @@ proCommand_t cmd;
 /******************************************************************************/
 static void LeafProGetCardInfo(
         Can4osxUsbDeviceHandleEntry *pSelf /**< pointer to my reference */
-        )
+    )
 {
 proCommand_t cmd;
 

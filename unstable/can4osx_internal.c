@@ -189,16 +189,22 @@ canStatus CAN4OSX_GetChannelData(
 
     switch(cmd) {
         case canCHANNELDATA_CARD_SERIAL_NO:
-            if (bufsize < 8) {
+            if (bufsize < 8)  {
                 return canERR_NOMEM;
             }
             memcpy(pBuffer, &(pSelf->devInfo.serialNumber), 8);
             break;
         case canCHANNELDATA_DEVDESCR_ASCII:
-            if (bufsize > 128) {
+            if (bufsize > 128)  {
                 bufsize = 128;
             }
             memcpy(pBuffer, pSelf->devInfo.deviceString, bufsize);
+            break;
+        case canCHANNELDATA_CHANNEL_CAP:
+            if (bufsize < 4)  {
+                return(canERR_NOMEM);
+            }
+            memcpy(pBuffer, &(pSelf->devInfo.capability), 4);
             break;
         default:
             break;
