@@ -56,10 +56,6 @@
 #include <IOKit/usb/IOUSBLib.h>
 
 
-
-
-
-
 typedef struct{
     UInt32 vendorId;
     UInt32 productId;
