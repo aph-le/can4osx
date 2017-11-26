@@ -327,8 +327,6 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
         CAN4OSX_DEBUG_PRINT(" can4osx strange bitrate\n");
         return(canERR_PARAM);
     }
-    printf("LeafProCanSetBusParamsFd bitrate ok\n");
-
     memset(&cmd, 0 , sizeof(cmd));
     
     cmd.proCmdSetBusparamsReq.header.cmdNo = LEAFPRO_CMD_SET_BUSPARAMS_FD_REQ;
