@@ -242,7 +242,7 @@ static canStatus LeafProCanSetBusParams (
 {
 proCommand_t   cmd;
 // FIXME UInt32         tmp, PScl;
-int            retVal;
+int retVal;
     
 Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
 LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
@@ -285,8 +285,7 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
     cmd.proCmdSetBusparamsReq.tseg2   = (UInt8)tseg2;
     cmd.proCmdSetBusparamsReq.noSamp  = noSamp;
     
-    retVal = LeafProWriteCommandWait( pSelf, cmd,
-                LEAFPRO_CMD_SET_BUSPARAMS_RESP);
+    retVal = LeafProWriteCommandWait( pSelf, cmd,LEAFPRO_CMD_SET_BUSPARAMS_RESP);
     
     /* save locally */
     pPriv->freq = freq;
@@ -316,6 +315,7 @@ Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
 LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
     
     CAN4OSX_DEBUG_PRINT("leaf pro: _set_FD_busparam\n");
+    printf("LeafProCanSetBusParamsFd entry\n");
     
     if (pPriv->canFd == 0u)  {
         return(canERR_NOTINITIALIZED);
@@ -325,22 +325,27 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
                                           &noSamp, &syncmode)) {
         // TODO
         CAN4OSX_DEBUG_PRINT(" can4osx strange bitrate\n");
-        return canERR_PARAM;
+        return(canERR_PARAM);
     }
+    printf("LeafProCanSetBusParamsFd bitrate ok\n");
+
+    memset(&cmd, 0 , sizeof(cmd));
     
     cmd.proCmdSetBusparamsReq.header.cmdNo = LEAFPRO_CMD_SET_BUSPARAMS_FD_REQ;
+    cmd.proCmdSetBusparamsReq.header.address = pPriv->address;
+    cmd.proCmdSetBusparamsReq.header.transitionId = 0x0000;
     cmd.proCmdSetBusparamsReq.open_as_canfd = 1;
     
     cmd.proCmdSetBusparamsReq.bitRate = pPriv->freq;
     cmd.proCmdSetBusparamsReq.sjw     = pPriv->sjw;
     cmd.proCmdSetBusparamsReq.tseg1   = pPriv->tseg1;
     cmd.proCmdSetBusparamsReq.tseg2   = pPriv->tseg2;
-    cmd.proCmdSetBusparamsReq.noSamp  = 0;
+    cmd.proCmdSetBusparamsReq.noSamp  = 1;
     cmd.proCmdSetBusparamsReq.bitRateFd = freq_brs;
     cmd.proCmdSetBusparamsReq.tseg1Fd = tseg1;
     cmd.proCmdSetBusparamsReq.tseg2Fd = tseg2;
     cmd.proCmdSetBusparamsReq.sjwFd = sjw;
-    cmd.proCmdSetBusparamsReq.noSampFd = 0;
+    cmd.proCmdSetBusparamsReq.noSampFd = 1;
     
     retVal = LeafProWriteCommandWait( pSelf, cmd,
                 LEAFPRO_CMD_SET_BUSPARAMS_FD_RESP);
@@ -387,9 +392,9 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
 static canStatus LeafProCanStopChip(
         CanHandle hdl
         )
-        {
-        return 0;
-        }
+{
+    return 0;
+}
 
 
 /******************************************************************************/
@@ -782,6 +787,8 @@ CanMsg canMsg;
                 CAN4OSX_DEBUG_PRINT("LEAFPRO_MESSAGE ERROR_FRAME\n");
                 break;
             }
+            
+            canMsg.canTimestamp = pCmd->proCmdFdRxMessage.timestamp;
         
             canMsg.canId = pCmd->proCmdFdRxMessage.canId;
             canMsg.canDlc = (pCmd->proCmdFdRxMessage.control>>8u) & 0x0fu;
