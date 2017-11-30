@@ -193,7 +193,6 @@ pSelf->privateData = calloc(1,sizeof(LeafProPrivateData_t));
 
     
     /* Set some device Infos */
-    sprintf((char*)pSelf->devInfo.deviceString, "%s",pDeviceString);
     pSelf->devInfo.capability = 0u;
     pSelf->devInfo.capability |= canCHANNEL_CAP_CAN_FD;
     
@@ -315,7 +314,6 @@ Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
 LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
     
     CAN4OSX_DEBUG_PRINT("leaf pro: _set_FD_busparam\n");
-    printf("LeafProCanSetBusParamsFd entry\n");
     
     if (pPriv->canFd == 0u)  {
         return(canERR_NOTINITIALIZED);
@@ -491,7 +489,7 @@ static canStatus LeafProCanWriteExt(
     )
 {
 LeafProPrivateData_t *pPriv = (LeafProPrivateData_t*)pSelf->privateData;
-    proCommand_t extCmd;
+proCommand_t extCmd;
 
     /* in extended mode we alway use this kind of command */
     extCmd.proCommandExt.proCmdFdHead.header.cmdNo = LEAFPRO_CMD_CAN_FD;
@@ -1181,7 +1179,6 @@ UInt32 numBytesRead = (UInt32) arg0;
                         (long)numBytesRead);
     
     if (result != kIOReturnSuccess) {
-        printf("Error from async bulk read (%08x)\n", result);
         (void)(*interface)->USBInterfaceClose(interface);
         (void)(*interface)->Release(interface);
         return;
