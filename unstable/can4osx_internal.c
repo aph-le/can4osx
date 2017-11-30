@@ -87,7 +87,7 @@ CanEventMsgBuf* CAN4OSX_CreateCanEventBuffer(
 		return NULL;
 	}
     
-	return bufferRef;
+	return(bufferRef);
 }
 
 
@@ -115,9 +115,9 @@ static UInt8 CAN4OSX_TestFullCanEventBuffer(
         )
 {
 	if (bufferRef->bufferCount == bufferRef->bufferSize) {
-		return 1;
+		return(1);
 	} else {
-		return 0;
+		return(0);
 	}
 }
 
