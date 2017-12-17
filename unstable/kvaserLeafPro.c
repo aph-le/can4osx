@@ -797,12 +797,10 @@ CanMsg canMsg;
                     return;
                 }
             
-                CAN4OSX_DEBUG_PRINT("LEAFPRO_MESSAGE CAN-FD\n");
                 canMsg.canFlags |= canFDMSG_FDF;
                 
                 /* test for other FD flags */
                 if (pCmd->proCmdFdRxMessage.flags & LEAFPRO_MSGFLAG_BRS)  {
-                    CAN4OSX_DEBUG_PRINT("LEAFPRO_MESSAGE CAN-FD - BRS\n");
                     canMsg.canFlags |= canFDMSG_BRS;
                 }
                 /* decode dlc to length */
@@ -816,7 +814,6 @@ CanMsg canMsg;
             }
             
             if (pCmd->proCmdFdRxMessage.flags & LEAFPRO_MSG_FLAG_EXTENDED) {
-                CAN4OSX_DEBUG_PRINT("LEAFPRO_MESSAGE EXTENDED\n");
                 canMsg.canFlags |= canMSG_EXT;
             } else {
                 CAN4OSX_DEBUG_PRINT("LEAFPRO_MESSAGE STD\n");
@@ -902,7 +899,7 @@ static LeafProCommandMsgBuf_t* LeafProCreateCommandBuffer(
 LeafProCommandMsgBuf_t* pBufferRef = malloc(sizeof(LeafProCommandMsgBuf_t));
 
     if ( pBufferRef == NULL ) {
-        return NULL;
+        return(NULL);
     }
     
     pBufferRef->bufferSize = bufferSize;
@@ -913,17 +910,17 @@ LeafProCommandMsgBuf_t* pBufferRef = malloc(sizeof(LeafProCommandMsgBuf_t));
     
     if ( pBufferRef->commandRef == NULL ) {
         free(pBufferRef);
-        return NULL;
+        return(NULL);
     }
     
     pBufferRef->bufferGDCqueueRef = dispatch_queue_create(
                                         "com.can4osx.leafprocommandqueue", 0u);
     if ( pBufferRef->bufferGDCqueueRef == NULL ) {
         LeafProReleaseCommandBuffer(pBufferRef);
-        return NULL;
+        return(NULL);
     }
     
-    return pBufferRef;
+    return(pBufferRef);
 }
 
 
@@ -1034,8 +1031,6 @@ UInt32 numBytesWritten = (UInt32)arg0;
     
     (void)numBytesWritten;
     
-    CAN4OSX_DEBUG_PRINT("Asynchronous bulk write complete\n");
-    
     if (result != kIOReturnSuccess) {
         CAN4OSX_DEBUG_PRINT("error from asynchronous bulk write (%08x)\n", result);
         (void)(*interface)->USBInterfaceClose(interface);
@@ -1044,8 +1039,6 @@ UInt32 numBytesWritten = (UInt32)arg0;
     }
     
     self->endpoitBulkOutBusy = FALSE;
-    
-    CAN4OSX_DEBUG_PRINT("Wrote %ld bytes to bulk endpoint\n", (long)numBytesWritten);
     
     LeafProWriteBulkPipe(self);
     
@@ -1175,9 +1168,6 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
 IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
 UInt32 numBytesRead = (UInt32) arg0;
     
-    CAN4OSX_DEBUG_PRINT("Asynchronous bulk read complete (%ld)\n",
-                        (long)numBytesRead);
-    
     if (result != kIOReturnSuccess) {
         (void)(*interface)->USBInterfaceClose(interface);
         (void)(*interface)->Release(interface);
@@ -1221,7 +1211,7 @@ static void LeafProReadFromBulkInPipe(
         Can4osxUsbDeviceHandleEntry *pSelf /**< pointer to my reference */
         )
 {
-    IOReturn ret = (*(pSelf->can4osxInterfaceInterface))->ReadPipeAsync(pSelf->can4osxInterfaceInterface, pSelf->endpointNumberBulkIn, pSelf->endpointBufferBulkInRef, pSelf->endpointMaxSizeBulkIn, LeafProBulkReadCompletion, (void*)pSelf);
+IOReturn ret = (*(pSelf->can4osxInterfaceInterface))->ReadPipeAsync(pSelf->can4osxInterfaceInterface, pSelf->endpointNumberBulkIn, pSelf->endpointBufferBulkInRef, pSelf->endpointMaxSizeBulkIn, LeafProBulkReadCompletion, (void*)pSelf);
     
     if (ret != kIOReturnSuccess) {
         CAN4OSX_DEBUG_PRINT("Unable to read async interface (%08x)\n", ret);
