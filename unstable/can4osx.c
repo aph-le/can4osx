@@ -6,7 +6,7 @@
 //
 // License: GPLv2
 //
-// ===============================================================================
+// =============================================================================
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -22,7 +22,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
-// ===============================================================================
+// =============================================================================
 //
 // Disclaimer:     IMPORTANT: THE SOFTWARE IS PROVIDED ON AN "AS IS" BASIS. THE AUTHOR MAKES NO
 // WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE IMPLIED
@@ -37,7 +37,7 @@
 // OF SOFTWARE, HOWEVER CAUSED AND WHETHER UNDER THEORY OF CONTRACT, TORT
 // (INCLUDING NEGLIGENCE), STRICT LIABILITY OR OTHERWISE, EVEN IF THE AUTHOR HAS
 // BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// ===============================================================================
+// =============================================================================
 //
 
 
@@ -99,8 +99,6 @@ bool bIsLoaded = false;
  * This function might be called more than once, but at least once to init the
  * driver and internal structures.
  *
- * \return none
- *
  */
 void canInitializeLibrary (void)
 {
@@ -129,7 +127,7 @@ void canInitializeLibrary (void)
 }
 
 
-/********************************************************************************/
+/******************************************************************************/
 /**
  * \brief canBusOn - enables the CAn bus
  *
@@ -141,7 +139,7 @@ void canInitializeLibrary (void)
 canStatus canBusOn(const CanHandle hnd)
 {
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
-        return canERR_INVHANDLE;
+        return(canERR_INVHANDLE);
     } else {
         Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
         return self->hwFunctions.can4osxhwCanBusOnRef(hnd);
@@ -149,7 +147,7 @@ canStatus canBusOn(const CanHandle hnd)
 }
 
 
-/********************************************************************************/
+/******************************************************************************/
 /**
  * \brief canBusOff - disables the CAn bus
  *
@@ -161,7 +159,7 @@ canStatus canBusOn(const CanHandle hnd)
 canStatus canBusOff(const CanHandle hnd)
 {
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
-        return canERR_INVHANDLE;
+        return(canERR_INVHANDLE);
     } else {
         Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
         return pSelf->hwFunctions.can4osxhwCanBusOffRef(hnd);
@@ -169,7 +167,7 @@ canStatus canBusOff(const CanHandle hnd)
 }
 
 
-/********************************************************************************/
+/******************************************************************************/
 /**
  * \brief canOpenChannel - opens a channel on the interface
  *
@@ -181,15 +179,21 @@ canStatus canBusOff(const CanHandle hnd)
 CanHandle canOpenChannel(int channel, int flags)
 {
     if ( CAN4OSX_CheckHandle(channel) == -1 ) {
-        return canERR_NOCHANNELS;
+        return(canERR_NOCHANNELS);
     } else {
         Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[channel];
         if (pSelf->hwFunctions.can4osxhwCanOpenChannel != NULL) {
             pSelf->hwFunctions.can4osxhwCanOpenChannel(channel, flags);
         }
         
-        return (CanHandle)channel;
+        return(CanHandle)channel;
     }
+}
+
+canStatus canClose (const CanHandle hndl)
+{
+
+    return(0);//FIXME
 }
 
 
@@ -225,7 +229,12 @@ canStatus canSetBusParams (const CanHandle hnd, SInt32 freq, UInt32 tseg1, UInt3
         return canERR_INVHANDLE;
     } else {
         Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
-        return pSelf->hwFunctions.can4osxhwCanSetBusParamsRef(hnd, freq, tseg1, tseg2, sjw, noSamp, syncmode);
+        if (NULL != pSelf->hwFunctions.can4osxhwCanSetBusParamsRef)  {
+            return pSelf->hwFunctions.can4osxhwCanSetBusParamsRef(hnd, freq, tseg1, tseg2, sjw, noSamp, syncmode);
+        } else {
+            return(canERR_PARAM);
+        }
+
     }
 }
 
@@ -239,13 +248,13 @@ canStatus canSetBusParamsFd(const CanHandle hnd, SInt32 freq_brs, UInt32 tseg1, 
         if (NULL != pSelf->hwFunctions.can4osxhwCanSetBusParamsFdRef) {
             return pSelf->hwFunctions.can4osxhwCanSetBusParamsFdRef(hnd, freq_brs, tseg1, tseg2, sjw);
         } else {
-            return canERR_PARAM;
+            return(canERR_PARAM);
         }
     }
 }
 
 
-/********************************************************************************/
+/******************************************************************************/
 /**
  * \brief canRead - read a CAN message
  *
@@ -342,11 +351,11 @@ canStatus canGetNumberOfChannels (int *channelCount)
 
 static void CAN4OSX_CanInitializeLibrary (void)
 {
-    UInt16 loopCount = 0;
-    
-    CFMutableDictionaryRef 	can4osxUsbMatchingDictRef;
-    CFRunLoopSourceRef		can4osxRunLoopSourceRef;
-    CFNumberRef				numberRef;
+UInt16 loopCount = 0;
+
+CFMutableDictionaryRef 	can4osxUsbMatchingDictRef;
+CFRunLoopSourceRef		can4osxRunLoopSourceRef;
+CFNumberRef				numberRef;
     
     
     CAN4OSX_DEBUG_PRINT(" Call: %s\n",__func__);
@@ -404,7 +413,7 @@ static void CAN4OSX_CanInitializeLibrary (void)
 }
 
 
-/********************************************************************************/
+/******************************************************************************/
 /**
  * \internal
  * \brief CAN4OSX_CheckHandle - checks if the handle is valid
@@ -430,14 +439,14 @@ static CanHandle CAN4OSX_CheckHandle(const CanHandle hnd)
 
 static void CAN4OSX_DeviceAdded(void *refCon, io_iterator_t iterator)
 {
-    kern_return_t          kernRetVal;
-    SInt32                 score;
-    HRESULT                result;
-    UInt16                 productId;
-    
-    io_service_t           can4osxUsbDevice;
-    IOCFPlugInInterface  **can4osxPluginInterface = NULL;
-    Can4osxUsbDeviceHandleEntry *pDevice;
+kern_return_t          kernRetVal;
+SInt32                 score;
+HRESULT                result;
+UInt16                 productId;
+
+io_service_t           can4osxUsbDevice;
+IOCFPlugInInterface  **can4osxPluginInterface = NULL;
+Can4osxUsbDeviceHandleEntry *pDevice;
     
     while ( (can4osxUsbDevice = IOIteratorNext(iterator) ) ) {
 
@@ -556,9 +565,9 @@ static void CAN4OSX_DeviceAdded(void *refCon, io_iterator_t iterator)
 
 static IOReturn CAN4OSX_ConfigureDevice(IOUSBDeviceInterface **dev)
 {
-    UInt8 numConfig;
-    IOReturn kr;
-    IOUSBConfigurationDescriptorPtr configDesc;
+UInt8 numConfig;
+IOReturn kr;
+IOUSBConfigurationDescriptorPtr configDesc;
  
     /*kr = */(*dev)->GetNumberOfConfigurations(dev, &numConfig);
     if (!numConfig) {
@@ -582,19 +591,19 @@ static IOReturn CAN4OSX_ConfigureDevice(IOUSBDeviceInterface **dev)
 
 static IOReturn CAN4OSX_FindInterfaces(Can4osxUsbDeviceHandleEntry *handle)
 {
-    IOReturn ret, ret2;
-    IOUSBFindInterfaceRequest request;
-    io_iterator_t iterator;
-    io_service_t usbInterface;
-    IOCFPlugInInterface **plugInInterface = NULL;
-    IOUSBInterfaceInterface **interface = NULL;
-    HRESULT result;
-    SInt32 score;
-    UInt8 interfaceNumEndpoints;
-    IOUSBDeviceInterface **device = handle->can4osxDeviceInterface;
-    int loopCount = 1;
-    
-    CFRunLoopSourceRef runLoopSource;
+IOReturn ret, ret2;
+IOUSBFindInterfaceRequest request;
+io_iterator_t iterator;
+io_service_t usbInterface;
+IOCFPlugInInterface **plugInInterface = NULL;
+IOUSBInterfaceInterface **interface = NULL;
+HRESULT result;
+SInt32 score;
+UInt8 interfaceNumEndpoints;
+IOUSBDeviceInterface **device = handle->can4osxDeviceInterface;
+int loopCount = 1;
+
+CFRunLoopSourceRef runLoopSource;
     
     request.bInterfaceClass    = kIOUSBFindInterfaceDontCare;
     request.bInterfaceSubClass = kIOUSBFindInterfaceDontCare;
