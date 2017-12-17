@@ -239,6 +239,8 @@ void canInitializeLibrary (void);
 
 CanHandle canOpenChannel(int channel, int flags);
 
+canStatus canClose (const CanHandle hndl);
+
 canStatus canBusOn (const CanHandle hndl);
 
 canStatus canBusOff (const CanHandle hndl);
