@@ -166,6 +166,7 @@ static canStatus LeafCanWrite (const CanHandle hnd,UInt32 id, void *msg, UInt16 
         LeafPrivateData *priv = (LeafPrivateData *)self->privateData;
 
         leafCmd cmd;
+        cmd.txCanMessage.channel = 0;
         
         cmd.txCanMessage.cmdLen = sizeof(cmdTxCanMessage);
         
