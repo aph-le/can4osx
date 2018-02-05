@@ -56,6 +56,7 @@
 // Hardeware specific headers
 #include "kvaserLeaf.h"
 #include "kvaserLeafPro.h"
+#include "ixxatUsbFd.h"
 
 
 Can4osxUsbDeviceHandleEntry can4osxUsbDeviceHandle[CAN4OSX_MAX_CHANNEL_COUNT];
@@ -69,6 +70,7 @@ static Can4osxUsbDeviceEntry can4osxSupportedDevices[] =
     {0x0bfd, 0x0120}, //Kvaser Leaf Light v.2
     {0x0bfd, 0x0107}, //Kvaser Leaf Pro HS v.2
     {0x0bfd, 0x000E}, //Kvaser Leaf SemiPro HS
+    {0x08d8, 0x0017}, //IXXAT USB-to-CAN FD
 };
 
 
@@ -547,12 +549,17 @@ Can4osxUsbDeviceHandleEntry *pDevice;
             case 0x0107:
                 pDevice->hwFunctions = leafProHardwareFunctions;
                 break;
+            case 0x0017:
+            	pDevice->hwFunctions = ixxUsbFdHardwareFunctions;
+             	break;
             default:
                 pDevice->hwFunctions = leafHardwareFunctions;
                 break;
         }
         
-        pDevice->hwFunctions.can4osxhwInitRef(can4osxMaxChannelCount);
+        if (pDevice->hwFunctions.can4osxhwInitRef != NULL)  {
+        	pDevice->hwFunctions.can4osxhwInitRef(can4osxMaxChannelCount);
+        }
         
         //pDevice->hwFunctions.can4osxhwCanSetBusParamsRef(can4osxMaxChannelCount, canBITRATE_125K, 10, 5, 1, 1, 0);
 
@@ -678,7 +685,7 @@ CFRunLoopSourceRef runLoopSource;
                 CAN4OSX_DEBUG_PRINT("%s : Unable to get properties of pipe %d (%08x)\n",__func__ ,loopCount, ret2);
             } else {
                 if ( (direction == kUSBOut) && (transferType == kUSBBulk) ) {
-                    CAN4OSX_DEBUG_PRINT("%s : Found BulkOut endpoint %d \n",__func__ ,loopCount);
+                    CAN4OSX_DEBUG_PRINT("%s : Found BulkOut endpoint %d - maxPack: %d\n",__func__ ,loopCount, maxPacketSize);
                     if (handle->endpointNumberBulkOut == 0) {
                         handle->endpointNumberBulkOut = loopCount;
                         handle->endpointMaxSizeBulkOut = maxPacketSize;
@@ -686,7 +693,7 @@ CFRunLoopSourceRef runLoopSource;
                 }
                 
                 if ( (direction == kUSBIn) && (transferType == kUSBBulk) ) {
-                    CAN4OSX_DEBUG_PRINT("%s : Found BulkIn endpoint %d \n",__func__ ,loopCount);
+                    CAN4OSX_DEBUG_PRINT("%s : Found BulkIn endpoint %d - maxPack: %d\n",__func__ ,loopCount, maxPacketSize);
                     if (handle->endpointNumberBulkIn == 0u)  {
                         handle->endpointNumberBulkIn = loopCount;
                         handle->endpointMaxSizeBulkIn = maxPacketSize;
