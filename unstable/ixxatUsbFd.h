@@ -68,7 +68,7 @@ typedef struct {
     UInt16 reqPort;
     UInt16 reqSocket;
     UInt32 reqCode;
-} __attribute__ ((packed)) ixxUsbFdMsgReqHead_t;
+} __attribute__ ((packed)) IXXUSBFDMSGREQHEAD_T;
 
 typedef struct {
     UInt32 respSize;
@@ -77,7 +77,7 @@ typedef struct {
 } __attribute__ ((packed)) ixxUsbFdMsgRespHead_t;
 
 typedef struct {
-    ixxUsbFdMsgReqHead_t header;
+    IXXUSBFDMSGREQHEAD_T header;
     UInt8  mode;
     UInt8  padding1;
     UInt16 padding2;
@@ -88,6 +88,23 @@ typedef struct {
 } __attribute__ ((packed)) ixxUsbFdDevPowerResp_t;
 
 
+typedef struct  {
+	UInt16 chanCount;
+	UInt16 chanTypes[32];
+} __attribute__ ((packed)) IXXUSBFDDEVICECAPS_T;
+
+typedef struct  {
+	IXXUSBFDMSGREQHEAD_T header;
+} __attribute__ ((packed)) IXXUSBFDDEVICECAPSREQ_T;
+
+typedef struct  {
+    ixxUsbFdMsgRespHead_t header;
+    IXXUSBFDDEVICECAPS_T caps;
+} __attribute__ ((packed)) IXXUSBFDDEVICECAPSRESP_T;
+
+typedef union {
+	IXXUSBFDMSGREQHEAD_T reqHeader;
+} __attribute__ ((packed)) IXXUSBFD_CMD_T;
 
 
 #endif /* can4osx_ixxatUsbFd_h */
