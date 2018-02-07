@@ -144,6 +144,9 @@ typedef struct {
     
     CanNotificationType     canNotification;
     
+    int deviceChannelCount;
+    int deviceChannel;
+    // virtual channel number
     int channelNumber;
     // BulkIn info/pointer
     int endpointMaxSizeBulkIn;
