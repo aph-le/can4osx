@@ -138,7 +138,9 @@ Can4osxHwFunctions ixxUsbFdHardwareFunctions = {
 };
 
 
-static canStatus usbFdInitHardware(const CanHandle hnd)
+static canStatus usbFdInitHardware(
+		const CanHandle hnd
+    )
 {
     Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
     pSelf->privateData = calloc(1,sizeof(usbFdPrivateData_t));
@@ -151,16 +153,6 @@ static canStatus usbFdInitHardware(const CanHandle hnd)
      		priv->inEndPoint = i;
             priv->pEndpointInBuffer[i] = (UInt8 *)calloc(1,512);
         }
-    //    LeafPrivateData *priv = (LeafPrivateData *)self->privateData;
-        
-    //    priv->cmdBufferRef = LeafCreateCommandBuffer(1000);
-    //    if ( priv->cmdBufferRef == NULL ) {
-    //        free(priv);
-    //        return canERR_NOMEM;
-    //    }
-        
-    //    priv->semaTimeout = dispatch_semaphore_create(0);
-        
     } else {
         return(canERR_NOMEM);
     }
@@ -175,12 +167,12 @@ static canStatus usbFdInitHardware(const CanHandle hnd)
     usbFdSetPowerMode(pSelf, 0);
     usbFdGetDeviceCaps(pSelf);
 
-
     // Trigger the read
     usbFdReadFromBulkInPipe(pSelf);
     
     return(canOK);
 }
+
 
 static CanHandle usbFdCanOpenChannel(
         int channel,
@@ -212,7 +204,7 @@ static canStatus usbFdCanSetBusParams (
     )
 {
 Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
- usbFdPrivateData_t *pPriv = (usbFdPrivateData_t *)pSelf->privateData;
+usbFdPrivateData_t *pPriv = (usbFdPrivateData_t *)pSelf->privateData;
     
     CAN4OSX_DEBUG_PRINT("leaf pro: _set_busparam\n");
     
@@ -222,8 +214,6 @@ Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
         CAN4OSX_DEBUG_PRINT(" can4osx strange bitrate\n");
         return(-1);
     }
-    
-
     
     /* save locally */
     pPriv->brp = freq;
@@ -270,7 +260,7 @@ IXXUSBFDCANSTARTRESP_T *pResp;
 
 static canStatus usbFdCanStopChip(
         CanHandle hdl
-        )
+    )
 {
 Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hdl];
 UInt8 data[IXXUSBFD_CMD_BUFFER_SIZE] = {0};
@@ -304,7 +294,7 @@ static canStatus usbFdCanRead (
         UInt16  *dlc,
         UInt32  *flag,
         UInt32  *time
-        )
+    )
 {
 Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
     
@@ -337,7 +327,7 @@ Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
 // Translate from baud macro to bus params
 /******************************************************************************/
 static canStatus usbFdCanTranslateBaud (
-        SInt32 *const freq,
+        SInt32 *const pPrescaler,
         unsigned int *const tseg1,
         unsigned int *const tseg2,
         unsigned int *const sjw,
@@ -345,45 +335,45 @@ static canStatus usbFdCanTranslateBaud (
         unsigned int *const syncMode
     )
 {
-    switch (*freq) {
+    switch (*pPrescaler) {
     
         case canFD_BITRATE_8M_60P:
-            *freq     = 8000000L;
+            *pPrescaler     = 8000000L;
             *tseg1    = 2;
             *tseg2    = 2;
             *sjw      = 1;
             break;
 
         case canFD_BITRATE_4M_80P:
-            *freq     = 4000000L;
+            *pPrescaler     = 4000000L;
             *tseg1    = 7;
             *tseg2    = 2;
             *sjw      = 2;
             break;
 
         case canFD_BITRATE_2M_80P:
-            *freq     = 2000000L;
+            *pPrescaler     = 2000000L;
             *tseg1    = 29;
             *tseg2    = 10;
             *sjw      = 10;
             break;
 
         case canFD_BITRATE_1M_80P:
-            *freq     = 1000000L;
+            *pPrescaler     = 1000000L;
             *tseg1    = 63;
             *tseg2    = 16;
             *sjw      = 16;
             break;
 
         case canFD_BITRATE_500K_80P:
-            *freq     = 16;
+            *pPrescaler = 16;
             *tseg1    = 15;
             *tseg2    = 4;
             *sjw      = 1;
             break;
 
         case canBITRATE_1M:
-            *freq     = 5;
+            *pPrescaler = 5;
             *tseg1    = 13;
             *tseg2    = 2;
             *sjw      = 1;
@@ -392,7 +382,7 @@ static canStatus usbFdCanTranslateBaud (
             break;
             
         case canBITRATE_500K:
-            *freq     = 10;
+            *pPrescaler = 10;
             *tseg1    = 13;
             *tseg2    = 2;
             *sjw      = 1;
@@ -401,7 +391,7 @@ static canStatus usbFdCanTranslateBaud (
             break;
             
         case canBITRATE_250K:
-            *freq     = 20;
+            *pPrescaler = 20;
             *tseg1    = 13;
             *tseg2    = 2;
             *sjw      = 1;
@@ -410,7 +400,7 @@ static canStatus usbFdCanTranslateBaud (
             break;
             
         case canBITRATE_125K:
-            *freq     = 40;
+            *pPrescaler = 40;
             *tseg1    = 13;
             *tseg2    = 2;
             *sjw      = 1;
@@ -419,7 +409,7 @@ static canStatus usbFdCanTranslateBaud (
             break;
             
         case canBITRATE_100K:
-            *freq     = 100000L;
+            *pPrescaler     = 100000L;
             *tseg1    = 13;
             *tseg2    = 2;
             *sjw      = 1;
@@ -428,7 +418,7 @@ static canStatus usbFdCanTranslateBaud (
             break;
             
         case canBITRATE_83K:
-            *freq     = 83333L;
+            *pPrescaler     = 83333L;
             *tseg1    = 5;
             *tseg2    = 2;
             *sjw      = 2;
@@ -437,7 +427,7 @@ static canStatus usbFdCanTranslateBaud (
             break;
             
         case canBITRATE_62K:
-            *freq     = 62500L;
+            *pPrescaler     = 62500L;
             *tseg1    = 10;
             *tseg2    = 5;
             *sjw      = 1;
@@ -446,7 +436,7 @@ static canStatus usbFdCanTranslateBaud (
             break;
             
         case canBITRATE_50K:
-            *freq     = 50000L;
+            *pPrescaler     = 50000L;
             *tseg1    = 10;
             *tseg2    = 5;
             *sjw      = 1;
@@ -462,8 +452,10 @@ static canStatus usbFdCanTranslateBaud (
 }
 
 
-
-static canStatus usbFdSetPowerMode(Can4osxUsbDeviceHandleEntry *pSelf, UInt8 mode)
+static canStatus usbFdSetPowerMode(
+		Can4osxUsbDeviceHandleEntry *pSelf, /**< pointer to handle structure */
+        UInt8 mode
+    )
 {
 UInt8 data[IXXUSBFD_CMD_BUFFER_SIZE] = {0};
 ixxUsbFdDevPowerReq_t *pPowerReq;
@@ -493,7 +485,10 @@ ixxUsbFdDevPowerResp_t *pPowerResp;
 	return(canOK);
 }
 
-static canStatus usbFdGetDeviceCaps(Can4osxUsbDeviceHandleEntry *pSelf)
+
+static canStatus usbFdGetDeviceCaps(
+		Can4osxUsbDeviceHandleEntry *pSelf /**< pointer to handle structure */
+    )
 {
 UInt8 data[IXXUSBFD_CMD_BUFFER_SIZE] = {0};
 IXXUSBFDDEVICECAPSREQ_T *pCapsReq;
@@ -530,7 +525,9 @@ int i;
 }
 
 
-static canStatus usbFdSetBitrates(Can4osxUsbDeviceHandleEntry *pSelf)
+static canStatus usbFdSetBitrates(
+		Can4osxUsbDeviceHandleEntry *pSelf /**< pointer to handle structure */
+    )
 {
 UInt8 data[IXXUSBFD_CMD_BUFFER_SIZE] = {0};
 usbFdPrivateData_t *pPriv = (usbFdPrivateData_t *)pSelf->privateData;
@@ -579,9 +576,10 @@ IXXUSBFDCANINITRESP_T *pResp;
 }
 
 
-
-
-static canStatus usbFdSendCmd(Can4osxUsbDeviceHandleEntry *pSelf, IXXUSBFDMSGREQHEAD_T *pCmd)
+static canStatus usbFdSendCmd(
+		Can4osxUsbDeviceHandleEntry *pSelf, /**< pointer to handle structure */
+        IXXUSBFDMSGREQHEAD_T *pCmd
+    )
 {
 IOUSBDevRequest request;
 IOReturn retVal;
@@ -725,7 +723,9 @@ static void usbFdBulkReadCompletion(void *refCon, IOReturn result, void *arg0)
 
 
 
-static void usbFdReadFromBulkInPipe(Can4osxUsbDeviceHandleEntry *pSelf)
+static void usbFdReadFromBulkInPipe(
+		Can4osxUsbDeviceHandleEntry *pSelf /**< pointer to handle structure */
+    )
 {
 IOReturn ret = (*(pSelf->can4osxInterfaceInterface))->ReadPipeAsync(pSelf->can4osxInterfaceInterface, pSelf->endpointNumberBulkIn + 2, pSelf->endpointBufferBulkInRef, pSelf->endpointMaxSizeBulkIn, usbFdBulkReadCompletion, (void*)pSelf);
 
