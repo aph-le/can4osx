@@ -195,6 +195,8 @@ pSelf->privateData = calloc(1,sizeof(LeafProPrivateData_t));
     /* Set some device Infos */
     pSelf->devInfo.capability = 0u;
     pSelf->devInfo.capability |= canCHANNEL_CAP_CAN_FD;
+    sprintf((char*)pSelf->devInfo.deviceString, "%s",pDeviceString);
+
     
     /* Trigger next read */
     LeafProReadFromBulkInPipe(pSelf);
