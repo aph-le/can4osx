@@ -230,9 +230,8 @@ usbFdPrivateData_t *pPriv = (usbFdPrivateData_t *)pSelf->privateData;
 //Go bus on
 static canStatus usbFdCanStartChip(
         CanHandle hdl
-        )
+    )
 {
-int retVal = 0;
 Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hdl];
 UInt8 data[IXXUSBFD_CMD_BUFFER_SIZE] = {0};
 IXXUSBFDCANSTARTREQ_T *pReq;
@@ -253,6 +252,10 @@ IXXUSBFDCANSTARTRESP_T *pResp;
     
     usbFdSendCmd(pSelf, (IXXUSBFDMSGREQHEAD_T *)pReq);
     usbFdRecvCmd(pSelf, (IXXUSBFDMSGRESPHEAD_T *)pResp, 0 /* FIXME */);
+    
+    if (pResp->header.retCode != 0u)  {
+    	return(canERR_INTERNAL);
+    }
 
 	return(canOK);
 }
@@ -601,7 +604,11 @@ IOReturn retVal;
 }
 
 
-static canStatus usbFdRecvCmd(Can4osxUsbDeviceHandleEntry *pSelf, IXXUSBFDMSGRESPHEAD_T *pCmd, int value)
+static canStatus usbFdRecvCmd(
+		Can4osxUsbDeviceHandleEntry *pSelf, /**< pointer to handle structure */
+        IXXUSBFDMSGRESPHEAD_T *pCmd,
+        int value
+    )
 {
 IOUSBDevRequest request;
 IOReturn retVal;
@@ -626,20 +633,6 @@ UInt16 sizeToRead = pCmd->respSize;
 	return(canERR_PARAM);
 }
 
-/******************************************************************************/
-/**
-* \brief decodeFdDlc - decode the dlc to data length
-*
-* \return the datalength
-*/
-static UInt8 decodeFdDlc(
-        UInt8 dlc
-    )
-{
-static const UInt8 len[16u] = {0u,1u,2u,3u,4u,5u,6u,7u,8u,12u,16u,20u,24u,32u,48u,64u};
-
-    return len[dlc];
-}
 
 static void usbFdDeocdeMsg(Can4osxUsbDeviceHandleEntry *pSelf, IXXUSBFDCANMSG_T* pMsg)
 {
@@ -651,7 +644,7 @@ CanMsg canMsg;
     	canMsg.canDlc = (pMsg->flags & IXXUSBFD_MSG_FLAG_DLC ) >> 16;
      
         /* decode dlc to length */
-    	canMsg.canDlc = decodeFdDlc(canMsg.canDlc);
+    	canMsg.canDlc = CAN4OSX_decodeFdDlc(canMsg.canDlc);
      
      	canMsg.canFlags = 0u;
      	if (pMsg->flags & IXXUSBFD_MSG_FLAG_EDL)  {

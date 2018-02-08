@@ -100,7 +100,6 @@
 static char* pDeviceString = "Kvaser Leaf Pro v2";
 
 static UInt32 getCommandSize(proCommand_t *pCmd);
-static UInt8 decodeFdDlc(UInt8 dlc);
 
 static void LeafProDecodeCommand(Can4osxUsbDeviceHandleEntry *pSelf,
                                  proCommand_t *pCmd);
@@ -663,22 +662,6 @@ static UInt8 calcExtendedCommandSize(
 
 
 /******************************************************************************/
-/**
-* \brief decodeFdDlc - decode the dlc to data length
-*
-* \return the datalength
-*/
-static UInt8 decodeFdDlc(
-        UInt8 dlc
-    )
-{
-static const UInt8 len[16u] = {0u,1u,2u,3u,4u,5u,6u,7u,8u,12u,16u,20u,24u,32u,48u,64u};
-
-    return len[dlc];
-}
-
-
-/******************************************************************************/
 static void LeafProDecodeCommand(
         Can4osxUsbDeviceHandleEntry *pSelf, /**< pointer to my reference */
         proCommand_t *pCmd
@@ -806,7 +789,7 @@ CanMsg canMsg;
                     canMsg.canFlags |= canFDMSG_BRS;
                 }
                 /* decode dlc to length */
-                canMsg.canDlc = decodeFdDlc(canMsg.canDlc);
+                canMsg.canDlc = CAN4OSX_decodeFdDlc(canMsg.canDlc);
                 
             } else {
                 CAN4OSX_DEBUG_PRINT("LEAFPRO_MESSAGE CLASSIC\n");

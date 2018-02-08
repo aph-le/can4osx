@@ -214,3 +214,18 @@ canStatus CAN4OSX_GetChannelData(
 
 
 
+/******************************************************************************/
+/**
+* \brief CAN4OSX_decodeFdDlc - decode the dlc to data length
+*
+* \return the datalength
+*/
+UInt8 CAN4OSX_decodeFdDlc(
+        UInt8 dlc
+    )
+{
+static const UInt8 len[16u] = {0u,1u,2u,3u,4u,5u,6u,7u,8u,12u,16u,20u,24u,32u,48u,64u};
+
+    return(len[dlc]);
+}
+
