@@ -49,6 +49,24 @@ extern Can4osxHwFunctions ixxUsbFdHardwareFunctions;
 
 #define IXXUSBFD_CMD_BUFFER_SIZE	256
 
+/* reception of 11-bit id messages */
+#define IXXATUSBFD_OPMODE_STANDARD         0x01
+/* reception of 29-bit id messages */
+#define IXXATUSBFD_OPMODE_EXTENDED         0x02
+/* enable reception of error frames */
+#define IXXATUSBFD_OPMODE_ERRFRAME         0x04
+/* listen only mode (TX passive) */
+#define IXXATUSBFD_OPMODE_LISTONLY         0x08
+
+/* no extended operation */
+#define IXXATUSBFD_EXMODE_DISABLED         0x00
+/* extended data length */
+#define IXXATUSBFD_EXMODE_EXTDATA          0x01
+/* fast data bit rate */
+#define IXXATUSBFD_EXMODE_FASTDATA         0x02
+/* ISO conform CAN-FD frame */
+#define IXXATUSBFD_EXMODE_ISOFD            0x04
+
 #define IXXUSBFD_MSG_FLAG_TYPE   0x000000FF
 #define IXXUSBFD_MSG_FLAG_SSM    0x00000100
 #define IXXUSBFD_MSG_FLAG_HPM    0x00000200
@@ -74,7 +92,8 @@ typedef struct {
     UInt32 respSize;
     UInt32 retSize;
     UInt32 retCode;
-} __attribute__ ((packed)) ixxUsbFdMsgRespHead_t;
+} __attribute__ ((packed)) IXXUSBFDMSGRESPHEAD_T;
+
 
 typedef struct {
     IXXUSBFDMSGREQHEAD_T header;
@@ -84,7 +103,7 @@ typedef struct {
 } __attribute__ ((packed)) ixxUsbFdDevPowerReq_t;
 
 typedef struct {
-	ixxUsbFdMsgRespHead_t header;
+	IXXUSBFDMSGRESPHEAD_T header;
 } __attribute__ ((packed)) ixxUsbFdDevPowerResp_t;
 
 
@@ -98,13 +117,68 @@ typedef struct  {
 } __attribute__ ((packed)) IXXUSBFDDEVICECAPSREQ_T;
 
 typedef struct  {
-    ixxUsbFdMsgRespHead_t header;
+    IXXUSBFDMSGRESPHEAD_T header;
     IXXUSBFDDEVICECAPS_T caps;
 } __attribute__ ((packed)) IXXUSBFDDEVICECAPSRESP_T;
 
+
+typedef struct  {
+	UInt32 mode;
+	UInt32 bps;
+	UInt16 tseg1;
+	UInt16 tseg2;
+	UInt16 sjw;
+	UInt16 tdo;
+} __attribute__ ((packed)) IXXUSBFDDCANBTP_T;
+
+typedef struct  {
+	IXXUSBFDMSGREQHEAD_T header;
+	UInt8 opMode;
+	UInt8 exMode;
+	IXXUSBFDDCANBTP_T stdBitrate;
+    IXXUSBFDDCANBTP_T fdBitrate;
+	UInt16 padding;
+} __attribute__ ((packed)) IXXUSBFDCANINITREQ_T;
+
+typedef struct  {
+    IXXUSBFDMSGRESPHEAD_T header;
+} __attribute__ ((packed)) IXXUSBFDCANINITRESP_T;
+
+
+typedef struct  {
+	IXXUSBFDMSGREQHEAD_T header;
+} __attribute__ ((packed)) IXXUSBFDCANSTARTREQ_T;
+
+typedef struct  {
+    IXXUSBFDMSGRESPHEAD_T header;
+    UInt32 startTime;
+} __attribute__ ((packed)) IXXUSBFDCANSTARTRESP_T;
+
+
+typedef struct  {
+    IXXUSBFDMSGREQHEAD_T header;
+	UInt32 action;
+} __attribute__ ((packed)) IXXUSBFDCANSTOPREQ_T;
+
+typedef struct  {
+    IXXUSBFDMSGRESPHEAD_T header;
+} __attribute__ ((packed)) IXXUSBFDCANSTOPRESP_T;
+
+
 typedef union {
-	IXXUSBFDMSGREQHEAD_T reqHeader;
+	IXXUSBFDMSGREQHEAD_T 	reqHeader;
+	IXXUSBFDDEVICECAPSREQ_T	respHeader;
 } __attribute__ ((packed)) IXXUSBFD_CMD_T;
+
+typedef struct  {
+	UInt8 size;
+	UInt32 time;
+	UInt32 canId;
+	UInt32 flags;
+	UInt32 clientId;
+	UInt8 data[64];
+} __attribute__ ((packed)) IXXUSBFDCANMSG_T;
+
 
 
 #endif /* can4osx_ixxatUsbFd_h */
