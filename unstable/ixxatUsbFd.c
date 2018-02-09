@@ -75,7 +75,7 @@ typedef struct {
     UInt8   fd_tseg1;
     UInt8   fd_tseg2;
     UInt8   fd_sjw;
-} usbFdPrivateData_t;
+} IXXUSBFDPRIVATEDATA_T;
 
 
 static char* pDeviceString = "IXXAT USB-to-CAN FD";
@@ -142,11 +142,12 @@ static canStatus usbFdInitHardware(
 		const CanHandle hnd
     )
 {
-    Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
-    pSelf->privateData = calloc(1,sizeof(usbFdPrivateData_t));
+Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
+	
+	pSelf->privateData = calloc(1,sizeof(IXXUSBFDPRIVATEDATA_T));
     
     if ( pSelf->privateData != NULL ) {
-    	usbFdPrivateData_t *priv = (usbFdPrivateData_t *)pSelf->privateData;
+    	IXXUSBFDPRIVATEDATA_T *priv = (IXXUSBFDPRIVATEDATA_T *)pSelf->privateData;
      	priv->pParent = pSelf;
     
     	for (UInt8 i = 0u; i < IXXUSBFD_MAX_RX_ENDPOINT; i++)  {
@@ -180,7 +181,7 @@ static CanHandle usbFdCanOpenChannel(
     )
 {
 Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[channel];
-usbFdPrivateData_t *pPriv = (usbFdPrivateData_t *)pSelf->privateData;
+IXXUSBFDPRIVATEDATA_T *pPriv = (IXXUSBFDPRIVATEDATA_T *)pSelf->privateData;
     
     // set CAN Mode
     if ((flags & canOPEN_CAN_FD) ==  canOPEN_CAN_FD) {
@@ -189,8 +190,9 @@ usbFdPrivateData_t *pPriv = (usbFdPrivateData_t *)pSelf->privateData;
         pPriv->canFd = 0;
     }
 
-    return (CanHandle)channel;
+    return((CanHandle)channel);
 }
+
 
 //Set bit timing
 static canStatus usbFdCanSetBusParams (
@@ -204,7 +206,7 @@ static canStatus usbFdCanSetBusParams (
     )
 {
 Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
-usbFdPrivateData_t *pPriv = (usbFdPrivateData_t *)pSelf->privateData;
+IXXUSBFDPRIVATEDATA_T *pPriv = (IXXUSBFDPRIVATEDATA_T *)pSelf->privateData;
     
     CAN4OSX_DEBUG_PRINT("leaf pro: _set_busparam\n");
     
@@ -289,6 +291,7 @@ IXXUSBFDCANSTOPRESP_T *pResp;
 	return(canOK);
 }
 
+
 /******************************************************************************/
 static canStatus usbFdCanRead (
         const   CanHandle hnd,
@@ -300,29 +303,21 @@ static canStatus usbFdCanRead (
     )
 {
 Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
-    
-    if ( pSelf->privateData != NULL ) {
+CanMsg canMsg;
         
-        CanMsg canMsg;
+    if ( CAN4OSX_ReadCanEventBuffer(pSelf->canEventMsgBuff, &canMsg) ) {
+        *id = canMsg.canId;
+        *dlc = canMsg.canDlc;
+        *time =canMsg.canTimestamp;
+        *flag = canMsg.canFlags;
+        memcpy(msg, canMsg.canData, *dlc);
         
-        if ( CAN4OSX_ReadCanEventBuffer(pSelf->canEventMsgBuff, &canMsg) ) {
-            
-            *id = canMsg.canId;
-            *dlc = canMsg.canDlc;
-            *time =canMsg.canTimestamp;
-            
-            memcpy(msg, canMsg.canData, *dlc);
-            
-            *flag = canMsg.canFlags;
-            
-            return canOK;
-        } else {
-            return canERR_NOMSG;
-        }
+        return(canOK);
     } else {
-        return canERR_INTERNAL;
+        return(canERR_NOMSG);
     }
-    
+
+    return(canERR_INTERNAL);
 }
 
 
@@ -533,7 +528,7 @@ static canStatus usbFdSetBitrates(
     )
 {
 UInt8 data[IXXUSBFD_CMD_BUFFER_SIZE] = {0};
-usbFdPrivateData_t *pPriv = (usbFdPrivateData_t *)pSelf->privateData;
+IXXUSBFDPRIVATEDATA_T *pPriv = (IXXUSBFDPRIVATEDATA_T *)pSelf->privateData;
 IXXUSBFDCANINITREQ_T *pReq;
 IXXUSBFDCANINITRESP_T *pResp;
 
@@ -723,10 +718,10 @@ static void usbFdReadFromBulkInPipe(
 IOReturn ret = (*(pSelf->can4osxInterfaceInterface))->ReadPipeAsync(pSelf->can4osxInterfaceInterface, pSelf->endpointNumberBulkIn + 2, pSelf->endpointBufferBulkInRef, pSelf->endpointMaxSizeBulkIn, usbFdBulkReadCompletion, (void*)pSelf);
 
 #if 0
-    IOReturn ret = (*(self->can4osxInterfaceInterface))->ReadPipeAsync(self->can4osxInterfaceInterface, self->endpointNumberBulkIn, ((usbFdPrivateData_t*)(self->privateData))->pEndpointInBuffer[0], self->endpointMaxSizeBulkIn, usbFdBulkReadCompletion, (void*)self);
-    (*(self->can4osxInterfaceInterface))->ReadPipeAsync(self->can4osxInterfaceInterface, self->endpointNumberBulkIn + 2, ((usbFdPrivateData_t*)(self->privateData))->pEndpointInBuffer[0], self->endpointMaxSizeBulkIn, usbFdBulkReadCompletion, (void*)self);
-    (*(self->can4osxInterfaceInterface))->ReadPipeAsync(self->can4osxInterfaceInterface, self->endpointNumberBulkIn + 4, ((usbFdPrivateData_t*)(self->privateData))->pEndpointInBuffer[0], self->endpointMaxSizeBulkIn, usbFdBulkReadCompletion, (void*)self);
-    (*(self->can4osxInterfaceInterface))->ReadPipeAsync(self->can4osxInterfaceInterface, self->endpointNumberBulkIn + 8, ((usbFdPrivateData_t*)(self->privateData))->pEndpointInBuffer[0], self->endpointMaxSizeBulkIn, usbFdBulkReadCompletion, (void*)self);
+    IOReturn ret = (*(self->can4osxInterfaceInterface))->ReadPipeAsync(self->can4osxInterfaceInterface, self->endpointNumberBulkIn, ((IXXUSBFDPRIVATEDATA_T*)(self->privateData))->pEndpointInBuffer[0], self->endpointMaxSizeBulkIn, usbFdBulkReadCompletion, (void*)self);
+    (*(self->can4osxInterfaceInterface))->ReadPipeAsync(self->can4osxInterfaceInterface, self->endpointNumberBulkIn + 2, ((IXXUSBFDPRIVATEDATA_T*)(self->privateData))->pEndpointInBuffer[0], self->endpointMaxSizeBulkIn, usbFdBulkReadCompletion, (void*)self);
+    (*(self->can4osxInterfaceInterface))->ReadPipeAsync(self->can4osxInterfaceInterface, self->endpointNumberBulkIn + 4, ((IXXUSBFDPRIVATEDATA_T*)(self->privateData))->pEndpointInBuffer[0], self->endpointMaxSizeBulkIn, usbFdBulkReadCompletion, (void*)self);
+    (*(self->can4osxInterfaceInterface))->ReadPipeAsync(self->can4osxInterfaceInterface, self->endpointNumberBulkIn + 8, ((IXXUSBFDPRIVATEDATA_T*)(self->privateData))->pEndpointInBuffer[0], self->endpointMaxSizeBulkIn, usbFdBulkReadCompletion, (void*)self);
 #endif
     if (ret != kIOReturnSuccess) {
         CAN4OSX_DEBUG_PRINT("Unable to read async interface (%08x)\n", ret);
