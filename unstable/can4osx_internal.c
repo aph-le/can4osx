@@ -229,3 +229,39 @@ static const UInt8 len[16u] = {0u,1u,2u,3u,4u,5u,6u,7u,8u,12u,16u,20u,24u,32u,48
     return(len[dlc]);
 }
 
+
+/******************************************************************************/
+/**
+* \brief CAN4OSX_decodeFdDlc - decode the dlc to data length
+*
+* \return the datalength
+*/
+UInt8 CAN4OSX_encodeFdDlc(
+        UInt8 dlc
+    )
+{
+	if (dlc == 12u)  {
+		return(0x09);
+    }
+    if (dlc == 16u)  {
+        return(0x0A);
+    }
+    if (dlc == 20u)  {
+        return(0x0B);
+    }
+    if (dlc == 24u)  {
+        return(0x0C);
+    }
+    if (dlc == 32u)  {
+        return(0x0D);
+    }
+    if (dlc == 48u)  {
+        return(0x0E);
+    }
+    if (dlc == 64u)  {
+        return(0x0F);
+    }
+
+    return(dlc);
+}
+

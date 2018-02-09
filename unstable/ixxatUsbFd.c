@@ -105,6 +105,14 @@ static canStatus usbFdCanSetBusParams (
         unsigned int syncmode
     );
 
+static canStatus usbFdCanSetBusParamsFd(
+        const CanHandle hnd,
+        SInt32 freq_brs,
+        UInt32 tseg1,
+        UInt32 tseg2,
+        UInt32 sjw
+    );
+
 static canStatus usbFdCanRead (
         const   CanHandle hnd,
         UInt32  *id,
@@ -154,7 +162,7 @@ Can4osxHwFunctions ixxUsbFdHardwareFunctions = {
     .can4osxhwInitRef = usbFdInitHardware,
     .can4osxhwCanOpenChannel = usbFdCanOpenChannel,
     .can4osxhwCanSetBusParamsRef = usbFdCanSetBusParams,
-    .can4osxhwCanSetBusParamsFdRef = NULL,
+    .can4osxhwCanSetBusParamsFdRef = usbFdCanSetBusParamsFd,
     .can4osxhwCanBusOnRef = usbFdCanStartChip,
     .can4osxhwCanBusOffRef = usbFdCanStopChip,
     .can4osxhwCanWriteRef = usbFdCanWrite,
@@ -254,10 +262,48 @@ IXXUSBFDPRIVATEDATA_T *pPriv = (IXXUSBFDPRIVATEDATA_T *)pSelf->privateData;
     pPriv->sjw = sjw;
     pPriv->tseg1 = tseg1;
     pPriv->tseg2 = tseg2;
+    
+    if (pPriv->fd_brp == 0u)  {
+	    pPriv->fd_brp = freq;
+    	pPriv->fd_sjw = sjw;
+    	pPriv->fd_tseg1 = tseg1;
+    	pPriv->fd_tseg2 = tseg2;
+    }
 
 	usbFdSetBitrates(pSelf);
 
     return(canOK);
+}
+
+static canStatus usbFdCanSetBusParamsFd(
+		const CanHandle hnd,
+        SInt32 freq_brs,
+        UInt32 tseg1,
+        UInt32 tseg2,
+        UInt32 sjw
+    )
+{
+Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
+IXXUSBFDPRIVATEDATA_T *pPriv = (IXXUSBFDPRIVATEDATA_T *)pSelf->privateData;
+unsigned int dummy;
+    CAN4OSX_DEBUG_PRINT("leaf pro: _set_busparam\n");
+    
+    if ( canOK != usbFdCanTranslateBaud(&freq_brs, &tseg1, &tseg2, &sjw,
+                                          &dummy, &dummy)) {
+        // TODO
+        CAN4OSX_DEBUG_PRINT(" can4osx strange bitrate\n");
+        return(-1);
+    }
+    
+    /* save locally */
+
+    pPriv->fd_brp = freq_brs;
+    pPriv->fd_sjw = sjw;
+    pPriv->fd_tseg1 = tseg1;
+    pPriv->fd_tseg2 = tseg2;
+
+    usbFdSetBitrates(pSelf);
+	return(canOK);
 }
 
 
@@ -367,10 +413,16 @@ Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
     IXXUSBFDPRIVATEDATA_T *pPriv = (IXXUSBFDPRIVATEDATA_T *)pSelf->privateData;
 	IXXUSBFDCANMSG_T canMsg = {0};
 	
+		if (pPriv->canFd == 0u)  {
+            if (dlc > 8u)  {
+                 dlc = 8u;
+            }
+        }
+	
 		canMsg.canId = id;
   
   		canMsg.flags = 0u;
-    	canMsg.flags = dlc;
+    	canMsg.flags = CAN4OSX_encodeFdDlc(dlc);
      	canMsg.flags <<= 16u;
   
   		if (flag & canMSG_EXT)  {
@@ -383,10 +435,6 @@ Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
         	canMsg.flags |= IXXUSBFD_MSG_FLAG_EDL;
          	if (flag & canFDMSG_BRS)  {
           		canMsg.flags |= IXXUSBFD_MSG_FLAG_FDR;
-            }
-        } else {
-        	if (dlc > 8u)  {
-         		dlc = 8u;
             }
         }
         
@@ -436,10 +484,10 @@ static canStatus usbFdCanTranslateBaud (
             break;
 
         case canFD_BITRATE_2M_80P:
-            *pPrescaler     = 2000000L;
-            *tseg1    = 29;
-            *tseg2    = 10;
-            *sjw      = 10;
+            *pPrescaler     = 2L;
+            *tseg1    = 15;
+            *tseg2    = 4;
+            *sjw      = 4;
             break;
 
         case canFD_BITRATE_1M_80P:
@@ -450,10 +498,10 @@ static canStatus usbFdCanTranslateBaud (
             break;
 
         case canFD_BITRATE_500K_80P:
-            *pPrescaler = 16;
+            *pPrescaler = 8;
             *tseg1    = 15;
             *tseg2    = 4;
-            *sjw      = 1;
+            *sjw      = 4;
             break;
 
         case canBITRATE_1M:
@@ -642,7 +690,7 @@ IXXUSBFDCANINITRESP_T *pResp;
     pReq->stdBitrate.sjw = pPriv->sjw;
     pReq->stdBitrate.tdo = 0u;
     if (pPriv->canFd)  {
-	    pReq->fdBitrate.bps = 1u;
+	    pReq->fdBitrate.bps = pPriv->fd_brp;
     	pReq->fdBitrate.tseg1 = pPriv->fd_tseg1;
     	pReq->fdBitrate.tseg2 = pPriv->fd_tseg2;
     	pReq->fdBitrate.sjw = pPriv->fd_sjw;

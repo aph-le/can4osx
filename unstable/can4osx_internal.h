@@ -179,6 +179,7 @@ UInt8 CAN4OSX_ReadCanEventBuffer(CanEventMsgBuf* bufferRef, CanMsg* readEvent);
 
 /* helper functions for all devices */
 UInt8 CAN4OSX_decodeFdDlc(UInt8 dlc);
+UInt8 CAN4OSX_encodeFdDlc(UInt8 dlc);
 
 canStatus CAN4OSX_GetChannelData(Can4osxUsbDeviceHandleEntry* pSelf, SInt32 cmd, void* pBuffer, size_t bufsize);
 
