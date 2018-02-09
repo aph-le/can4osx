@@ -61,7 +61,17 @@
 
 #define IXXUSBFD_MAX_RX_ENDPOINT 4u
 
+//holds the actual buffer
 typedef struct {
+    int bufferSize;
+    int bufferFirst;
+    int bufferCount;
+    dispatch_queue_t bufferGDCqueueRef;
+    IXXUSBFDCANMSG_T msgData[512];
+} UXXUSBFDTRANSMITBUFFER_T;
+
+typedef struct {
+	UXXUSBFDTRANSMITBUFFER_T pTransBuff;
 	Can4osxUsbDeviceHandleEntry *pParent;
 	UInt8 inEndPoint;
 	UInt8 *pEndpointInBuffer[IXXUSBFD_MAX_RX_ENDPOINT];
@@ -104,6 +114,14 @@ static canStatus usbFdCanRead (
         UInt32  *time
         );
 
+static canStatus usbFdCanWrite (
+        const CanHandle hnd,
+        UInt32 id,
+        void *msg,
+        UInt16 dlc,
+        UInt32 flag
+    );
+
 static canStatus usbFdCanTranslateBaud (
         SInt32 *const freq,
         unsigned int *const tseg1,
@@ -122,6 +140,13 @@ static canStatus usbFdRecvCmd(Can4osxUsbDeviceHandleEntry *pSelf, IXXUSBFDMSGRES
 
 static void usbFdBulkReadCompletion(void *refCon, IOReturn result, void *arg0);
 static void usbFdReadFromBulkInPipe(Can4osxUsbDeviceHandleEntry *self);
+static IOReturn usbFdWriteToBulkPipe(Can4osxUsbDeviceHandleEntry *pSelf);
+static UInt16 usbFdFillBulkPipeBuffer(UXXUSBFDTRANSMITBUFFER_T *pBufferRef, UInt8 *pipe, UInt16 maxPipeSize);
+static void usbFdBulkWriteCompletion(void *refCon, IOReturn result, void *arg0);
+
+static UInt8 usbFdWriteTransmitBuffer(UXXUSBFDTRANSMITBUFFER_T* pBuffer, IXXUSBFDCANMSG_T newMsg);
+static UInt8 usbFdReadCommandBuffer(UXXUSBFDTRANSMITBUFFER_T* pBuffer, IXXUSBFDCANMSG_T* pCanMsg);
+
 
 
 
@@ -132,7 +157,7 @@ Can4osxHwFunctions ixxUsbFdHardwareFunctions = {
     .can4osxhwCanSetBusParamsFdRef = NULL,
     .can4osxhwCanBusOnRef = usbFdCanStartChip,
     .can4osxhwCanBusOffRef = usbFdCanStopChip,
-    .can4osxhwCanWriteRef = NULL,
+    .can4osxhwCanWriteRef = usbFdCanWrite,
     .can4osxhwCanReadRef = usbFdCanRead,
     .can4osxhwCanCloseRef = NULL,
 };
@@ -147,12 +172,17 @@ Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
 	pSelf->privateData = calloc(1,sizeof(IXXUSBFDPRIVATEDATA_T));
     
     if ( pSelf->privateData != NULL ) {
-    	IXXUSBFDPRIVATEDATA_T *priv = (IXXUSBFDPRIVATEDATA_T *)pSelf->privateData;
-     	priv->pParent = pSelf;
+    	IXXUSBFDPRIVATEDATA_T *pPriv = (IXXUSBFDPRIVATEDATA_T *)pSelf->privateData;
+     	pPriv->pParent = pSelf;
+      
+      	pPriv->pTransBuff.bufferGDCqueueRef = dispatch_queue_create("com.can4osx.ixxusbfdmsgqueue", 0);
+		pPriv->pTransBuff.bufferCount = 0u;
+        pPriv->pTransBuff.bufferFirst = 0u;
+        pPriv->pTransBuff.bufferSize = 512u;
     
     	for (UInt8 i = 0u; i < IXXUSBFD_MAX_RX_ENDPOINT; i++)  {
-     		priv->inEndPoint = i;
-            priv->pEndpointInBuffer[i] = (UInt8 *)calloc(1,512);
+     		pPriv->inEndPoint = i;
+            pPriv->pEndpointInBuffer[i] = (UInt8 *)calloc(1,512);
         }
     } else {
         return(canERR_NOMEM);
@@ -167,6 +197,8 @@ Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
 
     usbFdSetPowerMode(pSelf, 0);
     usbFdGetDeviceCaps(pSelf);
+    
+    pSelf->endpointNumberBulkOut += 2;
 
     // Trigger the read
     usbFdReadFromBulkInPipe(pSelf);
@@ -304,7 +336,7 @@ static canStatus usbFdCanRead (
 {
 Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
 CanMsg canMsg;
-        
+    
     if ( CAN4OSX_ReadCanEventBuffer(pSelf->canEventMsgBuff, &canMsg) ) {
         *id = canMsg.canId;
         *dlc = canMsg.canDlc;
@@ -318,6 +350,60 @@ CanMsg canMsg;
     }
 
     return(canERR_INTERNAL);
+}
+
+
+static canStatus usbFdCanWrite (
+		const CanHandle hnd,
+        UInt32 id,
+        void *msg,
+        UInt16 dlc,
+        UInt32 flag
+    )
+{
+Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
+    
+    if ( pSelf->privateData != NULL ) {
+    IXXUSBFDPRIVATEDATA_T *pPriv = (IXXUSBFDPRIVATEDATA_T *)pSelf->privateData;
+	IXXUSBFDCANMSG_T canMsg = {0};
+	
+		canMsg.canId = id;
+  
+  		canMsg.flags = 0u;
+    	canMsg.flags = dlc;
+     	canMsg.flags <<= 16u;
+  
+  		if (flag & canMSG_EXT)  {
+    		canMsg.flags |= IXXUSBFD_MSG_FLAG_EXT;
+        }
+        if (flag & canMSG_RTR)  {
+        	canMsg.flags |= IXXUSBFD_MSG_FLAG_RTR;
+        }
+        if (flag & canFDMSG_FDF)  {
+        	canMsg.flags |= IXXUSBFD_MSG_FLAG_EDL;
+         	if (flag & canFDMSG_BRS)  {
+          		canMsg.flags |= IXXUSBFD_MSG_FLAG_FDR;
+            }
+        } else {
+        	if (dlc > 8u)  {
+         		dlc = 8u;
+            }
+        }
+        
+        memcpy(canMsg.data , msg, dlc);
+	
+		canMsg.size = (sizeof(canMsg) - 1u - 64u + dlc);
+        
+        usbFdWriteTransmitBuffer(&pPriv->pTransBuff, canMsg);
+        
+        usbFdWriteToBulkPipe(pSelf);
+        
+        return(canOK);
+        
+    } else {
+        return(canERR_INTERNAL);
+    }
+
 }
 
 
@@ -726,6 +812,160 @@ IOReturn ret = (*(pSelf->can4osxInterfaceInterface))->ReadPipeAsync(pSelf->can4o
     if (ret != kIOReturnSuccess) {
         CAN4OSX_DEBUG_PRINT("Unable to read async interface (%08x)\n", ret);
     }
+}
+
+static IOReturn usbFdWriteToBulkPipe(
+		Can4osxUsbDeviceHandleEntry *pSelf
+    )
+{
+IOReturn retval = kIOReturnSuccess;
+IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
+IXXUSBFDPRIVATEDATA_T *pPriv = (IXXUSBFDPRIVATEDATA_T *)pSelf->privateData;
+UInt16 size = 0u;
+
+	if ( pSelf->endpoitBulkOutBusy == FALSE ) {
+        pSelf->endpoitBulkOutBusy = TRUE;
+        size = usbFdFillBulkPipeBuffer(&pPriv->pTransBuff, pSelf->endpointBufferBulkOutRef, pSelf->endpointMaxSizeBulkOut );
+        if (size > 0) {
+
+            retval = (*interface)->WritePipeAsync(interface, pSelf->endpointNumberBulkOut, pSelf->endpointBufferBulkOutRef, size, usbFdBulkWriteCompletion, (void*)pSelf);
+        
+            if (retval != kIOReturnSuccess) {
+                CAN4OSX_DEBUG_PRINT("Unable to perform asynchronous bulk write (%08x)\n", retval);
+                (void) (*interface)->USBInterfaceClose(interface);
+                (void) (*interface)->Release(interface);
+            }
+        } else {
+            pSelf->endpoitBulkOutBusy = FALSE;
+        }
+    }
+    
+    return(retval);
+}
+
+static UInt16 usbFdFillBulkPipeBuffer(
+		UXXUSBFDTRANSMITBUFFER_T *pBufferRef,
+        UInt8 *pipe,
+        UInt16 maxPipeSize
+    )
+{
+UInt16 fillState = 0;
+    
+    while ( fillState < maxPipeSize ) {
+        IXXUSBFDCANMSG_T cmd;
+        if ( usbFdReadCommandBuffer(pBufferRef, &cmd) ) {
+            memcpy(pipe, &cmd, cmd.size + 1);
+            fillState += cmd.size + 1;
+            pipe += cmd.size + 1;
+            //Will another command fir in the pipe?
+            if ( (fillState + sizeof(IXXUSBFDCANMSG_T)) >= maxPipeSize ) {
+                *pipe = 0;
+                break;
+            }
+            
+        } else {
+            *pipe = 0;
+            break;
+        }
+    }
+    
+    return(fillState);
+}
+
+static void usbFdBulkWriteCompletion(
+		void *refCon,
+        IOReturn result,
+        void *arg0
+    )
+{
+Can4osxUsbDeviceHandleEntry *pSelf = (Can4osxUsbDeviceHandleEntry *)refCon;
+IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
+    
+    UInt32 numBytesWritten = (UInt32) arg0;
+    
+    (void)numBytesWritten;
+    
+    CAN4OSX_DEBUG_PRINT("Asynchronous bulk write complete\n");
+    
+    if (result != kIOReturnSuccess) {
+        CAN4OSX_DEBUG_PRINT("error from asynchronous bulk write (%08x)\n", result);
+        (void) (*interface)->USBInterfaceClose(interface);
+        (void) (*interface)->Release(interface);
+        return;
+    }
+    
+    pSelf->endpoitBulkOutBusy = FALSE;
+    
+    CAN4OSX_DEBUG_PRINT("Wrote %ld bytes to bulk endpoint\n", (long)numBytesWritten);
+    
+    usbFdWriteToBulkPipe(pSelf);
+    
+}
+
+
+
+
+
+static UInt8 usbFdTestFullTransmitBuffer(
+		UXXUSBFDTRANSMITBUFFER_T * pBuffer
+	)
+{
+    if (pBuffer->bufferCount >= pBuffer->bufferSize) {
+        return(1u);
+    } else {
+        return(0u);
+    }
+}
+
+
+static UInt8 usbFdTestEmptyTransmitBuffer(
+        UXXUSBFDTRANSMITBUFFER_T * pBuffer
+    )
+{
+    if ( pBuffer->bufferCount == 0 ) {
+        return(1u);
+    } else {
+        return(0u);
+    }
+}
+
+
+static UInt8 usbFdWriteTransmitBuffer(
+		UXXUSBFDTRANSMITBUFFER_T* pBuffer,
+        IXXUSBFDCANMSG_T newMsg
+    )
+{
+__block UInt8 retval = 1u;
+    
+    dispatch_sync(pBuffer->bufferGDCqueueRef, ^{
+        if (usbFdTestFullTransmitBuffer(pBuffer)) {
+            retval = 0u;
+        } else {
+            pBuffer->msgData[(pBuffer->bufferFirst + pBuffer->bufferCount++) % pBuffer->bufferSize] = newMsg;
+        }
+    });
+    
+    return(retval);
+}
+
+
+static UInt8 usbFdReadCommandBuffer(
+		UXXUSBFDTRANSMITBUFFER_T* pBuffer,
+		IXXUSBFDCANMSG_T* pCanMsg
+    )
+{
+__block UInt8 retval = 1u;
+    
+    dispatch_sync(pBuffer->bufferGDCqueueRef, ^{
+        if (usbFdTestEmptyTransmitBuffer(pBuffer)) {
+            retval = 0u;
+        } else {
+            pBuffer->bufferCount--;
+            *pCanMsg = pBuffer->msgData[pBuffer->bufferFirst++ % pBuffer->bufferSize];
+        }
+    });
+    
+    return(retval);
 }
 
 
