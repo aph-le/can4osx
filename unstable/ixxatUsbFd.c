@@ -469,15 +469,8 @@ static canStatus usbFdCanTranslateBaud (
 {
     switch (*pPrescaler) {
     
-        case canFD_BITRATE_8M_60P:
-            *pPrescaler     = 8000000L;
-            *tseg1    = 2;
-            *tseg2    = 2;
-            *sjw      = 1;
-            break;
-
         case canFD_BITRATE_4M_80P:
-            *pPrescaler     = 4000000L;
+            *pPrescaler     = 2L;
             *tseg1    = 7;
             *tseg2    = 2;
             *sjw      = 2;
@@ -491,10 +484,10 @@ static canStatus usbFdCanTranslateBaud (
             break;
 
         case canFD_BITRATE_1M_80P:
-            *pPrescaler     = 1000000L;
-            *tseg1    = 63;
-            *tseg2    = 16;
-            *sjw      = 16;
+            *pPrescaler     = 4L;
+            *tseg1    = 15;
+            *tseg2    = 4;
+            *sjw      = 4;
             break;
 
         case canFD_BITRATE_500K_80P:
@@ -541,7 +534,7 @@ static canStatus usbFdCanTranslateBaud (
             break;
             
         case canBITRATE_100K:
-            *pPrescaler     = 100000L;
+            *pPrescaler     = 50L;
             *tseg1    = 13;
             *tseg2    = 2;
             *sjw      = 1;
@@ -550,27 +543,18 @@ static canStatus usbFdCanTranslateBaud (
             break;
             
         case canBITRATE_83K:
-            *pPrescaler     = 83333L;
-            *tseg1    = 5;
+            *pPrescaler     = 60L;
+            *tseg1    = 13;
             *tseg2    = 2;
-            *sjw      = 2;
-            *nosamp   = 1;
-            *syncMode = 0;
-            break;
-            
-        case canBITRATE_62K:
-            *pPrescaler     = 62500L;
-            *tseg1    = 10;
-            *tseg2    = 5;
             *sjw      = 1;
             *nosamp   = 1;
             *syncMode = 0;
             break;
-            
+                        
         case canBITRATE_50K:
-            *pPrescaler     = 50000L;
-            *tseg1    = 10;
-            *tseg2    = 5;
+            *pPrescaler     = 100L;
+            *tseg1    = 13;
+            *tseg2    = 2;
             *sjw      = 1;
             *nosamp   = 1;
             *syncMode = 0;
