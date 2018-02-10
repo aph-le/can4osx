@@ -261,6 +261,10 @@ UInt8 CAN4OSX_encodeFdDlc(
     if (dlc == 64u)  {
         return(0x0F);
     }
+    /* invalid dlc */
+    if (dlc > 8u)  {
+    	return(0xff);
+    }
 
     return(dlc);
 }
