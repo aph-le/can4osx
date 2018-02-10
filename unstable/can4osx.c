@@ -559,17 +559,28 @@ Can4osxUsbDeviceHandleEntry *pDevice;
         
         if (pDevice->hwFunctions.can4osxhwInitRef != NULL)  {
         	can4osxUsbDeviceHandle[can4osxMaxChannelCount].deviceChannelCount = 0u;
+         	can4osxUsbDeviceHandle[can4osxMaxChannelCount].deviceChannel = 0u;
         	pDevice->hwFunctions.can4osxhwInitRef(can4osxMaxChannelCount);
          	if (can4osxUsbDeviceHandle[can4osxMaxChannelCount].deviceChannelCount > 1u)  {
             UInt8 maxChannel = can4osxUsbDeviceHandle[can4osxMaxChannelCount].deviceChannelCount;
+            	CAN4OSX_DEBUG_PRINT("Multichannel device found with %d channels\n", maxChannel);
             	for (UInt8 i = 1u; i < maxChannel; i++)  {
-             	
+			        can4osxMaxChannelCount++;
+                    if (can4osxMaxChannelCount >= CAN4OSX_MAX_CHANNEL_COUNT) {
+            			CAN4OSX_DEBUG_PRINT("%s : max Channel reached\n", __func__);
+            			return;
+        			}
+           			memcpy(&can4osxUsbDeviceHandle[can4osxMaxChannelCount], &can4osxUsbDeviceHandle[can4osxMaxChannelCount - 1], sizeof(Can4osxUsbDeviceHandleEntry));
+              		// Set up buffer for sending and receiving
+        			(void)CAN4OSX_CreateEndpointBuffer(can4osxMaxChannelCount);
+              		can4osxUsbDeviceHandle[can4osxMaxChannelCount].deviceChannel++;
+                	can4osxUsbDeviceHandle[can4osxMaxChannelCount].channelNumber = can4osxMaxChannelCount;
+                 	pDevice++;
+                  	pDevice->hwFunctions.can4osxhwInitRef(can4osxMaxChannelCount);
                 }
             }
         }
         
-        //pDevice->hwFunctions.can4osxhwCanSetBusParamsRef(can4osxMaxChannelCount, canBITRATE_125K, 10, 5, 1, 1, 0);
-
         can4osxMaxChannelCount++;
         
     }
