@@ -250,6 +250,7 @@ IXXUSBFDPRIVATEDATA_T *pPriv = (IXXUSBFDPRIVATEDATA_T *)pSelf->privateData;
     return(canOK);
 }
 
+
 static canStatus usbFdCanSetBusParamsFd(
 		const CanHandle hnd,
         SInt32 freq_brs,
@@ -296,8 +297,8 @@ IXXUSBFDCANSTARTRESP_T *pResp;
     pResp = (IXXUSBFDCANSTARTRESP_T *)(data + sizeof(IXXUSBFDCANSTARTREQ_T));
     
     pReq->header.reqSize = sizeof(IXXUSBFDCANSTARTREQ_T);
-    pReq->header.reqCode = 0x326;
-    pReq->header.reqPort = pSelf->deviceChannel;//FIXME
+    pReq->header.reqCode = IXXUSB_CMD_START_CHIP;
+    pReq->header.reqPort = pSelf->deviceChannel;
     pReq->header.reqSocket = 0xffff;
     
     pResp->header.respSize = sizeof(IXXUSBFDCANSTARTRESP_T);
@@ -306,7 +307,7 @@ IXXUSBFDCANSTARTRESP_T *pResp;
     pResp->startTime = 0u;
     
     usbFdSendCmd(pSelf, (IXXUSBFDMSGREQHEAD_T *)pReq);
-    usbFdRecvCmd(pSelf, (IXXUSBFDMSGRESPHEAD_T *)pResp, pSelf->deviceChannel /* FIXME */);
+    usbFdRecvCmd(pSelf, (IXXUSBFDMSGRESPHEAD_T *)pResp, pSelf->deviceChannel);
     
     if (pResp->header.retCode != 0u)  {
     	return(canERR_INTERNAL);
@@ -329,8 +330,8 @@ IXXUSBFDCANSTOPRESP_T *pResp;
     pResp = (IXXUSBFDCANSTOPRESP_T *)(data + sizeof(IXXUSBFDCANSTOPREQ_T));
  
     pReq->header.reqSize = sizeof(IXXUSBFDCANSTOPREQ_T);
-    pReq->header.reqCode = 0x327;
-    pReq->header.reqPort = pSelf->deviceChannel;//0u;//FIXME
+    pReq->header.reqCode = IXXUSB_CMD_STOP_CHIP;
+    pReq->header.reqPort = pSelf->deviceChannel;
     pReq->header.reqSocket = 0xffff;
     pReq->action = 0x3;
     
@@ -339,7 +340,7 @@ IXXUSBFDCANSTOPRESP_T *pResp;
     pResp->header.retCode = 0xffFFffFF;
     
     usbFdSendCmd(pSelf, (IXXUSBFDMSGREQHEAD_T *)pReq);
-    usbFdRecvCmd(pSelf, (IXXUSBFDMSGRESPHEAD_T *)pResp, pSelf->deviceChannel /* FIXME */);
+    usbFdRecvCmd(pSelf, (IXXUSBFDMSGRESPHEAD_T *)pResp, pSelf->deviceChannel);
     
     if (pResp->header.retCode != 0u)  {
         return(canERR_INTERNAL);
@@ -564,7 +565,7 @@ ixxUsbFdDevPowerResp_t *pPowerResp;
     pPowerResp = (ixxUsbFdDevPowerResp_t *)(data + sizeof(ixxUsbFdDevPowerReq_t));
     
     pPowerReq->header.reqSize = sizeof(ixxUsbFdDevPowerReq_t);
-    pPowerReq->header.reqCode = 0x421;
+    pPowerReq->header.reqCode = IXXUSB_CMD_POWER_DEV;
     pPowerReq->header.reqSocket = 0xffff;
     pPowerReq->header.reqPort = 0xffff;
     pPowerReq->mode = mode;
@@ -598,7 +599,7 @@ int i;
 	pCapsResp = (IXXUSBFDDEVICECAPSRESP_T *)(data + sizeof(IXXUSBFDDEVICECAPSREQ_T));
 	
 	pCapsReq->header.reqSize = sizeof(IXXUSBFDDEVICECAPSREQ_T);
-	pCapsReq->header.reqCode = 0x401;
+	pCapsReq->header.reqCode = IXXUSB_CMD_CAPS_DEV;
 	pCapsReq->header.reqPort = 0xffff;
 	pCapsReq->header.reqSocket = 0xffff;
 	
@@ -642,7 +643,7 @@ IXXUSBFDCANINITRESP_T *pResp;
     pReq->header.reqSize = sizeof(IXXUSBFDCANINITREQ_T);
     pReq->header.reqCode = 0x337;
     pReq->header.reqSocket = 0xffff;
-    pReq->header.reqPort = pSelf->deviceChannel;//0;  //FIXME
+    pReq->header.reqPort = pSelf->deviceChannel;
 
     pReq->exMode = 0u;
     pReq->opMode = (IXXATUSBFD_OPMODE_EXTENDED | IXXATUSBFD_OPMODE_STANDARD);
@@ -650,7 +651,7 @@ IXXUSBFDCANINITRESP_T *pResp;
     	pReq->exMode = (IXXATUSBFD_EXMODE_EXTDATA | IXXATUSBFD_EXMODE_ISOFD | IXXATUSBFD_EXMODE_FASTDATA);
     }
     pReq->stdBitrate.mode = 1;
-    pReq->stdBitrate.bps = pPriv->brp;//1u;
+    pReq->stdBitrate.bps = pPriv->brp;
     pReq->stdBitrate.tseg1 = pPriv->tseg1;
     pReq->stdBitrate.tseg2 = pPriv->tseg2;
     pReq->stdBitrate.sjw = pPriv->sjw;
@@ -668,7 +669,7 @@ IXXUSBFDCANINITRESP_T *pResp;
     pResp->header.retCode = 0xffFFffFF;
 
     usbFdSendCmd(pSelf, (IXXUSBFDMSGREQHEAD_T *)pReq);
-    usbFdRecvCmd(pSelf, (IXXUSBFDMSGRESPHEAD_T *)pResp, pSelf->deviceChannel/* FIXME */);
+    usbFdRecvCmd(pSelf, (IXXUSBFDMSGRESPHEAD_T *)pResp, pSelf->deviceChannel);
     
     if (pResp->header.retCode != 0u)  {
         return(canERR_PARAM);

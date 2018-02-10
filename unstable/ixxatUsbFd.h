@@ -49,6 +49,11 @@ extern Can4osxHwFunctions ixxUsbFdHardwareFunctions;
 
 #define IXXUSBFD_CMD_BUFFER_SIZE	256
 
+#define IXXUSB_CMD_POWER_DEV	0x421
+#define IXXUSB_CMD_CAPS_DEV		0x401
+#define IXXUSB_CMD_START_CHIP	0x326
+#define IXXUSB_CMD_STOP_CHIP	0x327
+
 /* reception of 11-bit id messages */
 #define IXXATUSBFD_OPMODE_STANDARD         0x01
 /* reception of 29-bit id messages */
