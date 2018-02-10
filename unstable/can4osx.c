@@ -543,13 +543,13 @@ Can4osxUsbDeviceHandleEntry *pDevice;
         CAN4OSX_DEBUG_PRINT("Found a Device with productId: %X\n", (UInt16)productId);
         
         switch (productId) {
-            case 0x0120: // Leaf Light v.2
+            case 0x0120: /* Kvaser Leaf Light v.2 */
                 pDevice->hwFunctions = leafHardwareFunctions;
                 break;
             case 0x0107:
                 pDevice->hwFunctions = leafProHardwareFunctions;
                 break;
-            case 0x0017:
+            case 0x0017: /* IXXAT USB-TO-CAN FD Automotive  */
             	pDevice->hwFunctions = ixxUsbFdHardwareFunctions;
              	break;
             default:
@@ -558,7 +558,14 @@ Can4osxUsbDeviceHandleEntry *pDevice;
         }
         
         if (pDevice->hwFunctions.can4osxhwInitRef != NULL)  {
+        	can4osxUsbDeviceHandle[can4osxMaxChannelCount].deviceChannelCount = 0u;
         	pDevice->hwFunctions.can4osxhwInitRef(can4osxMaxChannelCount);
+         	if (can4osxUsbDeviceHandle[can4osxMaxChannelCount].deviceChannelCount > 1u)  {
+            UInt8 maxChannel = can4osxUsbDeviceHandle[can4osxMaxChannelCount].deviceChannelCount;
+            	for (UInt8 i = 1u; i < maxChannel; i++)  {
+             	
+                }
+            }
         }
         
         //pDevice->hwFunctions.can4osxhwCanSetBusParamsRef(can4osxMaxChannelCount, canBITRATE_125K, 10, 5, 1, 1, 0);
