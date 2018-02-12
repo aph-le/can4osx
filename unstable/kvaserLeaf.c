@@ -117,13 +117,13 @@ canStatus LeafInitHardware(const CanHandle hnd)
         priv->cmdBufferRef = LeafCreateCommandBuffer(1000);
         if ( priv->cmdBufferRef == NULL ) {
             free(priv);
-            return canERR_NOMEM;
+            return(canERR_NOMEM);
         }
         
         priv->semaTimeout = dispatch_semaphore_create(0);
         
     } else {
-        return canERR_NOMEM;
+        return(canERR_NOMEM);
     }
     
     // Set some device Infos
@@ -159,7 +159,7 @@ static canStatus LeafCanClose(const CanHandle hnd)
 
 static canStatus LeafCanWrite (const CanHandle hnd,UInt32 id, void *msg, UInt16 dlc, UInt32 flag)
 {
-    Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
+Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
     
     if ( self->privateData != NULL ) {
         LeafPrivateData *priv = (LeafPrivateData *)self->privateData;
@@ -201,20 +201,19 @@ static canStatus LeafCanWrite (const CanHandle hnd,UInt32 id, void *msg, UInt16 
         
         LeafWriteToBulkPipe(self);
         
-        return canOK;
+        return(canOK);
         
     } else {
-        return canERR_INTERNAL;
+        return(canERR_INTERNAL);
     }
 
 }
 
 static canStatus LeafCanRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt32 *flag, UInt32 *time)
 {
-    Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
+Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
 
     if ( self->privateData != NULL ) {
-
     
         CanMsg canMsg;
     
@@ -228,14 +227,13 @@ static canStatus LeafCanRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16
             
             *flag = canMsg.canFlags;
         
-            return canOK;
+            return(canOK);
         } else {
-            return canERR_NOMSG;
+            return(canERR_NOMSG);
         }
     } else {
-        return canERR_INTERNAL;
+        return(canERR_INTERNAL);
     }
-
 }
 
 
