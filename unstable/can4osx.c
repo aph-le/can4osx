@@ -571,8 +571,6 @@ Can4osxUsbDeviceHandleEntry *pDevice;
             			return;
         			}
            			memcpy(&can4osxUsbDeviceHandle[can4osxMaxChannelCount], &can4osxUsbDeviceHandle[can4osxMaxChannelCount - 1], sizeof(Can4osxUsbDeviceHandleEntry));
-              		// Set up buffer for sending and receiving
-        			(void)CAN4OSX_CreateEndpointBuffer(can4osxMaxChannelCount);
               		can4osxUsbDeviceHandle[can4osxMaxChannelCount].deviceChannel++;
                 	can4osxUsbDeviceHandle[can4osxMaxChannelCount].channelNumber = can4osxMaxChannelCount;
                  	pDevice++;
