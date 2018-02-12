@@ -42,6 +42,9 @@
 // =============================================================================
 //
 
+
+/* header of standard C - libraries
+------------------------------------------------------------------------------*/
 #include <stdio.h>
 
 #include <CoreFoundation/CoreFoundation.h>
@@ -51,17 +54,21 @@
 #include <IOKit/usb/IOUSBLib.h>
 
 
-/* can4osx */
+/* header of project specific types
+------------------------------------------------------------------------------*/
 #include "can4osx.h"
 #include "can4osx_debug.h"
 #include "can4osx_internal.h"
-
-/* Leaf functions */
+/* ixxat functions */
 #include "ixxatUsbFd.h"
 
-#define IXXUSBFD_MAX_RX_ENDPOINT 4u
 
-//holds the actual buffer
+/* constant definitions
+------------------------------------------------------------------------------*/
+
+/* local defined data types
+------------------------------------------------------------------------------*/
+/* holds the actual buffer */
 typedef struct {
     int bufferSize;
     int bufferFirst;
@@ -73,9 +80,6 @@ typedef struct {
 typedef struct {
 	IXXUSBFDTRANSMITBUFFER_T pTransBuff;
 	Can4osxUsbDeviceHandleEntry *pParent;
-	UInt8 inEndPoint;
-	UInt8 *pEndpointInBuffer[IXXUSBFD_MAX_RX_ENDPOINT];
-    UInt8 *pEndpointOutBuffer;
     UInt8 canFd;
     UInt32  brp;
     UInt8   tseg1;
@@ -88,10 +92,11 @@ typedef struct {
 } IXXUSBFDPRIVATEDATA_T;
 
 
-static char* pDeviceString = "IXXAT USB-to-CAN FD";
-
+/* list of local defined functions
+------------------------------------------------------------------------------*/
 static canStatus usbFdInitHardware(const CanHandle hnd);
 static CanHandle usbFdCanOpenChannel(int channel, int flags);
+static canStatus usbFdCanClose(const CanHandle hnd);
 static canStatus usbFdCanStartChip(CanHandle hdl);
 static canStatus usbFdCanStopChip(CanHandle hnl);
 
@@ -129,8 +134,8 @@ static UInt8 usbFdWriteTransmitBuffer(IXXUSBFDTRANSMITBUFFER_T* pBuffer, IXXUSBF
 static UInt8 usbFdReadCommandBuffer(IXXUSBFDTRANSMITBUFFER_T* pBuffer, IXXUSBFDCANMSG_T* pCanMsg);
 
 
-
-
+/* global variables
+------------------------------------------------------------------------------*/
 Can4osxHwFunctions ixxUsbFdHardwareFunctions = {
     .can4osxhwInitRef = usbFdInitHardware,
     .can4osxhwCanOpenChannel = usbFdCanOpenChannel,
@@ -140,10 +145,27 @@ Can4osxHwFunctions ixxUsbFdHardwareFunctions = {
     .can4osxhwCanBusOffRef = usbFdCanStopChip,
     .can4osxhwCanWriteRef = usbFdCanWrite,
     .can4osxhwCanReadRef = usbFdCanRead,
-    .can4osxhwCanCloseRef = NULL,
+    .can4osxhwCanCloseRef = usbFdCanClose,
 };
 
 
+/* local defined variables
+------------------------------------------------------------------------------*/
+static char* pDeviceString = "IXXAT USB-to-CAN FD";
+
+
+/******************************************************************************/
+/**
+*
+* \brief usbFdInitHardware - initialze internal data structures
+*
+* This function initilize internal data structures and created device specific
+* private data. Sometimes this function has to correct endpoint information,
+* depending on the real hardware.
+*
+* \return canStatus
+*
+*/
 static canStatus usbFdInitHardware(
 		const CanHandle hnd
     )
@@ -161,17 +183,17 @@ Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
         pPriv->pTransBuff.bufferFirst = 0u;
         pPriv->pTransBuff.bufferSize = 512u;
     
-    	for (UInt8 i = 0u; i < IXXUSBFD_MAX_RX_ENDPOINT; i++)  {
-     		pPriv->inEndPoint = i;
-            pPriv->pEndpointInBuffer[i] = (UInt8 *)calloc(1,512);
-        }
     } else {
         return(canERR_NOMEM);
     }
-    // Set some device Infos
+    /* get and set some device infos */
     if (pSelf->deviceChannelCount == 0u)  {
     	usbFdSetPowerMode(pSelf, 0);
     	usbFdGetDeviceCaps(pSelf);
+    } else {
+    	/* create new endpoint buffer */
+        pSelf->endpointBufferBulkInRef = calloc( 1 , pSelf->endpointMaxSizeBulkIn);
+    	pSelf->endpointBufferBulkOutRef = calloc( 1 , pSelf->endpointMaxSizeBulkOut);
     }
     
     sprintf((char*)pSelf->devInfo.deviceString, "%s %d/%d",pDeviceString,pSelf->deviceChannel + 1, pSelf->deviceChannelCount);
@@ -183,13 +205,14 @@ Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
     pSelf->endpointNumberBulkOut += 2;
     pSelf->endpointNumberBulkIn += 2;
 
-    // Trigger the read
+    /* Trigger the read */
     usbFdReadFromBulkInPipe(pSelf);
     
     return(canOK);
 }
 
 
+/******************************************************************************/
 static CanHandle usbFdCanOpenChannel(
         int channel,
         int flags
@@ -209,7 +232,27 @@ IXXUSBFDPRIVATEDATA_T *pPriv = (IXXUSBFDPRIVATEDATA_T *)pSelf->privateData;
 }
 
 
-//Set bit timing
+/******************************************************************************/
+static canStatus usbFdCanClose(
+		const CanHandle hnd
+    )
+{
+Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
+    
+    if (pSelf->privateData != NULL)  {
+        IXXUSBFDPRIVATEDATA_T *pPriv = (IXXUSBFDPRIVATEDATA_T *)pSelf->privateData;
+        
+        (void)pPriv;
+    } else {
+        return(canERR_NOMEM);
+    }
+    
+    return(canOK);
+}
+
+
+
+/******************************************************************************/
 static canStatus usbFdCanSetBusParams (
         const CanHandle hnd,
         SInt32 freq,
@@ -251,6 +294,7 @@ IXXUSBFDPRIVATEDATA_T *pPriv = (IXXUSBFDPRIVATEDATA_T *)pSelf->privateData;
 }
 
 
+/******************************************************************************/
 static canStatus usbFdCanSetBusParamsFd(
 		const CanHandle hnd,
         SInt32 freq_brs,
@@ -283,7 +327,7 @@ unsigned int dummy;
 }
 
 
-//Go bus on
+/******************************************************************************/
 static canStatus usbFdCanStartChip(
         CanHandle hdl
     )
@@ -297,7 +341,7 @@ IXXUSBFDCANSTARTRESP_T *pResp;
     pResp = (IXXUSBFDCANSTARTRESP_T *)(data + sizeof(IXXUSBFDCANSTARTREQ_T));
     
     pReq->header.reqSize = sizeof(IXXUSBFDCANSTARTREQ_T);
-    pReq->header.reqCode = IXXUSB_CMD_START_CHIP;
+    pReq->header.reqCode = IXXUSBFD_CMD_START_CHIP;
     pReq->header.reqPort = pSelf->deviceChannel;
     pReq->header.reqSocket = 0xffff;
     
@@ -317,6 +361,7 @@ IXXUSBFDCANSTARTRESP_T *pResp;
 }
 
 
+/******************************************************************************/
 static canStatus usbFdCanStopChip(
         CanHandle hdl
     )
@@ -330,7 +375,7 @@ IXXUSBFDCANSTOPRESP_T *pResp;
     pResp = (IXXUSBFDCANSTOPRESP_T *)(data + sizeof(IXXUSBFDCANSTOPREQ_T));
  
     pReq->header.reqSize = sizeof(IXXUSBFDCANSTOPREQ_T);
-    pReq->header.reqCode = IXXUSB_CMD_STOP_CHIP;
+    pReq->header.reqCode = IXXUSBFD_CMD_STOP_CHIP;
     pReq->header.reqPort = pSelf->deviceChannel;
     pReq->header.reqSocket = 0xffff;
     pReq->action = 0x3;
@@ -379,6 +424,7 @@ CanMsg canMsg;
 }
 
 
+/******************************************************************************/
 static canStatus usbFdCanWrite (
 		const CanHandle hnd,
         UInt32 id,
@@ -552,6 +598,7 @@ static canStatus usbFdCanTranslateBaud (
 }
 
 
+/******************************************************************************/
 static canStatus usbFdSetPowerMode(
 		Can4osxUsbDeviceHandleEntry *pSelf, /**< pointer to handle structure */
         UInt8 mode
@@ -565,7 +612,7 @@ ixxUsbFdDevPowerResp_t *pPowerResp;
     pPowerResp = (ixxUsbFdDevPowerResp_t *)(data + sizeof(ixxUsbFdDevPowerReq_t));
     
     pPowerReq->header.reqSize = sizeof(ixxUsbFdDevPowerReq_t);
-    pPowerReq->header.reqCode = IXXUSB_CMD_POWER_DEV;
+    pPowerReq->header.reqCode = IXXUSBFD_CMD_POWER_DEV;
     pPowerReq->header.reqSocket = 0xffff;
     pPowerReq->header.reqPort = 0xffff;
     pPowerReq->mode = mode;
@@ -586,6 +633,7 @@ ixxUsbFdDevPowerResp_t *pPowerResp;
 }
 
 
+/******************************************************************************/
 static canStatus usbFdGetDeviceCaps(
 		Can4osxUsbDeviceHandleEntry *pSelf /**< pointer to handle structure */
     )
@@ -599,7 +647,7 @@ int i;
 	pCapsResp = (IXXUSBFDDEVICECAPSRESP_T *)(data + sizeof(IXXUSBFDDEVICECAPSREQ_T));
 	
 	pCapsReq->header.reqSize = sizeof(IXXUSBFDDEVICECAPSREQ_T);
-	pCapsReq->header.reqCode = IXXUSB_CMD_CAPS_DEV;
+	pCapsReq->header.reqCode = IXXUSBFD_CMD_CAPS_DEV;
 	pCapsReq->header.reqPort = 0xffff;
 	pCapsReq->header.reqSocket = 0xffff;
 	
@@ -624,6 +672,7 @@ int i;
 }
 
 
+/******************************************************************************/
 static canStatus usbFdSetBitrates(
 		Can4osxUsbDeviceHandleEntry *pSelf /**< pointer to handle structure */
     )
@@ -641,7 +690,7 @@ IXXUSBFDCANINITRESP_T *pResp;
     pResp = (IXXUSBFDCANINITRESP_T *)(data + sizeof(IXXUSBFDCANINITREQ_T));
     
     pReq->header.reqSize = sizeof(IXXUSBFDCANINITREQ_T);
-    pReq->header.reqCode = 0x337;
+    pReq->header.reqCode = IXXUSBFD_CMD_FREQ_CHIP;
     pReq->header.reqSocket = 0xffff;
     pReq->header.reqPort = pSelf->deviceChannel;
 
@@ -679,6 +728,7 @@ IXXUSBFDCANINITRESP_T *pResp;
 }
 
 
+/******************************************************************************/
 static canStatus usbFdSendCmd(
 		Can4osxUsbDeviceHandleEntry *pSelf, /**< pointer to handle structure */
         IXXUSBFDMSGREQHEAD_T *pCmd
@@ -704,6 +754,7 @@ IOReturn retVal;
 }
 
 
+/******************************************************************************/
 static canStatus usbFdRecvCmd(
 		Can4osxUsbDeviceHandleEntry *pSelf, /**< pointer to handle structure */
         IXXUSBFDMSGRESPHEAD_T *pCmd,
@@ -734,6 +785,7 @@ UInt16 sizeToRead = pCmd->respSize;
 }
 
 
+/******************************************************************************/
 static void usbFdDeocdeMsg(Can4osxUsbDeviceHandleEntry *pSelf, IXXUSBFDCANMSG_T* pMsg)
 {
 CanMsg canMsg;
@@ -785,6 +837,7 @@ CanMsg canMsg;
 }
 
 
+/******************************************************************************/
 static void usbFdBulkReadCompletion(void *refCon, IOReturn result, void *arg0)
 {
     Can4osxUsbDeviceHandleEntry *pSelf = (Can4osxUsbDeviceHandleEntry *)refCon;
@@ -815,7 +868,7 @@ static void usbFdBulkReadCompletion(void *refCon, IOReturn result, void *arg0)
 }
 
 
-
+/******************************************************************************/
 static void usbFdReadFromBulkInPipe(
 		Can4osxUsbDeviceHandleEntry *pSelf /**< pointer to handle structure */
     )
@@ -826,6 +879,7 @@ IOReturn ret = (*(pSelf->can4osxInterfaceInterface))->ReadPipeAsync(pSelf->can4o
         CAN4OSX_DEBUG_PRINT("Unable to read async interface (%08x)\n", ret);
     }
 }
+
 
 static IOReturn usbFdWriteToBulkPipe(
 		Can4osxUsbDeviceHandleEntry *pSelf
@@ -856,6 +910,8 @@ UInt16 size = 0u;
     return(retval);
 }
 
+
+/******************************************************************************/
 static UInt16 usbFdFillBulkPipeBuffer(
 		IXXUSBFDTRANSMITBUFFER_T *pBufferRef,
         UInt8 *pipe,
@@ -885,6 +941,8 @@ UInt16 fillState = 0;
     return(fillState);
 }
 
+
+/******************************************************************************/
 static void usbFdBulkWriteCompletion(
 		void *refCon,
         IOReturn result,
@@ -916,9 +974,7 @@ IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
 }
 
 
-
-
-
+/******************************************************************************/
 static UInt8 usbFdTestFullTransmitBuffer(
 		IXXUSBFDTRANSMITBUFFER_T * pBuffer
 	)
@@ -931,6 +987,7 @@ static UInt8 usbFdTestFullTransmitBuffer(
 }
 
 
+/******************************************************************************/
 static UInt8 usbFdTestEmptyTransmitBuffer(
         IXXUSBFDTRANSMITBUFFER_T * pBuffer
     )
@@ -943,6 +1000,7 @@ static UInt8 usbFdTestEmptyTransmitBuffer(
 }
 
 
+/******************************************************************************/
 static UInt8 usbFdWriteTransmitBuffer(
 		IXXUSBFDTRANSMITBUFFER_T* pBuffer,
         IXXUSBFDCANMSG_T newMsg
@@ -962,6 +1020,7 @@ __block UInt8 retval = 1u;
 }
 
 
+/******************************************************************************/
 static UInt8 usbFdReadCommandBuffer(
 		IXXUSBFDTRANSMITBUFFER_T* pBuffer,
 		IXXUSBFDCANMSG_T* pCanMsg
