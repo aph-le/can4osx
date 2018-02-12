@@ -102,7 +102,9 @@ bool bIsLoaded = false;
  * driver and internal structures.
  *
  */
-void canInitializeLibrary (void)
+void canInitializeLibrary (
+		void
+    )
 {
     if (true == bIsLoaded ) {
         return;
@@ -138,7 +140,9 @@ void canInitializeLibrary (void)
  * \return canStatus
  *
  */
-canStatus canBusOn(const CanHandle hnd)
+canStatus canBusOn(
+		const CanHandle hnd /**< handle to the CAN channel */
+    )
 {
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
         return(canERR_INVHANDLE);
@@ -158,7 +162,9 @@ canStatus canBusOn(const CanHandle hnd)
  * \return canStatus
  *
  */
-canStatus canBusOff(const CanHandle hnd)
+canStatus canBusOff(
+		const CanHandle hnd /**< handle to the CAN channel */
+    )
 {
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
         return(canERR_INVHANDLE);
@@ -266,7 +272,7 @@ canStatus canSetBusParamsFd(const CanHandle hnd, SInt32 freq_brs, UInt32 tseg1, 
  *
  */
 canStatus canRead (
-		const CanHandle hnd,
+		const CanHandle hnd, /**< handle to the CAN channel */
         UInt32 *id,
         void *msg,
         UInt16 *dlc,
@@ -292,7 +298,7 @@ canStatus canRead (
  * \return canStatus
  *
  */canStatus canWrite (
-		const CanHandle hnd,
+		const CanHandle hnd, /**< handle to the CAN channel */
         UInt32 id,
         void *msg,
         UInt16 dlc,
@@ -309,7 +315,7 @@ canStatus canRead (
 
 
 canStatus canReadStatus	(
-		const CanHandle hnd,
+		const CanHandle hnd, /**< handle to the CAN channel */
         UInt32 *const flags
     )
 {
