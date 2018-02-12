@@ -134,7 +134,7 @@ canStatus LeafInitHardware(const CanHandle hnd)
     // Trigger the read
     LeafReadFromBulkInPipe(self);
     
-    return canOK;
+    return(canOK);
 }
 
 static canStatus LeafCanClose(const CanHandle hnd)
@@ -150,11 +150,10 @@ static canStatus LeafCanClose(const CanHandle hnd)
         }
         
     } else {
-        return canERR_NOMEM;
+        return(canERR_NOMEM);
     }
     
-    return canOK;
-
+    return(canOK);
 }
 
 
