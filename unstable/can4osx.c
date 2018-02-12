@@ -202,7 +202,7 @@ canStatus canClose (const CanHandle hndl)
 canStatus canSetNotify (const CanHandle hnd, CanNotificationType notifyStruct, unsigned int notifyFlags, void *tag)
 {
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
-        return canERR_INVHANDLE;
+        return(canERR_INVHANDLE);
     } else {
     
         Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
@@ -228,7 +228,7 @@ canStatus canSetNotify (const CanHandle hnd, CanNotificationType notifyStruct, u
 canStatus canSetBusParams (const CanHandle hnd, SInt32 freq, UInt32 tseg1, UInt32 tseg2, UInt32 sjw, UInt32 noSamp, UInt32 syncmode)
 {
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
-        return canERR_INVHANDLE;
+        return(canERR_INVHANDLE);
     } else {
         Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
         if (NULL != pSelf->hwFunctions.can4osxhwCanSetBusParamsRef)  {
@@ -244,7 +244,7 @@ canStatus canSetBusParams (const CanHandle hnd, SInt32 freq, UInt32 tseg1, UInt3
 canStatus canSetBusParamsFd(const CanHandle hnd, SInt32 freq_brs, UInt32 tseg1, UInt32 tseg2, UInt32 sjw)
 {
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
-        return canERR_INVHANDLE;
+        return(canERR_INVHANDLE);
     } else {
         Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
         if (NULL != pSelf->hwFunctions.can4osxhwCanSetBusParamsFdRef) {
@@ -260,37 +260,61 @@ canStatus canSetBusParamsFd(const CanHandle hnd, SInt32 freq_brs, UInt32 tseg1, 
 /**
  * \brief canRead - read a CAN message
  *
- * This function opens a channel on the interface.
+ * This function read a CAN message from the given handle.
  *
  * \return canStatus
  *
  */
-canStatus canRead (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt32 *flag, UInt32 *time)
+canStatus canRead (
+		const CanHandle hnd,
+        UInt32 *id,
+        void *msg,
+        UInt16 *dlc,
+        UInt32 *flag,
+        UInt32 *time
+    )
 {
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
-        return canERR_INVHANDLE;
+        return(canERR_INVHANDLE);
     } else {
         Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
-        return pSelf->hwFunctions.can4osxhwCanReadRef(hnd, id, msg, dlc, flag, time );
+        return(pSelf->hwFunctions.can4osxhwCanReadRef(hnd, id, msg, dlc, flag, time));
     }
 }
 
 
-canStatus canWrite (const CanHandle hnd,UInt32 id, void *msg, UInt16 dlc, UInt32 flag)
+/******************************************************************************/
+/**
+ * \brief canWrite - write a CAN message
+ *
+ * This function writes a CAN message to the given handle.
+ *
+ * \return canStatus
+ *
+ */canStatus canWrite (
+		const CanHandle hnd,
+        UInt32 id,
+        void *msg,
+        UInt16 dlc,
+        UInt32 flag
+    )
 {
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
-        return canERR_INVHANDLE;
+        return(canERR_INVHANDLE);
     } else {
         Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
-        return pSelf->hwFunctions.can4osxhwCanWriteRef(hnd, id, msg, dlc, flag);
+        return(pSelf->hwFunctions.can4osxhwCanWriteRef(hnd, id, msg, dlc, flag));
     }
 }
 
 
-canStatus canReadStatus	(const CanHandle hnd, UInt32 *const flags)
+canStatus canReadStatus	(
+		const CanHandle hnd,
+        UInt32 *const flags
+    )
 {
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
-        return canERR_INVHANDLE;
+        return(canERR_INVHANDLE);
     } else {
         Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
         
@@ -310,7 +334,7 @@ canStatus canReadStatus	(const CanHandle hnd, UInt32 *const flags)
                 break;
         }
         
-        return canOK;
+        return(canOK);
     }
 }
 
@@ -318,7 +342,7 @@ canStatus canReadStatus	(const CanHandle hnd, UInt32 *const flags)
 canStatus canGetChannelData(const CanHandle hnd, SInt32 item, void* pBuffer, size_t bufsize)
 {
     if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
-        return canERR_INVHANDLE;
+        return(canERR_INVHANDLE);
     } else {
         Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
         
@@ -425,21 +449,26 @@ CFNumberRef				numberRef;
  * \return canStatus
  *
  */
-static CanHandle CAN4OSX_CheckHandle(const CanHandle hnd)
+static CanHandle CAN4OSX_CheckHandle(
+		const CanHandle hnd
+    )
 {
-    if (hnd >= CAN4OSX_MAX_CHANNEL_COUNT) {
-        return -1;
+    if (hnd >= CAN4OSX_MAX_CHANNEL_COUNT)  {
+        return(-1);
     }
     
-    if ( can4osxUsbDeviceHandle[hnd].channelNumber == -1 ) {
-        return -1;
+    if ( can4osxUsbDeviceHandle[hnd].channelNumber == -1 )  {
+        return(-1);
     }
     
-    return hnd;
+    return(hnd);
 }
 
 
-static void CAN4OSX_DeviceAdded(void *refCon, io_iterator_t iterator)
+static void CAN4OSX_DeviceAdded(
+		void *refCon,
+        io_iterator_t iterator
+    )
 {
 kern_return_t          kernRetVal;
 SInt32                 score;
@@ -586,7 +615,9 @@ Can4osxUsbDeviceHandleEntry *pDevice;
 }
 
 
-static IOReturn CAN4OSX_ConfigureDevice(IOUSBDeviceInterface **dev)
+static IOReturn CAN4OSX_ConfigureDevice(
+		IOUSBDeviceInterface **dev
+    )
 {
 UInt8 numConfig;
 IOReturn kr;
@@ -594,25 +625,27 @@ IOUSBConfigurationDescriptorPtr configDesc;
  
     /*kr = */(*dev)->GetNumberOfConfigurations(dev, &numConfig);
     if (!numConfig) {
-        return -1;
+        return(-1);
     }
     //Get the configuration descriptor for index 0
     kr = (*dev)->GetConfigurationDescriptorPtr(dev, 0, &configDesc);
     if (kr) {
         CAN4OSX_DEBUG_PRINT("%s : Could not get configuration descriptor for index %d (err = %08x)\n",__func__, 0, (unsigned int)kr);
-        return -1;
+        return(-1);
     }
     //Set the device’s configuration.
     kr = (*dev)->SetConfiguration(dev, configDesc->bConfigurationValue);
     if (kr) {
         CAN4OSX_DEBUG_PRINT("%s : Could not set configuration to value %d (err = %08x)\n",__func__, 0, (unsigned int)kr);
-        return -1;
+        return(-1);
     }
-    return kIOReturnSuccess;
+    return(kIOReturnSuccess);
 }
 
 
-static IOReturn CAN4OSX_FindInterfaces(Can4osxUsbDeviceHandleEntry *handle)
+static IOReturn CAN4OSX_FindInterfaces(
+		Can4osxUsbDeviceHandleEntry *handle
+    )
 {
 IOReturn ret, ret2;
 IOUSBFindInterfaceRequest request;
@@ -735,44 +768,51 @@ CFRunLoopSourceRef runLoopSource;
         //Right now only the first interface is supported
         break;
     }
-    return ret;
+    return(ret);
 }
 
 
-static void CAN4OSX_DeviceNotification(void *refCon, io_service_t service, natural_t messageType, void *messageArgument)
+static void CAN4OSX_DeviceNotification(
+		void *refCon, io_service_t service,
+		natural_t messageType,
+		void *messageArgument
+	)
 {
-    Can4osxUsbDeviceHandleEntry	*pSelf = (Can4osxUsbDeviceHandleEntry *) refCon;
+Can4osxUsbDeviceHandleEntry	*pSelf = (Can4osxUsbDeviceHandleEntry *) refCon;
     
-    if (messageType == kIOMessageServiceIsTerminated) {
+    if (messageType == kIOMessageServiceIsTerminated)  {
         CAN4OSX_DEBUG_PRINT("%s : Device removed. Channel number %d\n",__func__, pSelf->channelNumber);
         
         CAN4OSX_Dealloc(pSelf);
 
         pSelf->channelNumber = -1;
-
     }
 }
 
 
-static IOReturn CAN4OSX_CreateEndpointBuffer( const CanHandle hnd )
+static IOReturn CAN4OSX_CreateEndpointBuffer(
+		const CanHandle hnd
+    )
 {
-    Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
+Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
     
     pSelf->endpointBufferBulkInRef = calloc( 1 , pSelf->endpointMaxSizeBulkIn);
 
     pSelf->endpointBufferBulkOutRef = calloc( 1 , pSelf->endpointMaxSizeBulkOut);
     
-    return kIOReturnSuccess;
+    return(kIOReturnSuccess);
 }
 
 
-static IOReturn CAN4OSX_Dealloc(Can4osxUsbDeviceHandleEntry	*pSelf)
+static IOReturn CAN4OSX_Dealloc(
+		Can4osxUsbDeviceHandleEntry	*pSelf
+    )
 {
-    kern_return_t retval;
+kern_return_t retval;
     
     // Release the usb stuff
     
-    if (pSelf->can4osxDeviceInterface) {
+    if (pSelf->can4osxDeviceInterface)  {
         /*retval = */(*pSelf->can4osxDeviceInterface)->Release(pSelf->can4osxDeviceInterface);
     }
     
@@ -781,11 +821,11 @@ static IOReturn CAN4OSX_Dealloc(Can4osxUsbDeviceHandleEntry	*pSelf)
     //}
     
     
-    if(pSelf->endpointBufferBulkInRef) {
+    if(pSelf->endpointBufferBulkInRef)  {
         free(pSelf->endpointBufferBulkInRef);
     }
     
-    if(pSelf->endpointBufferBulkOutRef) {
+    if(pSelf->endpointBufferBulkOutRef)  {
         free(pSelf->endpointBufferBulkOutRef);
     }
     
@@ -795,7 +835,7 @@ static IOReturn CAN4OSX_Dealloc(Can4osxUsbDeviceHandleEntry	*pSelf)
     
     // FIXME test return value
     if (0) {
-        return retval;
+        return(retval);
     }
     
     // Now release  the dive internal stuff
@@ -804,7 +844,7 @@ static IOReturn CAN4OSX_Dealloc(Can4osxUsbDeviceHandleEntry	*pSelf)
     
     pSelf->hwFunctions.can4osxhwCanCloseRef(pSelf->channelNumber);
     
-    return retval;
+    return(retval);
     
 }
 
