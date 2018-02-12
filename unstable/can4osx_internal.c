@@ -62,11 +62,11 @@ static UInt8 CAN4OSX_TestEmptyCanEventBuffer(CanEventMsgBuf* bufferRef);
 /******************************************************************************/
 CanEventMsgBuf* CAN4OSX_CreateCanEventBuffer(
         UInt32 bufferSize
-        )
+    )
 {
 	CanEventMsgBuf* bufferRef = malloc(sizeof(CanEventMsgBuf));
-	if ( bufferRef == NULL ) {
-		return NULL;
+	if ( bufferRef == NULL )  {
+		return(NULL);
 	}
     
 	bufferRef->bufferSize = bufferSize;
@@ -75,16 +75,16 @@ CanEventMsgBuf* CAN4OSX_CreateCanEventBuffer(
     
 	bufferRef->canMsgRef = malloc(bufferSize * sizeof(CanMsg));
     
-	if ( bufferRef->canMsgRef == NULL ) {
+	if ( bufferRef->canMsgRef == NULL )  {
 		free(bufferRef);
         bufferRef = NULL;
-		return NULL;
+		return(NULL);
 	}
     
     bufferRef->bufferGDCqueueRef = dispatch_queue_create("com.can4osx.caneventqueue", 0);
-    if ( bufferRef->bufferGDCqueueRef == NULL ) {
+    if ( bufferRef->bufferGDCqueueRef == NULL )  {
 		CAN4OSX_ReleaseCanEventBuffer(bufferRef);
-		return NULL;
+		return(NULL);
 	}
     
 	return(bufferRef);
@@ -94,7 +94,7 @@ CanEventMsgBuf* CAN4OSX_CreateCanEventBuffer(
 /******************************************************************************/
 void CAN4OSX_ReleaseCanEventBuffer(
         CanEventMsgBuf* bufferRef
-        )
+    )
 {
 	if ( bufferRef != NULL ) {
         if (bufferRef->bufferGDCqueueRef != NULL) {
@@ -112,9 +112,9 @@ void CAN4OSX_ReleaseCanEventBuffer(
 /******************************************************************************/
 static UInt8 CAN4OSX_TestFullCanEventBuffer(
         CanEventMsgBuf* bufferRef
-        )
+    )
 {
-	if (bufferRef->bufferCount == bufferRef->bufferSize) {
+	if (bufferRef->bufferCount == bufferRef->bufferSize)  {
 		return(1);
 	} else {
 		return(0);
@@ -125,12 +125,12 @@ static UInt8 CAN4OSX_TestFullCanEventBuffer(
 /******************************************************************************/
 static UInt8 CAN4OSX_TestEmptyCanEventBuffer(
         CanEventMsgBuf* bufferRef
-        )
+    )
 {
-    if ( bufferRef->bufferCount == 0 ) {
-        return 1;
+    if ( bufferRef->bufferCount == 0 )  {
+        return(1);
     } else {
-        return 0;
+        return(0);
     }
 }
 
@@ -139,19 +139,19 @@ static UInt8 CAN4OSX_TestEmptyCanEventBuffer(
 UInt8 CAN4OSX_WriteCanEventBuffer(
         CanEventMsgBuf* bufferRef,
         CanMsg newEvent
-        )
+    )
 {
-    __block UInt8 retval = 1;
+__block UInt8 retval = 1;
     
     dispatch_sync(bufferRef->bufferGDCqueueRef, ^{
-        if (CAN4OSX_TestFullCanEventBuffer(bufferRef)) {
+        if (CAN4OSX_TestFullCanEventBuffer(bufferRef))  {
             retval = 0;
         } else {
             bufferRef->canMsgRef[(bufferRef->bufferFirst + bufferRef->bufferCount++) % bufferRef->bufferSize] = newEvent;
         }
     });
     
-	return retval;
+	return(retval);
 }
 
 
@@ -159,12 +159,12 @@ UInt8 CAN4OSX_WriteCanEventBuffer(
 UInt8 CAN4OSX_ReadCanEventBuffer(
         CanEventMsgBuf* bufferRef,
         CanMsg* readEvent
-        )
+    )
 {
-    __block UInt8 retval = 1;
+__block UInt8 retval = 1;
     
     dispatch_sync(bufferRef->bufferGDCqueueRef, ^{
-        if (CAN4OSX_TestEmptyCanEventBuffer(bufferRef)) {
+        if (CAN4OSX_TestEmptyCanEventBuffer(bufferRef))  {
             retval = 0;
         } else {
             bufferRef->bufferCount--;
@@ -173,7 +173,7 @@ UInt8 CAN4OSX_ReadCanEventBuffer(
 
     });
     
-	return retval;
+	return(retval);
 
 }
 
@@ -184,13 +184,13 @@ canStatus CAN4OSX_GetChannelData(
         SInt32 cmd,
         void* pBuffer,
         size_t bufsize
-        )
+    )
 {
 
     switch(cmd) {
         case canCHANNELDATA_CARD_SERIAL_NO:
             if (bufsize < 8)  {
-                return canERR_NOMEM;
+                return(canERR_NOMEM);
             }
             memcpy(pBuffer, &(pSelf->devInfo.serialNumber), 8);
             break;
@@ -209,9 +209,8 @@ canStatus CAN4OSX_GetChannelData(
         default:
             break;
     }
-    return canOK;
+    return(canOK);
 }
-
 
 
 /******************************************************************************/
