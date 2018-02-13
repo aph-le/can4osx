@@ -306,7 +306,6 @@ static canStatus usbFdCanSetBusParamsFd(
 Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
 IXXUSBFDPRIVATEDATA_T *pPriv = (IXXUSBFDPRIVATEDATA_T *)pSelf->privateData;
 unsigned int dummy;
-    CAN4OSX_DEBUG_PRINT("ixxat usb fd: _set_busparam_fd\n");
     
     if ( canOK != usbFdCanTranslateBaud(&freq_brs, &tseg1, &tseg2, &sjw,
                                           &dummy, &dummy)) {
@@ -840,13 +839,11 @@ CanMsg canMsg;
 /******************************************************************************/
 static void usbFdBulkReadCompletion(void *refCon, IOReturn result, void *arg0)
 {
-    Can4osxUsbDeviceHandleEntry *pSelf = (Can4osxUsbDeviceHandleEntry *)refCon;
-    IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
-    UInt32 numBytesRead = (UInt32) arg0;
-    UInt32 count = 0u;
-    IXXUSBFDCANMSG_T *pMsg;
-    UInt8 data[512];
-    memcpy(data, pSelf->endpointBufferBulkInRef, 512);
+Can4osxUsbDeviceHandleEntry *pSelf = (Can4osxUsbDeviceHandleEntry *)refCon;
+IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
+UInt32 numBytesRead = (UInt32) arg0;
+UInt32 count = 0u;
+IXXUSBFDCANMSG_T *pMsg;
     
     CAN4OSX_DEBUG_PRINT("Asynchronous bulk read complete (%ld)\n", (long)numBytesRead);
     
@@ -979,7 +976,7 @@ static UInt8 usbFdTestFullTransmitBuffer(
 		IXXUSBFDTRANSMITBUFFER_T * pBuffer
 	)
 {
-    if (pBuffer->bufferCount >= pBuffer->bufferSize) {
+    if (pBuffer->bufferCount >= pBuffer->bufferSize)  {
         return(1u);
     } else {
         return(0u);
@@ -992,7 +989,7 @@ static UInt8 usbFdTestEmptyTransmitBuffer(
         IXXUSBFDTRANSMITBUFFER_T * pBuffer
     )
 {
-    if ( pBuffer->bufferCount == 0 ) {
+    if ( pBuffer->bufferCount == 0 )  {
         return(1u);
     } else {
         return(0u);
