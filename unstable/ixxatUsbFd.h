@@ -56,22 +56,22 @@ extern Can4osxHwFunctions ixxUsbFdHardwareFunctions;
 #define IXXUSBFD_CMD_FREQ_CHIP	0x337
 
 /* reception of 11-bit id messages */
-#define IXXATUSBFD_OPMODE_STANDARD         0x01
+#define IXXUSBFD_OPMODE_STANDARD         0x01
 /* reception of 29-bit id messages */
-#define IXXATUSBFD_OPMODE_EXTENDED         0x02
+#define IXXUSBFD_OPMODE_EXTENDED         0x02
 /* enable reception of error frames */
-#define IXXATUSBFD_OPMODE_ERRFRAME         0x04
+#define IXXUSBFD_OPMODE_ERRFRAME         0x04
 /* listen only mode (TX passive) */
-#define IXXATUSBFD_OPMODE_LISTONLY         0x08
+#define IXXUSBFD_OPMODE_LISTONLY         0x08
 
 /* no extended operation */
-#define IXXATUSBFD_EXMODE_DISABLED         0x00
+#define IXXUSBFD_EXMODE_DISABLED         0x00
 /* extended data length */
-#define IXXATUSBFD_EXMODE_EXTDATA          0x01
+#define IXXUSBFD_EXMODE_EXTDATA          0x01
 /* fast data bit rate */
-#define IXXATUSBFD_EXMODE_FASTDATA         0x02
+#define IXXUSBFD_EXMODE_FASTDATA         0x02
 /* ISO conform CAN-FD frame */
-#define IXXATUSBFD_EXMODE_ISOFD            0x04
+#define IXXUSBFD_EXMODE_ISOFD            0x04
 
 #define IXXUSBFD_MSG_FLAG_TYPE   0x000000FF
 #define IXXUSBFD_MSG_FLAG_SSM    0x00000100

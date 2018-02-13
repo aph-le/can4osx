@@ -253,7 +253,7 @@ Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
 
 
 /******************************************************************************/
-static canStatus usbFdCanSetBusParams (
+static canStatus usbFdCanSetBusParams(
         const CanHandle hnd,
         SInt32 freq,
         unsigned int tseg1,
@@ -694,9 +694,9 @@ IXXUSBFDCANINITRESP_T *pResp;
     pReq->header.reqPort = pSelf->deviceChannel;
 
     pReq->exMode = 0u;
-    pReq->opMode = (IXXATUSBFD_OPMODE_EXTENDED | IXXATUSBFD_OPMODE_STANDARD);
+    pReq->opMode = (IXXUSBFD_OPMODE_EXTENDED | IXXUSBFD_OPMODE_STANDARD);
     if (pPriv->canFd)  {
-    	pReq->exMode = (IXXATUSBFD_EXMODE_EXTDATA | IXXATUSBFD_EXMODE_ISOFD | IXXATUSBFD_EXMODE_FASTDATA);
+    	pReq->exMode = (IXXUSBFD_EXMODE_EXTDATA | IXXUSBFD_EXMODE_ISOFD | IXXUSBFD_EXMODE_FASTDATA);
     }
     pReq->stdBitrate.mode = 1;
     pReq->stdBitrate.bps = pPriv->brp;
@@ -917,9 +917,9 @@ static UInt16 usbFdFillBulkPipeBuffer(
 {
 UInt16 fillState = 0;
     
-    while ( fillState < maxPipeSize ) {
+    while (fillState < maxPipeSize)  {
         IXXUSBFDCANMSG_T cmd;
-        if ( usbFdReadCommandBuffer(pBufferRef, &cmd) ) {
+        if (usbFdReadCommandBuffer(pBufferRef, &cmd))  {
             memcpy(pipe, &cmd, cmd.size + 1);
             fillState += cmd.size + 1;
             pipe += cmd.size + 1;
@@ -948,8 +948,7 @@ static void usbFdBulkWriteCompletion(
 {
 Can4osxUsbDeviceHandleEntry *pSelf = (Can4osxUsbDeviceHandleEntry *)refCon;
 IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
-    
-    UInt32 numBytesWritten = (UInt32) arg0;
+UInt32 numBytesWritten = (UInt32) arg0;
     
     (void)numBytesWritten;
     

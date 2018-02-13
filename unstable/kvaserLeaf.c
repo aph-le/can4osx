@@ -2,7 +2,7 @@
 //  kvaserLeaf.c
 //
 //
-// Copyright (c) 2014 - 2017 Alexander Philipp. All rights reserved.
+// Copyright (c) 2014 - 2018 Alexander Philipp. All rights reserved.
 //
 //
 // License: GPLv2
@@ -136,6 +136,7 @@ canStatus LeafInitHardware(const CanHandle hnd)
     
     return(canOK);
 }
+
 
 static canStatus LeafCanClose(const CanHandle hnd)
 {
@@ -654,8 +655,7 @@ IOReturn LeafWriteCommandToBulkPipe(Can4osxUsbDeviceHandleEntry *self, leafCmd c
     
         retVal = (*interface)->WritePipe( interface, self->endpointNumberBulkOut, &cmd, cmd.head.cmdLen );
     
-        if (retVal != kIOReturnSuccess)
-        {
+        if (retVal != kIOReturnSuccess)  {
             CAN4OSX_DEBUG_PRINT("Unable to perform synchronous bulk write (%08x)\n", retVal);
             (void) (*interface)->USBInterfaceClose(interface);
             (void) (*interface)->Release(interface);
@@ -848,16 +848,7 @@ static canStatus LeafCanSetBusParams ( const CanHandle hnd, SInt32 freq, unsigne
     cmd.setBusparamsReq.channel = (UInt8)0;//vChan->channel;
     cmd.setBusparamsReq.noSamp  = 1; // qqq Can't be trusted: (BYTE) pi->chip_param.samp3
     
-    CAN4OSX_DEBUG_PRINT("leaf_set_busparams: Chan(%d): Freq (%d) SJW (%d) TSEG1 (%d) TSEG2 (%d) Samp (%d)\n",
-                        cmd.setBusparamsReq.channel,
-                        cmd.setBusparamsReq.bitRate,
-                        cmd.setBusparamsReq.sjw,
-                        cmd.setBusparamsReq.tseg1,
-                        cmd.setBusparamsReq.tseg2,
-                        cmd.setBusparamsReq.noSamp);
-    
     retVal = LeafWriteCommandToBulkPipe( self, cmd);
-    
     
     return retVal;
 }
