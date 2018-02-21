@@ -433,6 +433,7 @@ static canStatus usbFdCanWrite (
     )
 {
 Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
+UInt8 retVal = 0u;
     
     if ( pSelf->privateData != NULL ) {
     IXXUSBFDPRIVATEDATA_T *pPriv = (IXXUSBFDPRIVATEDATA_T *)pSelf->privateData;
@@ -471,7 +472,11 @@ Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
 	
 		canMsg.size = (sizeof(canMsg) - 1u - 64u + dlc);
         
-        usbFdWriteTransmitBuffer(&pPriv->pTransBuff, canMsg);
+        retVal = usbFdWriteTransmitBuffer(&pPriv->pTransBuff, canMsg);
+        
+        if (retVal == 0u)  {
+        	return(canERR_TXBUFOFL);
+        }
         
         usbFdWriteToBulkPipe(pSelf);
         
@@ -790,7 +795,7 @@ static void usbFdDeocdeMsg(Can4osxUsbDeviceHandleEntry *pSelf, IXXUSBFDCANMSG_T*
 CanMsg canMsg;
 
 	switch (pMsg->flags & IXXUSBFD_MSG_FLAG_TYPE)  {
-    case 0x00:
+    case IXXUSBFD_CAN_DATA:
     	canMsg.canId = pMsg->canId;
     	canMsg.canDlc = (pMsg->flags & IXXUSBFD_MSG_FLAG_DLC ) >> 16;
      
@@ -829,6 +834,15 @@ CanMsg canMsg;
         }
      
      	break;
+    case IXXUSBFD_CAN_STATUS:
+        {
+        UInt8 newState = pMsg->data[0];
+        	if (newState == 0u)  {
+            	pSelf->canState.canState = CHIPSTAT_ERROR_ACTIVE;
+             	return;
+            }
+      	}
+    	break;
     default:
     	break;
     }
