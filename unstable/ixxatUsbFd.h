@@ -55,6 +55,14 @@ extern Can4osxHwFunctions ixxUsbFdHardwareFunctions;
 #define IXXUSBFD_CMD_STOP_CHIP	0x327
 #define IXXUSBFD_CMD_FREQ_CHIP	0x337
 
+#define IXXUSBFD_CAN_DATA             0x00
+#define IXXUSBFD_CAN_INFO             0x01
+#define IXXUSBFD_CAN_ERROR            0x02
+#define IXXUSBFD_CAN_STATUS           0x03
+#define IXXUSBFD_CAN_WAKEUP           0x04
+#define IXXUSBFD_CAN_TIMEOVR          0x05
+#define IXXUSBFD_CAN_TIMERST          0x06
+
 /* reception of 11-bit id messages */
 #define IXXUSBFD_OPMODE_STANDARD         0x01
 /* reception of 29-bit id messages */
