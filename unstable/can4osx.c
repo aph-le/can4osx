@@ -609,6 +609,7 @@ Can4osxUsbDeviceHandleEntry *pDevice;
               		can4osxUsbDeviceHandle[can4osxMaxChannelCount].deviceChannel++;
                 	can4osxUsbDeviceHandle[can4osxMaxChannelCount].channelNumber = can4osxMaxChannelCount;
                  	pDevice++;
+                  	pDevice->canEventMsgBuff = CAN4OSX_CreateCanEventBuffer(1000);
                   	pDevice->hwFunctions.can4osxhwInitRef(can4osxMaxChannelCount);
                 }
             }
