@@ -53,6 +53,8 @@
 #include <IOKit/IOCFPlugIn.h>
 #include <IOKit/usb/IOUSBLib.h>
 
+#include <pthread.h>
+
 
 /* header of project specific types
 ------------------------------------------------------------------------------*/
@@ -66,6 +68,8 @@
 /* constant definitions
 ------------------------------------------------------------------------------*/
 
+#define IXXCOMMANDBUF_SIZE (1000 * 10)
+
 /* local defined data types
 ------------------------------------------------------------------------------*/
 /* holds the actual buffer */
@@ -74,7 +78,7 @@ typedef struct {
     int bufferFirst;
     int bufferCount;
     dispatch_queue_t bufferGDCqueueRef;
-    IXXUSBFDCANMSG_T msgData[512];
+    IXXUSBFDCANMSG_T msgData[IXXCOMMANDBUF_SIZE];
 } IXXUSBFDTRANSMITBUFFER_T;
 
 typedef struct {
@@ -89,6 +93,7 @@ typedef struct {
     UInt8   fd_tseg1;
     UInt8   fd_tseg2;
     UInt8   fd_sjw;
+    pthread_mutex_t mutex;
 } IXXUSBFDPRIVATEDATA_T;
 
 
@@ -181,7 +186,8 @@ Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
       	pPriv->pTransBuff.bufferGDCqueueRef = dispatch_queue_create("com.can4osx.ixxusbfdmsgqueue", 0);
 		pPriv->pTransBuff.bufferCount = 0u;
         pPriv->pTransBuff.bufferFirst = 0u;
-        pPriv->pTransBuff.bufferSize = 512u;
+        pPriv->pTransBuff.bufferSize = IXXCOMMANDBUF_SIZE;
+        pthread_mutex_init(&(pPriv->mutex), NULL);
     
     } else {
         return(canERR_NOMEM);
@@ -862,7 +868,7 @@ IXXUSBFDCANMSG_T *pMsg;
     CAN4OSX_DEBUG_PRINT("Asynchronous bulk read complete (%ld)\n", (long)numBytesRead);
     
     if (result != kIOReturnSuccess) {
-        printf("Error from async bulk read (%08x)\n", result);
+        CAN4OSX_DEBUG_PRINT("Error from async bulk read (%08x)\n", result);
         (void) (*interface)->USBInterfaceClose(interface);
         (void) (*interface)->Release(interface);
         return;
@@ -901,6 +907,8 @@ IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
 IXXUSBFDPRIVATEDATA_T *pPriv = (IXXUSBFDPRIVATEDATA_T *)pSelf->privateData;
 UInt16 size = 0u;
 
+    pthread_mutex_lock(&pPriv->mutex);
+    
 	if ( pSelf->endpoitBulkOutBusy == FALSE ) {
         pSelf->endpoitBulkOutBusy = TRUE;
         size = usbFdFillBulkPipeBuffer(&pPriv->pTransBuff, pSelf->endpointBufferBulkOutRef, pSelf->endpointMaxSizeBulkOut );
@@ -917,6 +925,7 @@ UInt16 size = 0u;
             pSelf->endpoitBulkOutBusy = FALSE;
         }
     }
+    pthread_mutex_unlock(&pPriv->mutex);
     
     return(retval);
 }
@@ -963,7 +972,8 @@ static void usbFdBulkWriteCompletion(
 Can4osxUsbDeviceHandleEntry *pSelf = (Can4osxUsbDeviceHandleEntry *)refCon;
 IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
 UInt32 numBytesWritten = (UInt32) arg0;
-    
+IXXUSBFDPRIVATEDATA_T *pPriv = (IXXUSBFDPRIVATEDATA_T *)pSelf->privateData;
+
     (void)numBytesWritten;
     
     CAN4OSX_DEBUG_PRINT("Asynchronous bulk write complete\n");
@@ -974,9 +984,11 @@ UInt32 numBytesWritten = (UInt32) arg0;
         (void) (*interface)->Release(interface);
         return;
     }
-    
+ 
+ 	pthread_mutex_lock(&pPriv->mutex);
     pSelf->endpoitBulkOutBusy = FALSE;
-    
+    pthread_mutex_unlock(&pPriv->mutex);
+
     CAN4OSX_DEBUG_PRINT("Wrote %ld bytes to bulk endpoint\n", (long)numBytesWritten);
     
     usbFdWriteToBulkPipe(pSelf);
