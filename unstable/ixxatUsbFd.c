@@ -796,7 +796,10 @@ UInt16 sizeToRead = pCmd->respSize;
 
 
 /******************************************************************************/
-static void usbFdDeocdeMsg(Can4osxUsbDeviceHandleEntry *pSelf, IXXUSBFDCANMSG_T* pMsg)
+static void usbFdDeocdeMsg(
+		Can4osxUsbDeviceHandleEntry *pSelf,
+        IXXUSBFDCANMSG_T* pMsg
+    )
 {
 CanMsg canMsg;
 
