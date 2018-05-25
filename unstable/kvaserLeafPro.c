@@ -402,7 +402,7 @@ static canStatus LeafProCanRead (
         UInt16  *dlc,
         UInt32  *flag,
         UInt32  *time
-        )
+    )
 {
 Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
     
