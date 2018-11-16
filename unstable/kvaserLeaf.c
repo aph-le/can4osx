@@ -90,7 +90,7 @@ static void LeafReadFromBulkInPipe(Can4osxUsbDeviceHandleEntry *self);
 //Hardware interface function
 canStatus LeafInitHardware(const CanHandle hnd);
 
-Can4osxHwFunctions leafHardwareFunctions = {
+CAN4OSX_HW_FUNC_T leafHardwareFunctions = {
     .can4osxhwInitRef = LeafInitHardware,
     .can4osxhwCanOpenChannel = NULL,
     .can4osxhwCanSetBusParamsRef = LeafCanSetBusParams,

@@ -51,6 +51,8 @@
 #include <IOKit/IOCFPlugIn.h>
 #include <IOKit/usb/IOUSBLib.h>
 
+#include <sys/time.h>
+
 #include "can4osx_internal.h"
 #include "can4osx_debug.h"
 
@@ -266,5 +268,15 @@ UInt8 CAN4OSX_encodeFdDlc(
     }
 
     return(dlc);
+}
+
+UInt64 CAN$OSX_getMilliseconds(
+		void
+    )
+{
+struct timeval time;
+
+	gettimeofday(&time, NULL);
+	return(time.tv_sec * 1000) + (time.tv_usec / 1000);
 }
 

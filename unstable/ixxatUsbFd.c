@@ -141,7 +141,7 @@ static UInt8 usbFdReadCommandBuffer(IXXUSBFDTRANSMITBUFFER_T* pBuffer, IXXUSBFDC
 
 /* global variables
 ------------------------------------------------------------------------------*/
-Can4osxHwFunctions ixxUsbFdHardwareFunctions = {
+CAN4OSX_HW_FUNC_T ixxUsbFdHardwareFunctions = {
     .can4osxhwInitRef = usbFdInitHardware,
     .can4osxhwCanOpenChannel = usbFdCanOpenChannel,
     .can4osxhwCanSetBusParamsRef = usbFdCanSetBusParams,

@@ -323,7 +323,7 @@ typedef struct {
 } LeafPrivateData;
 
 
-extern Can4osxHwFunctions leafHardwareFunctions;
+extern CAN4OSX_HW_FUNC_T leafHardwareFunctions;
 
 
 

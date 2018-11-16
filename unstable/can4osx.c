@@ -69,6 +69,7 @@ static Can4osxUsbDeviceEntry can4osxSupportedDevices[] =
     // Vendor Id, Product Id
     {0x0bfd, 0x0120}, //Kvaser Leaf Light v.2
     {0x0bfd, 0x0107}, //Kvaser Leaf Pro HS v.2
+    {0x0bfd, 0x0108}, //Kvaser USBcan Pro 2xHS v.2
     {0x0bfd, 0x000E}, //Kvaser Leaf SemiPro HS
     {0x08d8, 0x0017}, //IXXAT USB-to-CAN FD
 };
@@ -582,6 +583,7 @@ Can4osxUsbDeviceHandleEntry *pDevice;
                 pDevice->hwFunctions = leafHardwareFunctions;
                 break;
             case 0x0107:
+            case 0x0108:
                 pDevice->hwFunctions = leafProHardwareFunctions;
                 break;
             case 0x0017: /* IXXAT USB-TO-CAN FD Automotive  */

@@ -119,7 +119,11 @@ typedef struct {
     canStatus (*can4osxhwCanWriteRef) (const CanHandle hnd,UInt32 id, void *msg, UInt16 dlc, UInt32 flag);
     canStatus (*can4osxhwCanReadRef) (const CanHandle hnd, UInt32 *id, void *msg, UInt16 *dlc, UInt32 *flag, UInt32 *time);
     canStatus (*can4osxhwCanCloseRef) (const CanHandle hnd);
-}Can4osxHwFunctions;
+}CAN4OSX_HW_FUNC_T;
+
+typedef struct {
+   void (*bulkReadCompletion)(void *refCon, IOReturn result, void *arg0);
+} CAN4OSX_USB_FUNC_T;
 
 
 typedef struct {
@@ -132,7 +136,7 @@ typedef struct {
     UInt64 serialNumber;
     UInt32 capability;
     UInt8  deviceString[128];
-} Can4osxDeviceInfo_T;
+} CAN4OSX_DEV_INFO_T;
 
 
 typedef struct {
@@ -159,11 +163,12 @@ typedef struct {
     bool endpoitBulkOutBusy;
     
     void *privateData; //Here every instace can save private stuff
-    Can4osxHwFunctions hwFunctions;
     
     Can4osxDeviceState_T canState;
     
-    Can4osxDeviceInfo_T devInfo;
+    CAN4OSX_DEV_INFO_T	devInfo;
+    CAN4OSX_HW_FUNC_T	hwFunctions;
+    CAN4OSX_USB_FUNC_T	usbFunctions;
     
 }Can4osxUsbDeviceHandleEntry;
 
@@ -180,6 +185,7 @@ UInt8 CAN4OSX_ReadCanEventBuffer(CanEventMsgBuf* bufferRef, CanMsg* readEvent);
 /* helper functions for all devices */
 UInt8 CAN4OSX_decodeFdDlc(UInt8 dlc);
 UInt8 CAN4OSX_encodeFdDlc(UInt8 dlc);
+UInt64 CAN$OSX_getMilliseconds(void);
 
 canStatus CAN4OSX_GetChannelData(Can4osxUsbDeviceHandleEntry* pSelf, SInt32 cmd, void* pBuffer, size_t bufsize);
 

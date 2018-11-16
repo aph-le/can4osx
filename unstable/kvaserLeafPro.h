@@ -46,7 +46,7 @@
 #ifndef can4osx_kvaserLeafPro_h
 #define can4osx_kvaserLeafPro_h
 
-extern Can4osxHwFunctions leafProHardwareFunctions;
+extern CAN4OSX_HW_FUNC_T leafProHardwareFunctions;
 
 
 # define LEAFPRO_MSG_FLAG_ERROR_FRAME   0x01
@@ -100,6 +100,20 @@ typedef struct {
     UInt16  flags;             // Various flags, to be defined
     UInt8   reserved1[24];
 } __attribute__ ((packed)) proCmdMapChannelResp_t;
+
+typedef struct {
+    proCmdHead_t    header;
+    UInt32 serial_number;
+    UInt32 clock_res;
+    UInt32 mfg_date;
+    UInt32 ean[2];
+    UInt8 hw_version;
+    UInt8 usb_mode;
+    UInt8 hw_type;
+    UInt8 reserved0;
+    UInt8 nchannels;
+    UInt8 reserved1[3];
+} __attribute__ ((packed)) proCmdCardInfoResp_t;
 
 typedef struct {
     proCmdHead_t    header;
@@ -216,6 +230,7 @@ typedef union {
     proCmdGetSoftwareDetailsReq_t   proCmdGetSoftwareDetailsReq;
     proCcmdGetSoftwareDetailsResp_t proCcmdGetSoftwareDetailsResp;
     proCommandExt_t                 proCommandExt;
+    proCmdCardInfoResp_t			proCmdCardInfoResp;
 } __attribute__ ((packed)) proCommand_t;
 
 

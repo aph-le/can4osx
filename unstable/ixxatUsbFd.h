@@ -45,7 +45,7 @@
 #ifndef can4osx_ixxatUsbFd_h
 #define can4osx_ixxatUsbFd_h
 
-extern Can4osxHwFunctions ixxUsbFdHardwareFunctions;
+extern CAN4OSX_HW_FUNC_T ixxUsbFdHardwareFunctions;
 
 #define IXXUSBFD_CMD_BUFFER_SIZE	256
 
