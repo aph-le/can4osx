@@ -64,7 +64,7 @@ Can4osxUsbDeviceHandleEntry can4osxUsbDeviceHandle[CAN4OSX_MAX_CHANNEL_COUNT];
 static UInt32 can4osxMaxChannelCount = 0;
 
 
-static Can4osxUsbDeviceEntry can4osxSupportedDevices[] =
+static CAN4OSX_DEV_ENTRY_T can4osxSupportedDevices[] =
 {
     // Vendor Id, Product Id
     {0x0bfd, 0x0120}, //Kvaser Leaf Light v.2
@@ -77,7 +77,7 @@ static Can4osxUsbDeviceEntry can4osxSupportedDevices[] =
 
 // Internal stuff
 static IONotificationPortRef can4osxUsbNotificationPortRef = 0;
-static io_iterator_t can4osxIoIterator[(sizeof(can4osxSupportedDevices)/sizeof(Can4osxUsbDeviceEntry))];
+static io_iterator_t can4osxIoIterator[(sizeof(can4osxSupportedDevices)/sizeof(CAN4OSX_DEV_ENTRY_T))];
 static dispatch_semaphore_t semaCan4osxStart = NULL;
 static dispatch_queue_t queueCan4osx = NULL;
 
@@ -107,10 +107,10 @@ void canInitializeLibrary (
 		void
     )
 {
-    if (true == bIsLoaded ) {
+    if (true == bIsLoaded )  {
         return;
     }
-    if (queueCan4osx != NULL) {
+    if (queueCan4osx != NULL)  {
         // If the queue already exist, the this function was already called
         return;
     }
@@ -145,7 +145,7 @@ canStatus canBusOn(
 		const CanHandle hnd /**< handle to the CAN channel */
     )
 {
-    if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
+    if ( CAN4OSX_CheckHandle(hnd) == -1 )  {
         return(canERR_INVHANDLE);
     } else {
         Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
@@ -167,7 +167,7 @@ canStatus canBusOff(
 		const CanHandle hnd /**< handle to the CAN channel */
     )
 {
-    if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
+    if ( CAN4OSX_CheckHandle(hnd) == -1 )  {
         return(canERR_INVHANDLE);
     } else {
         Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
@@ -187,7 +187,7 @@ canStatus canBusOff(
  */
 CanHandle canOpenChannel(int channel, int flags)
 {
-    if ( CAN4OSX_CheckHandle(channel) == -1 ) {
+    if ( CAN4OSX_CheckHandle(channel) == -1 )  {
         return(canERR_NOCHANNELS);
     } else {
         Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[channel];
@@ -208,7 +208,7 @@ canStatus canClose (const CanHandle hndl)
 
 canStatus canSetNotify (const CanHandle hnd, CanNotificationType notifyStruct, unsigned int notifyFlags, void *tag)
 {
-    if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
+    if ( CAN4OSX_CheckHandle(hnd) == -1 )  {
         return(canERR_INVHANDLE);
     } else {
     
@@ -234,7 +234,7 @@ canStatus canSetNotify (const CanHandle hnd, CanNotificationType notifyStruct, u
 
 canStatus canSetBusParams (const CanHandle hnd, SInt32 freq, UInt32 tseg1, UInt32 tseg2, UInt32 sjw, UInt32 noSamp, UInt32 syncmode)
 {
-    if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
+    if ( CAN4OSX_CheckHandle(hnd) == -1 )  {
         return(canERR_INVHANDLE);
     } else {
         Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
@@ -243,14 +243,13 @@ canStatus canSetBusParams (const CanHandle hnd, SInt32 freq, UInt32 tseg1, UInt3
         } else {
             return(canERR_PARAM);
         }
-
     }
 }
 
 
 canStatus canSetBusParamsFd(const CanHandle hnd, SInt32 freq_brs, UInt32 tseg1, UInt32 tseg2, UInt32 sjw)
 {
-    if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
+    if ( CAN4OSX_CheckHandle(hnd) == -1 )  {
         return(canERR_INVHANDLE);
     } else {
         Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
@@ -281,7 +280,7 @@ canStatus canRead (
         UInt32 *time
     )
 {
-    if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
+    if ( CAN4OSX_CheckHandle(hnd) == -1 )  {
         return(canERR_INVHANDLE);
     } else {
         Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
@@ -306,7 +305,7 @@ canStatus canRead (
         UInt32 flag
     )
 {
-    if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
+    if ( CAN4OSX_CheckHandle(hnd) == -1 )  {
         return(canERR_INVHANDLE);
     } else {
         Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
@@ -320,7 +319,7 @@ canStatus canReadStatus	(
         UInt32 *const flags
     )
 {
-    if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
+    if ( CAN4OSX_CheckHandle(hnd) == -1 )  {
         return(canERR_INVHANDLE);
     } else {
         Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
@@ -348,35 +347,35 @@ canStatus canReadStatus	(
 
 canStatus canGetChannelData(const CanHandle hnd, SInt32 item, void* pBuffer, size_t bufsize)
 {
-    if ( CAN4OSX_CheckHandle(hnd) == -1 ) {
+    if ( CAN4OSX_CheckHandle(hnd) == -1 )  {
         return(canERR_INVHANDLE);
     } else {
         Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
         
-        if (NULL == pBuffer) {
+        if (NULL == pBuffer)  {
             return canERR_NOMEM;
         }
         
-        if (bufsize <= 0) {
+        if (bufsize <= 0)  {
             return canERR_NOMEM;
         }
         
         memset(pBuffer, 0, bufsize);
         
-        return CAN4OSX_GetChannelData(pSelf, item, pBuffer, bufsize);
+        return(CAN4OSX_GetChannelData(pSelf, item, pBuffer, bufsize));
     }
 }
 
 
 canStatus canGetNumberOfChannels (int *channelCount)
 {
-    if (NULL == channelCount) {
-        return canERR_NOMEM;
+    if (NULL == channelCount)  {
+        return(canERR_NOMEM);
     }
     
     *channelCount = can4osxMaxChannelCount;
     
-    return canOK;
+    return(canOK);
 }
 
 
@@ -390,9 +389,6 @@ CFMutableDictionaryRef 	can4osxUsbMatchingDictRef;
 CFRunLoopSourceRef		can4osxRunLoopSourceRef;
 CFNumberRef				numberRef;
     
-    
-    CAN4OSX_DEBUG_PRINT(" Call: %s\n",__func__);
-    
     //Set all channels inactive
     for (loopCount = 0; loopCount < CAN4OSX_MAX_CHANNEL_COUNT; loopCount++ ) {
         can4osxUsbDeviceHandle[loopCount].channelNumber = -1;
@@ -404,7 +400,7 @@ CFNumberRef				numberRef;
     CFRunLoopAddSource(CFRunLoopGetCurrent(), can4osxRunLoopSourceRef, kCFRunLoopDefaultMode);
     
     
-    for ( loopCount = 0; loopCount < (sizeof(can4osxSupportedDevices)/sizeof(Can4osxUsbDeviceEntry)); loopCount++ ) {
+    for ( loopCount = 0; loopCount < (sizeof(can4osxSupportedDevices)/sizeof(CAN4OSX_DEV_ENTRY_T)); loopCount++ ) {
         
         can4osxUsbMatchingDictRef = IOServiceMatching(kIOUSBDeviceClassName);
         
@@ -437,7 +433,7 @@ CFNumberRef				numberRef;
     CFRunLoopRun();
     
     // if the runloop is stopped release
-    for ( loopCount = 0; loopCount < (sizeof(can4osxSupportedDevices)/sizeof(Can4osxUsbDeviceEntry)); loopCount++ ) {
+    for ( loopCount = 0; loopCount < (sizeof(can4osxSupportedDevices)/sizeof(CAN4OSX_DEV_ENTRY_T)); loopCount++ ) {
         IOObjectRelease(can4osxIoIterator[loopCount]);
     }
     
@@ -588,6 +584,7 @@ Can4osxUsbDeviceHandleEntry *pDevice;
                 break;
             case 0x0017: /* IXXAT USB-TO-CAN FD Automotive  */
             	pDevice->hwFunctions = ixxUsbFdHardwareFunctions;
+                pDevice->usbFunctions = ixxUsbFdUsbFunctions;
              	break;
             default:
                 pDevice->hwFunctions = leafHardwareFunctions;
@@ -620,7 +617,6 @@ Can4osxUsbDeviceHandleEntry *pDevice;
         can4osxMaxChannelCount++;
         
     }
-
 }
 
 

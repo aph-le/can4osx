@@ -130,7 +130,6 @@ static canStatus usbFdSendCmd(Can4osxUsbDeviceHandleEntry *pSelf, IXXUSBFDMSGREQ
 static canStatus usbFdRecvCmd(Can4osxUsbDeviceHandleEntry *pSelf, IXXUSBFDMSGRESPHEAD_T *pCmd, int value);
 
 static void usbFdBulkReadCompletion(void *refCon, IOReturn result, void *arg0);
-static void usbFdReadFromBulkInPipe(Can4osxUsbDeviceHandleEntry *self);
 static IOReturn usbFdWriteToBulkPipe(Can4osxUsbDeviceHandleEntry *pSelf);
 static UInt16 usbFdFillBulkPipeBuffer(IXXUSBFDTRANSMITBUFFER_T *pBufferRef, UInt8 *pipe, UInt16 maxPipeSize);
 static void usbFdBulkWriteCompletion(void *refCon, IOReturn result, void *arg0);
@@ -151,6 +150,10 @@ CAN4OSX_HW_FUNC_T ixxUsbFdHardwareFunctions = {
     .can4osxhwCanWriteRef = usbFdCanWrite,
     .can4osxhwCanReadRef = usbFdCanRead,
     .can4osxhwCanCloseRef = usbFdCanClose,
+};
+
+CAN4OSX_USB_FUNC_T ixxUsbFdUsbFunctions = {
+	.bulkReadCompletion = usbFdBulkReadCompletion
 };
 
 
@@ -212,7 +215,7 @@ Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
     pSelf->endpointNumberBulkIn += 2;
 
     /* Trigger the read */
-    usbFdReadFromBulkInPipe(pSelf);
+    CAN4OSX_usbReadFromBulkInPipe(pSelf);
     
     return(canOK);
 }
@@ -796,7 +799,7 @@ UInt16 sizeToRead = pCmd->respSize;
 
 
 /******************************************************************************/
-static void usbFdDeocdeMsg(
+static void usbFdDecodeMsg(
 		Can4osxUsbDeviceHandleEntry *pSelf,
         IXXUSBFDCANMSG_T* pMsg
     )
@@ -837,7 +840,7 @@ CanMsg canMsg;
       
         CAN4OSX_WriteCanEventBuffer(pSelf->canEventMsgBuff,canMsg);
         
-        if (pSelf->canNotification.notifacionCenter) {
+        if (pSelf->canNotification.notifacionCenter)  {
                 CFNotificationCenterPostNotification (pSelf->canNotification.notifacionCenter,
                     pSelf->canNotification.notificationString, NULL, NULL, true);
         }
@@ -879,25 +882,12 @@ IXXUSBFDCANMSG_T *pMsg;
     
     while (count < numBytesRead)  {
     	pMsg = (IXXUSBFDCANMSG_T *)&(pSelf->endpointBufferBulkInRef[count]);
-     	usbFdDeocdeMsg(pSelf, pMsg);
+     	usbFdDecodeMsg(pSelf, pMsg);
     	count += pMsg->size;
      	count++;
     }
 
-    usbFdReadFromBulkInPipe(pSelf);
-}
-
-
-/******************************************************************************/
-static void usbFdReadFromBulkInPipe(
-		Can4osxUsbDeviceHandleEntry *pSelf /**< pointer to handle structure */
-    )
-{
-IOReturn ret = (*(pSelf->can4osxInterfaceInterface))->ReadPipeAsync(pSelf->can4osxInterfaceInterface, pSelf->endpointNumberBulkIn, pSelf->endpointBufferBulkInRef, pSelf->endpointMaxSizeBulkIn, usbFdBulkReadCompletion, (void*)pSelf);
-
-    if (ret != kIOReturnSuccess) {
-        CAN4OSX_DEBUG_PRINT("Unable to read async interface (%08x)\n", ret);
-    }
+    CAN4OSX_usbReadFromBulkInPipe(pSelf);
 }
 
 

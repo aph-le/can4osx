@@ -219,7 +219,7 @@ canStatus CAN4OSX_GetChannelData(
 /**
 * \brief CAN4OSX_decodeFdDlc - decode the dlc to data length
 *
-* \return the datalength
+* \return the data length code
 */
 UInt8 CAN4OSX_decodeFdDlc(
         UInt8 dlc
@@ -270,6 +270,13 @@ UInt8 CAN4OSX_encodeFdDlc(
     return(dlc);
 }
 
+
+/******************************************************************************/
+/**
+* \brief OSX_getMilliseconds - get the actual milliseconds
+*
+* \return milliseconds
+*/
 UInt64 CAN$OSX_getMilliseconds(
 		void
     )

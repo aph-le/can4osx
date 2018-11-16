@@ -59,7 +59,7 @@
 typedef struct{
     UInt32 vendorId;
     UInt32 productId;
-}Can4osxUsbDeviceEntry;
+}CAN4OSX_DEV_ENTRY_T;
 
 
 
@@ -130,7 +130,7 @@ typedef struct {
     UInt8 rxErrorCounter;
     UInt8 txErrorCounter;
     UInt8 canState;
-} Can4osxDeviceState_T;
+} CAN4OSX_DEV_STATE_T;
 
 typedef struct {
     UInt64 serialNumber;
@@ -164,12 +164,10 @@ typedef struct {
     
     void *privateData; //Here every instace can save private stuff
     
-    Can4osxDeviceState_T canState;
-    
+    CAN4OSX_DEV_STATE_T	canState;
     CAN4OSX_DEV_INFO_T	devInfo;
     CAN4OSX_HW_FUNC_T	hwFunctions;
     CAN4OSX_USB_FUNC_T	usbFunctions;
-    
 }Can4osxUsbDeviceHandleEntry;
 
 

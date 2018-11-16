@@ -94,4 +94,17 @@ IOUSBInterfaceInterface **ppInterface = pSelf->can4osxInterfaceInterface;
 }
 
 
+/******************************************************************************/
+void CAN4OSX_usbReadFromBulkInPipe(
+        Can4osxUsbDeviceHandleEntry *pSelf /**< pointer to handle structure */
+    )
+{
+IOReturn ret = (*(pSelf->can4osxInterfaceInterface))->ReadPipeAsync(pSelf->can4osxInterfaceInterface, pSelf->endpointNumberBulkIn, pSelf->endpointBufferBulkInRef, pSelf->endpointMaxSizeBulkIn, pSelf->usbFunctions.bulkReadCompletion, (void*)pSelf);
+
+    if (ret != kIOReturnSuccess) {
+        CAN4OSX_DEBUG_PRINT("Unable to read async interface (%08x)\n", ret);
+    }
+}
+
+
 
