@@ -806,6 +806,8 @@ static void usbFdDecodeMsg(
 {
 CanMsg canMsg;
 
+	memset(&canMsg, 0u, sizeof(canMsg));
+
 	switch (pMsg->flags & IXXUSBFD_MSG_FLAG_TYPE)  {
     case IXXUSBFD_CAN_DATA:
     	canMsg.canId = pMsg->canId;
