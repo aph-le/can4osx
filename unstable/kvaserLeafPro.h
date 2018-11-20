@@ -261,6 +261,7 @@ typedef struct {
     UInt8   fd_tseg2;
     UInt8   fd_sjw;
     UInt8   fd_nosamp;
+    UInt8	chan2he[5];
 } LeafProPrivateData_t;
 
 #endif /* can4osx_kvaserLeafPro_h */
