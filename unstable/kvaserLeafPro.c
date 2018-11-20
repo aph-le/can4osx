@@ -837,9 +837,11 @@ static void LeafProMapChannels(
         Can4osxUsbDeviceHandleEntry *pSelf /**< pointer to my reference */
     )
 {
+LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
 proCommand_t cmd;
 proCommand_t resp;
 UInt8 i = 0u;
+IOReturn retVal;
 
     memset(&cmd, 0u, 32u);
     
@@ -853,7 +855,10 @@ UInt8 i = 0u;
     	cmd.proCmdHead.transitionId = 0x40 + i;
     	cmd.proCmdMapChannelReq.channel = i;
     	LeafProWriteCommandWait(pSelf, cmd, LEAFPRO_CMD_MAP_CHANNEL_RESP);
-    	LeafProCommandWait(pSelf, &resp, LEAFPRO_CMD_MAP_CHANNEL_RESP);
+    	retVal =LeafProCommandWait(pSelf, &resp, LEAFPRO_CMD_MAP_CHANNEL_RESP);
+        if (retVal == kIOReturnSuccess)  {
+            pPriv->chan2he[resp.proCmdHead.transitionId & 0xF] = resp.proCmdMapChannelResp.heAddress;
+        }
     }
     
     /* do we really need that? */
