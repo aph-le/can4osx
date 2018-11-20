@@ -873,21 +873,21 @@ IXXUSBFDCANMSG_T *pMsg;
     
     CAN4OSX_DEBUG_PRINT("Asynchronous bulk read complete (%ld)\n", (long)numBytesRead);
     
-    if (result != kIOReturnSuccess) {
+    if (result != kIOReturnSuccess)  {
         CAN4OSX_DEBUG_PRINT("Error from async bulk read (%08x)\n", result);
         (void) (*interface)->USBInterfaceClose(interface);
         (void) (*interface)->Release(interface);
-        return;
-    }
+    } else {
     
-    while (count < numBytesRead)  {
-    	pMsg = (IXXUSBFDCANMSG_T *)&(pSelf->endpointBufferBulkInRef[count]);
-     	usbFdDecodeMsg(pSelf, pMsg);
-    	count += pMsg->size;
-     	count++;
-    }
+	    while (count < numBytesRead)  {
+    		pMsg = (IXXUSBFDCANMSG_T *)&(pSelf->endpointBufferBulkInRef[count]);
+     		usbFdDecodeMsg(pSelf, pMsg);
+    		count += pMsg->size;
+     		count++;
+    	}
 
-    CAN4OSX_usbReadFromBulkInPipe(pSelf);
+    	CAN4OSX_usbReadFromBulkInPipe(pSelf);
+    }
 }
 
 
