@@ -61,49 +61,49 @@
 
 /******************************************************************************/
 canStatus CAN4OSX_usbSendCommand(
-        Can4osxUsbDeviceHandleEntry *pSelf,  /**< pointer to my reference */
-        void *pCmd,
-        size_t cmdLen
-    )
+		Can4osxUsbDeviceHandleEntry *pSelf,  /**< pointer to my reference */
+		void *pCmd,
+		size_t cmdLen
+	)
 {
 IOReturn retVal = kIOReturnSuccess;
 IOUSBInterfaceInterface **ppInterface = pSelf->can4osxInterfaceInterface;
 
-    if( pSelf->endpoitBulkOutBusy == FALSE ) {
-        pSelf->endpoitBulkOutBusy = TRUE;
-        
-        retVal = (*ppInterface)->WritePipe(ppInterface,
-                                         pSelf->endpointNumberBulkOut,
-                                         pCmd, (UInt32)cmdLen);
-        
-        if (retVal != kIOReturnSuccess) {
-            CAN4OSX_DEBUG_PRINT("Unable to perform synchronous bulk write (%08x)\n", retVal);
-            (void)(*ppInterface)->USBInterfaceClose(ppInterface);
-            (void)(*ppInterface)->Release(ppInterface);
-        }
-        
-        pSelf->endpoitBulkOutBusy = FALSE;
-    } else {
-    	retVal = kIOReturnError;
-    }
-    
+	if( pSelf->endpoitBulkOutBusy == FALSE )  {
+		pSelf->endpoitBulkOutBusy = TRUE;
+
+		retVal = (*ppInterface)->WritePipe(ppInterface,
+										 pSelf->endpointNumberBulkOut,
+										 pCmd, (UInt32)cmdLen);
+
+		if (retVal != kIOReturnSuccess)  {
+			CAN4OSX_DEBUG_PRINT("Unable to perform synchronous bulk write (%08x)\n", retVal);
+			(void)(*ppInterface)->USBInterfaceClose(ppInterface);
+			(void)(*ppInterface)->Release(ppInterface);
+		}
+
+		pSelf->endpoitBulkOutBusy = FALSE;
+	} else {
+		retVal = kIOReturnError;
+	}
+
 	if (retVal != kIOReturnSuccess)  {
 	    return(canERR_INTERNAL);
-    }
+	}
 	return(canOK);
 }
 
 
 /******************************************************************************/
 void CAN4OSX_usbReadFromBulkInPipe(
-        Can4osxUsbDeviceHandleEntry *pSelf /**< pointer to handle structure */
-    )
+		Can4osxUsbDeviceHandleEntry *pSelf /**< pointer to handle structure */
+	)
 {
 IOReturn ret = (*(pSelf->can4osxInterfaceInterface))->ReadPipeAsync(pSelf->can4osxInterfaceInterface, pSelf->endpointNumberBulkIn, pSelf->endpointBufferBulkInRef, pSelf->endpointMaxSizeBulkIn, pSelf->usbFunctions.bulkReadCompletion, (void*)pSelf);
 
-    if (ret != kIOReturnSuccess) {
-        CAN4OSX_DEBUG_PRINT("Unable to read async interface (%08x)\n", ret);
-    }
+	if (ret != kIOReturnSuccess)  {
+		CAN4OSX_DEBUG_PRINT("Unable to read async interface (%08x)\n", ret);
+	}
 }
 
 
