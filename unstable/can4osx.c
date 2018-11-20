@@ -201,7 +201,6 @@ CanHandle canOpenChannel(int channel, int flags)
 
 canStatus canClose (const CanHandle hndl)
 {
-
 	return(0);//FIXME
 }
 
