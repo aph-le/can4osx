@@ -82,7 +82,7 @@ static dispatch_semaphore_t semaCan4osxStart = NULL;
 static dispatch_queue_t queueCan4osx = NULL;
 
 
-static void CAN4OSX_CanInitializeLibrary (void);
+static void CAN4OSX_CanInitializeLibrary(void);
 static void CAN4OSX_DeviceAdded(void *refCon, io_iterator_t iterator);
 static IOReturn CAN4OSX_ConfigureDevice(IOUSBDeviceInterface **dev);
 static IOReturn CAN4OSX_FindInterfaces(Can4osxUsbDeviceHandleEntry *handle);
@@ -297,7 +297,8 @@ canStatus canRead (
  *
  * \return canStatus
  *
- */canStatus canWrite (
+ */
+ canStatus canWrite (
 		const CanHandle hnd, /**< handle to the CAN channel */
 		UInt32 id,
 		void *msg,
@@ -345,7 +346,12 @@ canStatus canReadStatus	(
 }
 
 
-canStatus canGetChannelData(const CanHandle hnd, SInt32 item, void* pBuffer, size_t bufsize)
+canStatus canGetChannelData(
+		const CanHandle hnd,
+		SInt32 item,
+		void* pBuffer,
+		size_t bufsize
+	)
 {
 	if ( CAN4OSX_CheckHandle(hnd) == -1 )  {
 		return(canERR_INVHANDLE);
@@ -381,7 +387,9 @@ canStatus canGetNumberOfChannels (int *channelCount)
 
 // Internal
 
-static void CAN4OSX_CanInitializeLibrary (void)
+static void CAN4OSX_CanInitializeLibrary(
+		void
+	)
 {
 UInt16 loopCount = 0;
 
