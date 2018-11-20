@@ -719,11 +719,11 @@ IXXUSBFDCANINITRESP_T *pResp;
     pReq->stdBitrate.sjw = pPriv->sjw;
     pReq->stdBitrate.tdo = 0u;
     if (pPriv->canFd)  {
-	    pReq->fdBitrate.bps = pPriv->fd_brp;
-    	pReq->fdBitrate.tseg1 = pPriv->fd_tseg1;
-    	pReq->fdBitrate.tseg2 = pPriv->fd_tseg2;
-    	pReq->fdBitrate.sjw = pPriv->fd_sjw;
-    	pReq->fdBitrate.tdo = 1u + pPriv->fd_tseg1;
+		pReq->fdBitrate.bps = pPriv->fd_brp;
+		pReq->fdBitrate.tseg1 = pPriv->fd_tseg1;
+		pReq->fdBitrate.tseg2 = pPriv->fd_tseg2;
+		pReq->fdBitrate.sjw = pPriv->fd_sjw;
+		pReq->fdBitrate.tdo = 1u + pPriv->fd_tseg1;
     }
     
     pResp->header.respSize = sizeof(IXXUSBFDCANINITRESP_T);
