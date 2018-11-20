@@ -42,8 +42,8 @@
 // =============================================================================
 //
 
-#ifndef can4osx_intern_h
-#define can4osx_intern_h
+#ifndef CAN4OSX_INTERN_H
+#define CAN4OSX_INTERN_H 1
 
 #include <stdio.h>
 
@@ -188,4 +188,4 @@ UInt64 CAN$OSX_getMilliseconds(void);
 canStatus CAN4OSX_GetChannelData(Can4osxUsbDeviceHandleEntry* pSelf, SInt32 cmd, void* pBuffer, size_t bufsize);
 
 
-#endif //can4osx_intern_h
+#endif /* CAN4OSX_INTERN_H */
