@@ -61,6 +61,7 @@
 #include "can4osx.h"
 #include "can4osx_debug.h"
 #include "can4osx_internal.h"
+#include "can4osx_usb_core.h"
 /* ixxat functions */
 #include "ixxatUsbFd.h"
 
