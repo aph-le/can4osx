@@ -56,6 +56,7 @@
 #include "can4osx.h"
 #include "can4osx_debug.h"
 #include "can4osx_internal.h"
+#include "can4osx_usb_core.h"
 
 /* Leaf functions */
 #include "kvaserLeaf.h"
@@ -84,7 +85,7 @@ static void LeafBulkWriteCompletion(void *refCon, IOReturn result, void *arg0);
 static IOReturn LeafWriteToBulkPipe(Can4osxUsbDeviceHandleEntry *self);
 static UInt16 LeafFillBulkPipeBuffer(LeafCommandMsgBuf* bufferRef, UInt8 *pipe, UInt16 maxPipeSize);
 
-static void LeafReadFromBulkInPipe(Can4osxUsbDeviceHandleEntry *self);
+static void BulkReadCompletion(void *refCon, IOReturn result, void *arg0);
 
 
 //Hardware interface function
@@ -102,17 +103,21 @@ CAN4OSX_HW_FUNC_T leafHardwareFunctions = {
     .can4osxhwCanCloseRef = LeafCanClose,
 };
 
+static CAN4OSX_USB_FUNC_T leafUsbFunctions = {
+	.bulkReadCompletion = BulkReadCompletion,
+};
+
 
 
 
 
 canStatus LeafInitHardware(const CanHandle hnd)
 {
-    Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
-    self->privateData = calloc(1,sizeof(LeafPrivateData));
+    Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
+    pSelf->privateData = calloc(1,sizeof(LeafPrivateData));
     
-    if ( self->privateData != NULL ) {
-        LeafPrivateData *priv = (LeafPrivateData *)self->privateData;
+    if ( pSelf->privateData != NULL ) {
+        LeafPrivateData *priv = (LeafPrivateData *)pSelf->privateData;
         
         priv->cmdBufferRef = LeafCreateCommandBuffer(1000);
         if ( priv->cmdBufferRef == NULL ) {
@@ -126,13 +131,14 @@ canStatus LeafInitHardware(const CanHandle hnd)
         return(canERR_NOMEM);
     }
     
+    pSelf->usbFunctions = leafUsbFunctions;
     // Set some device Infos
-    sprintf((char*)self->devInfo.deviceString, "%s",pDeviceString);
-    self->devInfo.capability = 0u;
+    sprintf((char*)pSelf->devInfo.deviceString, "%s",pDeviceString);
+    pSelf->devInfo.capability = 0u;
 
     
     // Trigger the read
-    LeafReadFromBulkInPipe(self);
+    CAN4OSX_usbReadFromBulkInPipe(pSelf);
     
     return(canOK);
 }
@@ -850,7 +856,7 @@ static canStatus LeafCanSetBusParams ( const CanHandle hnd, SInt32 freq, unsigne
     
     retVal = LeafWriteCommandToBulkPipe( self, cmd);
     
-    return retVal;
+    return(retVal);
 }
 
 
@@ -890,17 +896,7 @@ static void BulkReadCompletion(void *refCon, IOReturn result, void *arg0)
             LeafDecodeCommand(pSelf, cmd);
         }
     }
-    
-    LeafReadFromBulkInPipe(pSelf);
-}
-
-static void LeafReadFromBulkInPipe(Can4osxUsbDeviceHandleEntry *self)
-{
-    IOReturn ret = (*(self->can4osxInterfaceInterface))->ReadPipeAsync(self->can4osxInterfaceInterface, self->endpointNumberBulkIn, self->endpointBufferBulkInRef, self->endpointMaxSizeBulkIn, BulkReadCompletion, (void*)self);
-    
-    if (ret != kIOReturnSuccess) {
-        CAN4OSX_DEBUG_PRINT("Unable to read async interface (%08x)\n", ret);
-    }
+    CAN4OSX_usbReadFromBulkInPipe(pSelf);
 }
 
 
