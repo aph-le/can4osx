@@ -185,7 +185,10 @@ canStatus canBusOff(
  * \return canStatus
  *
  */
-CanHandle canOpenChannel(int channel, int flags)
+CanHandle canOpenChannel(
+		int channel,
+		int flags
+	)
 {
 	if ( CAN4OSX_CheckHandle(channel) == -1 )  {
 		return(canERR_NOCHANNELS);
@@ -199,13 +202,20 @@ CanHandle canOpenChannel(int channel, int flags)
 	}
 }
 
-canStatus canClose (const CanHandle hndl)
+canStatus canClose(
+		const CanHandle hndl
+	)
 {
 	return(0);//FIXME
 }
 
 
-canStatus canSetNotify (const CanHandle hnd, CanNotificationType notifyStruct, unsigned int notifyFlags, void *tag)
+canStatus canSetNotify(
+		const CanHandle hnd,
+		CanNotificationType notifyStruct,
+		unsigned int notifyFlags,
+		void *tag
+	)
 {
 	if ( CAN4OSX_CheckHandle(hnd) == -1 )  {
 		return(canERR_INVHANDLE);
@@ -231,7 +241,15 @@ canStatus canSetNotify (const CanHandle hnd, CanNotificationType notifyStruct, u
 }
 
 
-canStatus canSetBusParams (const CanHandle hnd, SInt32 freq, UInt32 tseg1, UInt32 tseg2, UInt32 sjw, UInt32 noSamp, UInt32 syncmode)
+canStatus canSetBusParams(
+		const CanHandle hnd,
+		SInt32 freq,
+		UInt32 tseg1,
+		UInt32 tseg2,
+		UInt32 sjw,
+		UInt32 noSamp,
+		UInt32 syncmode
+	)
 {
 	if ( CAN4OSX_CheckHandle(hnd) == -1 )  {
 		return(canERR_INVHANDLE);
@@ -246,7 +264,13 @@ canStatus canSetBusParams (const CanHandle hnd, SInt32 freq, UInt32 tseg1, UInt3
 }
 
 
-canStatus canSetBusParamsFd(const CanHandle hnd, SInt32 freq_brs, UInt32 tseg1, UInt32 tseg2, UInt32 sjw)
+canStatus canSetBusParamsFd(
+		const CanHandle hnd,
+		SInt32 freq_brs,
+		UInt32 tseg1,
+		UInt32 tseg2,
+		UInt32 sjw
+	)
 {
 	if ( CAN4OSX_CheckHandle(hnd) == -1 )  {
 		return(canERR_INVHANDLE);

@@ -103,11 +103,6 @@ CAN4OSX_HW_FUNC_T leafHardwareFunctions = {
 	.can4osxhwCanCloseRef = LeafCanClose,
 };
 
-static CAN4OSX_USB_FUNC_T leafUsbFunctions = {
-	.bulkReadCompletion = BulkReadCompletion,
-};
-
-
 
 
 
@@ -131,13 +126,13 @@ canStatus LeafInitHardware(const CanHandle hnd)
 		return(canERR_NOMEM);
 	}
 
-	pSelf->usbFunctions = leafUsbFunctions;
+	pSelf->usbFunctions.bulkReadCompletion = BulkReadCompletion;
+	
 	// Set some device Infos
 	sprintf((char*)pSelf->devInfo.deviceString, "%s",pDeviceString);
 	pSelf->devInfo.capability = 0u;
 
-
-	// Trigger the read
+	/* Trigger the read */
 	CAN4OSX_usbReadFromBulkInPipe(pSelf);
 
 	return(canOK);
@@ -381,6 +376,8 @@ LeafPrivateData *priv = (LeafPrivateData *)self->privateData;
 		case CMD_LOG_MESSAGE:
 		{
 			CanMsg canMsg;
+            
+   			memset(&canMsg, 0u, sizeof(canMsg));
 
 			if ( cmd->logMessage.ident & LEAF_EXT_MSG )  {
 				canMsg.canId = cmd->logMessage.ident & ~LEAF_EXT_MSG;
@@ -406,7 +403,6 @@ LeafPrivateData *priv = (LeafPrivateData *)self->privateData;
 			if (cmd->logMessage.flags & LEAF_MSG_FLAG_TXRQ)  {
 				canMsg.canFlags |= canMSG_TXRQ;
 			}
-
 
 			if ( cmd->logMessage.dlc > 8 )  {
 				cmd->logMessage.dlc = 8;
