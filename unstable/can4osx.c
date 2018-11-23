@@ -66,7 +66,7 @@ static UInt32 can4osxMaxChannelCount = 0;
 
 static CAN4OSX_DEV_ENTRY_T can4osxSupportedDevices[] =
 {
-    // Vendor Id, Product Id
+	// Vendor Id, Product Id
 	{0x0bfd, 0x0120}, //Kvaser Leaf Light v.2
 	{0x0bfd, 0x0107}, //Kvaser Leaf Pro HS v.2
 	{0x0bfd, 0x0108}, //Kvaser USBcan Pro 2xHS v.2
@@ -111,19 +111,19 @@ void canInitializeLibrary (
 		return;
 	}
 	if (queueCan4osx != NULL)  {
-        // If the queue already exist, the this function was already called
+		// If the queue already exist, the this function was already called
 		return;
 	}
-    // Create a queue to run in background, so the driver has his own task
+	// Create a queue to run in background, so the driver has his own task
 	queueCan4osx = dispatch_queue_create("can4osx", NULL);
 	semaCan4osxStart = dispatch_semaphore_create(0);
 
 	dispatch_set_target_queue(queueCan4osx, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0));
-    //Get a own thread where the usb stuff runs
+	//Get a own thread where the usb stuff runs
 	dispatch_async(queueCan4osx, ^(void) {
 		CAN4OSX_CanInitializeLibrary();
 	});
-    // Wait here until the background usb task is done
+	// Wait here until the background usb task is done
 	dispatch_semaphore_wait(semaCan4osxStart, DISPATCH_TIME_FOREVER);
 
 	dispatch_release(semaCan4osxStart);
@@ -348,17 +348,17 @@ canStatus canReadStatus	(
 	} else {
 		Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
 
-        *flags = 0;
+		*flags = 0;
 
 		switch ( pSelf->canState.canState ) {
 			case CHIPSTAT_ERROR_ACTIVE:
-                *flags = canSTAT_ERROR_ACTIVE;
+				*flags = canSTAT_ERROR_ACTIVE;
 				break;
 			case CHIPSTAT_BUSOFF:
-                *flags = canSTAT_BUS_OFF;
+				*flags = canSTAT_BUS_OFF;
 				break;
 			case CHIPSTAT_ERROR_PASSIVE:
-                *flags = canSTAT_ERROR_PASSIVE;
+				*flags = canSTAT_ERROR_PASSIVE;
 				break;
 			default:
 				break;
@@ -402,7 +402,7 @@ canStatus canGetNumberOfChannels (int *channelCount)
 		return(canERR_NOMEM);
 	}
 
-    *channelCount = can4osxMaxChannelCount;
+	*channelCount = can4osxMaxChannelCount;
 
 	return(canOK);
 }
@@ -420,7 +420,7 @@ CFMutableDictionaryRef 	can4osxUsbMatchingDictRef;
 CFRunLoopSourceRef		can4osxRunLoopSourceRef;
 CFNumberRef				numberRef;
 
-    //Set all channels inactive
+	//Set all channels inactive
 	for (loopCount = 0; loopCount < CAN4OSX_MAX_CHANNEL_COUNT; loopCount++ ) {
 		can4osxUsbDeviceHandle[loopCount].channelNumber = -1;
 	}
@@ -435,18 +435,18 @@ CFNumberRef				numberRef;
 
 		can4osxUsbMatchingDictRef = IOServiceMatching(kIOUSBDeviceClassName);
 
-        // IOUSBDevice and its subclasses
+		// IOUSBDevice and its subclasses
 		if (can4osxUsbMatchingDictRef == NULL)  {
 			CAN4OSX_DEBUG_PRINT("%s : IOServiceMatching ret: NULL.\n",__func__);
 			return;
 		}
 
-        // Create a CFNumber for the idVendor and set the value in the dictionary
+		// Create a CFNumber for the idVendor and set the value in the dictionary
 		numberRef = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &can4osxSupportedDevices[loopCount].vendorId );
 		CFDictionarySetValue(can4osxUsbMatchingDictRef, CFSTR(kUSBVendorID), numberRef);
 		CFRelease(numberRef);
 
-        // Create a CFNumber for the idProduct and set the value in the dictionary
+		// Create a CFNumber for the idProduct and set the value in the dictionary
 		numberRef = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &can4osxSupportedDevices[loopCount].productId);
 		CFDictionarySetValue(can4osxUsbMatchingDictRef, CFSTR(kUSBProductID), numberRef);
 		CFRelease(numberRef);
@@ -463,7 +463,7 @@ CFNumberRef				numberRef;
 	dispatch_semaphore_signal(semaCan4osxStart);
 	CFRunLoopRun();
 
-    // if the runloop is stopped release
+	// if the runloop is stopped release
 	for ( loopCount = 0; loopCount < (sizeof(can4osxSupportedDevices)/sizeof(CAN4OSX_DEV_ENTRY_T)); loopCount++ ) {
 		IOObjectRelease(can4osxIoIterator[loopCount]);
 	}
@@ -534,11 +534,11 @@ Can4osxUsbDeviceHandleEntry *pDevice;
 
 		pDevice = &can4osxUsbDeviceHandle[can4osxMaxChannelCount];
 
-        // Use the plugin interface to retrieve the device interface.
+		// Use the plugin interface to retrieve the device interface.
 		result = (*can4osxPluginInterface)->QueryInterface(can4osxPluginInterface, CFUUIDGetUUIDBytes(kIOUSBDeviceInterfaceID),
 												 (LPVOID*) &(pDevice->can4osxDeviceInterface));
 
-        // Now done with the plugin interface.
+		// Now done with the plugin interface.
 		(*can4osxPluginInterface)->Release(can4osxPluginInterface);
 
 		if (result || (pDevice->can4osxDeviceInterface == NULL) )  {
@@ -549,7 +549,7 @@ Can4osxUsbDeviceHandleEntry *pDevice;
 		}
 
 
-        // Open the device to change its state
+		// Open the device to change its state
 		kernRetVal = (*can4osxUsbDeviceHandle[can4osxMaxChannelCount].can4osxDeviceInterface)->USBDeviceOpen(can4osxUsbDeviceHandle[can4osxMaxChannelCount].can4osxDeviceInterface);
 		if (kernRetVal != kIOReturnSuccess)  {
 			CAN4OSX_DEBUG_PRINT("%s : Unable to open device: %08x\n", __func__,kernRetVal);
@@ -559,7 +559,7 @@ Can4osxUsbDeviceHandleEntry *pDevice;
 			continue;
 		}
 
-        //Configure device
+		//Configure device
 		kernRetVal = CAN4OSX_ConfigureDevice(can4osxUsbDeviceHandle[can4osxMaxChannelCount].can4osxDeviceInterface);
 		if (kernRetVal != kIOReturnSuccess)  {
 			CAN4OSX_DEBUG_PRINT("%s : Unable to configure device: %08x\n", __func__,kernRetVal);
@@ -571,7 +571,7 @@ Can4osxUsbDeviceHandleEntry *pDevice;
 		}
 
 
-        /*kernRetVal = */CAN4OSX_FindInterfaces(pDevice);
+		/*kernRetVal = */CAN4OSX_FindInterfaces(pDevice);
 
 		kernRetVal = IOServiceAddInterestNotification(can4osxUsbNotificationPortRef,			// notifyPort
 											  can4osxUsbDevice,                                 // service
@@ -587,19 +587,19 @@ Can4osxUsbDeviceHandleEntry *pDevice;
 
 		pDevice->channelNumber = can4osxMaxChannelCount;
 
-        // Done with this USB device; release the reference added by IOIteratorNext
+		// Done with this USB device; release the reference added by IOIteratorNext
 		(void)IOObjectRelease(can4osxUsbDevice);
 
-        // Set up buffer for sending and receiving
+		// Set up buffer for sending and receiving
 		(void)CAN4OSX_CreateEndpointBuffer(can4osxMaxChannelCount);
 
 		pDevice->canEventMsgBuff = CAN4OSX_CreateCanEventBuffer(1000);
 
 		pDevice->endpoitBulkOutBusy = FALSE;
 
-        // FIXME
+		// FIXME
 
-        // Read out the product ID of the device
+		// Read out the product ID of the device
 		productId = 0u;
 		(*can4osxUsbDeviceHandle[can4osxMaxChannelCount].can4osxDeviceInterface)->GetDeviceProduct(pDevice->can4osxDeviceInterface, &productId);
 
@@ -658,17 +658,17 @@ UInt8 numConfig;
 IOReturn kr;
 IOUSBConfigurationDescriptorPtr configDesc;
 
-    /*kr = */(*dev)->GetNumberOfConfigurations(dev, &numConfig);
+	/*kr = */(*dev)->GetNumberOfConfigurations(dev, &numConfig);
 	if (!numConfig)  {
 		return(-1);
 	}
-    //Get the configuration descriptor for index 0
+	//Get the configuration descriptor for index 0
 	kr = (*dev)->GetConfigurationDescriptorPtr(dev, 0, &configDesc);
 	if (kr)  {
 		CAN4OSX_DEBUG_PRINT("%s : Could not get configuration descriptor for index %d (err = %08x)\n",__func__, 0, (unsigned int)kr);
 		return(-1);
 	}
-    //Set the device’s configuration.
+	//Set the device’s configuration.
 	kr = (*dev)->SetConfiguration(dev, configDesc->bConfigurationValue);
 	if (kr)  {
 		CAN4OSX_DEBUG_PRINT("%s : Could not set configuration to value %d (err = %08x)\n",__func__, 0, (unsigned int)kr);
@@ -701,7 +701,7 @@ CFRunLoopSourceRef runLoopSource;
 	request.bInterfaceProtocol = kIOUSBFindInterfaceDontCare;
 	request.bAlternateSetting  = kIOUSBFindInterfaceDontCare;
 
-    //Get an iterator for the interfaces on the device
+	//Get an iterator for the interfaces on the device
 	ret = (*device)->CreateInterfaceIterator(device, &request, &iterator);
 
 	if ( ret != kIOReturnSuccess )  {
@@ -710,12 +710,12 @@ CFRunLoopSourceRef runLoopSource;
 	}
 
 	while ((usbInterface = IOIteratorNext(iterator)))  {
-        //Create an intermediate plug-in
+		//Create an intermediate plug-in
 		ret = IOCreatePlugInInterfaceForService(usbInterface,
 											   kIOUSBInterfaceUserClientTypeID,
 											   kIOCFPlugInInterfaceID,
 											   &plugInInterface, &score);
-        //Release the usbInterface object after getting the plug-in
+		//Release the usbInterface object after getting the plug-in
 		(void)IOObjectRelease(usbInterface);
 
 		if ((ret != kIOReturnSuccess) || !plugInInterface)  {
@@ -723,17 +723,17 @@ CFRunLoopSourceRef runLoopSource;
 			break;
 		}
 
-        //Now create the device interface for the interface
+		//Now create the device interface for the interface
 		result = (*plugInInterface)->QueryInterface(plugInInterface, CFUUIDGetUUIDBytes(kIOUSBInterfaceInterfaceID), (LPVOID *) &interface);
-        //No longer need the intermediate plug-in
+		//No longer need the intermediate plug-in
 		(*plugInInterface)->Release(plugInInterface);
 		if (result || !interface)  {
 			CAN4OSX_DEBUG_PRINT("%s : Could not create a device interface for the interface (%08x)\n", __func__,(int) result);
 			break;
 		}
 
-        //Now open the interface. This will cause the pipes associated with
-        //the endpoints in the interface descriptor to be instantiated
+		//Now open the interface. This will cause the pipes associated with
+		//the endpoints in the interface descriptor to be instantiated
 		ret = (*interface)->USBInterfaceOpen(interface);
 		if (ret != kIOReturnSuccess)  {
 			CAN4OSX_DEBUG_PRINT("%s : Unable to open interface (%08x)\n", __func__,ret);
@@ -741,7 +741,7 @@ CFRunLoopSourceRef runLoopSource;
 			continue;
 		}
 
-        //Get the number of endpoints associated with this interface
+		//Get the number of endpoints associated with this interface
 		ret = (*interface)->GetNumEndpoints(interface, &interfaceNumEndpoints);
 		if (ret != kIOReturnSuccess)  {
 			CAN4OSX_DEBUG_PRINT("%s : Unable to get number of endpoints (%08x)\n",__func__ ,ret);
@@ -752,7 +752,7 @@ CFRunLoopSourceRef runLoopSource;
 
 		CAN4OSX_DEBUG_PRINT("%s : Interface has %d endpoints\n",__func__, interfaceNumEndpoints);
 
-        // Reset the endpoint numbers
+		// Reset the endpoint numbers
 		handle->endpointNumberBulkIn = 0u;
 		handle->endpointNumberBulkOut = 0u;
 
@@ -797,10 +797,10 @@ CFRunLoopSourceRef runLoopSource;
 		CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, kCFRunLoopDefaultMode);
 		CAN4OSX_DEBUG_PRINT("%s : Asynchronous event source added to run loop\n", __func__);
 
-        //Save the interface
+		//Save the interface
 		handle->can4osxInterfaceInterface = interface;
 
-        //Right now only the first interface is supported
+		//Right now only the first interface is supported
 		break;
 	}
 	return(ret);
@@ -845,15 +845,15 @@ static IOReturn CAN4OSX_Dealloc(
 {
 kern_return_t retval;
 
-    // Release the usb stuff
+	// Release the usb stuff
 
 	if (pSelf->can4osxDeviceInterface)  {
-        /*retval = */(*pSelf->can4osxDeviceInterface)->Release(pSelf->can4osxDeviceInterface);
+		/*retval = */(*pSelf->can4osxDeviceInterface)->Release(pSelf->can4osxDeviceInterface);
 	}
 
-    //if(self->can4osxInterfaceInterface) {
-    //    (void)(*self->can4osxInterfaceInterface)->Release(self->can4osxInterfaceInterface);
-    //}
+	//if(self->can4osxInterfaceInterface) {
+	//	(void)(*self->can4osxInterfaceInterface)->Release(self->can4osxInterfaceInterface);
+	//}
 
 
 	if(pSelf->endpointBufferBulkInRef)  {
@@ -864,18 +864,18 @@ kern_return_t retval;
 		free(pSelf->endpointBufferBulkOutRef);
 	}
 
-    // Release the notification
+	// Release the notification
 
 	retval = IOObjectRelease(pSelf->can4osxNotification);
 
-    // FIXME test return value
+	// FIXME test return value
 	if (0)  {
 		return(retval);
 	}
 
-    // Now release  the dive internal stuff
+	// Now release  the dive internal stuff
 
-    // FIXME with the channelnumber
+	// FIXME with the channelnumber
 
 	pSelf->hwFunctions.can4osxhwCanCloseRef(pSelf->channelNumber);
 
