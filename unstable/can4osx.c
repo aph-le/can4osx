@@ -491,7 +491,7 @@ static CanHandle CAN4OSX_CheckHandle(
 		return(-1);
 	}
 
-	if ( can4osxUsbDeviceHandle[hnd].channelNumber == -1 )  {
+	if (can4osxUsbDeviceHandle[hnd].channelNumber == -1)  {
 		return(-1);
 	}
 
