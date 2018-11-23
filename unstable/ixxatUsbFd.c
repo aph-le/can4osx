@@ -153,10 +153,6 @@ CAN4OSX_HW_FUNC_T ixxUsbFdHardwareFunctions = {
     .can4osxhwCanCloseRef = usbFdCanClose,
 };
 
-CAN4OSX_USB_FUNC_T ixxUsbFdUsbFunctions = {
-	.bulkReadCompletion = usbFdBulkReadCompletion
-};
-
 
 /* local defined variables
 ------------------------------------------------------------------------------*/
@@ -214,6 +210,8 @@ Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
     /* correct the endpoint */
     pSelf->endpointNumberBulkOut += 2;
     pSelf->endpointNumberBulkIn += 2;
+    pSelf->usbFunctions.bulkReadCompletion  = usbFdBulkReadCompletion;
+
 
     /* Trigger the read */
     CAN4OSX_usbReadFromBulkInPipe(pSelf);
