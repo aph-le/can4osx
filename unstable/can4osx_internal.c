@@ -64,8 +64,8 @@ static UInt8 CAN4OSX_TestEmptyCanEventBuffer(CAN_EVENT_MSG_BUF_T* bufferRef);
 
 /******************************************************************************/
 CAN_EVENT_MSG_BUF_T* CAN4OSX_CreateCanEventBuffer(
-        UInt32 bufferSize
-    )
+		UInt32 bufferSize
+	)
 {
 	CAN_EVENT_MSG_BUF_T* bufferRef = malloc(sizeof(CAN_EVENT_MSG_BUF_T));
 	if ( bufferRef == NULL )  {
@@ -104,8 +104,8 @@ void CAN4OSX_ReleaseCanEventBuffer(
 			dispatch_release(bufferRef->bufferGDCqueueRef);
 		}
 		free(bufferRef->canMsgRef);
-        bufferRef->canMsgRef = NULL;
-        
+		bufferRef->canMsgRef = NULL;
+
 		free(bufferRef);
 		bufferRef = NULL;
 	}
@@ -171,7 +171,7 @@ __block UInt8 retval = 1;
 			retval = 0;
 		} else {
 			bufferRef->bufferCount--;
-            *readEvent = bufferRef->canMsgRef[bufferRef->bufferFirst++ % bufferRef->bufferSize];
+			*readEvent = bufferRef->canMsgRef[bufferRef->bufferFirst++ % bufferRef->bufferSize];
 		}
 
 	});
@@ -263,7 +263,7 @@ UInt8 CAN4OSX_encodeFdDlc(
 	if (dlc == 64u)  {
 		return(0x0F);
 	}
-    /* invalid dlc */
+	/* invalid dlc */
 	if (dlc > 8u)  {
 		return(0xff);
 	}
@@ -285,6 +285,6 @@ UInt64 CAN$OSX_getMilliseconds(
 struct timeval time;
 
 	gettimeofday(&time, NULL);
-    return(time.tv_sec * 1000) + (time.tv_usec / 1000);
+	return(time.tv_sec * 1000) + (time.tv_usec / 1000);
 }
 
