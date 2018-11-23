@@ -67,6 +67,9 @@
 #define CHIPSTAT_ERROR_WARNING       0x04
 #define CHIPSTAT_ERROR_ACTIVE        0x08
 
+#define CAN4OSX_GENMASK(h, l) \
+	(((~0UL) << (l)) & (~0UL >> ((__SIZEOF_LONG__ * 8) - 1 - (h))))
+
 
 typedef struct{
     UInt32 vendorId;
