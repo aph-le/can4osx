@@ -47,13 +47,15 @@
 
 #include <stdio.h>
 
-#include "can4osx.h"
-
 #include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/IOKitLib.h>
 #include <IOKit/IOMessage.h>
 #include <IOKit/IOCFPlugIn.h>
 #include <IOKit/usb/IOUSBLib.h>
+
+#include "can4osx.h"
+#include "can4osx_internal.h"
+
 
 canStatus CAN4OSX_usbSendCommand(Can4osxUsbDeviceHandleEntry *pSelf, void *pCmd, size_t cmdLen);
 void CAN4OSX_usbReadFromBulkInPipe(Can4osxUsbDeviceHandleEntry *pSelf);

@@ -861,7 +861,6 @@ CanMsg canMsg;
     default:
     	break;
     }
-
 }
 
 
@@ -869,7 +868,7 @@ CanMsg canMsg;
 static void usbFdBulkReadCompletion(void *refCon, IOReturn result, void *arg0)
 {
 Can4osxUsbDeviceHandleEntry *pSelf = (Can4osxUsbDeviceHandleEntry *)refCon;
-IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
+CAN4OSX_USB_INTERFACE **interface = pSelf->can4osxInterfaceInterface;
 UInt32 numBytesRead = (UInt32) arg0;
 UInt32 count = 0u;
 IXXUSBFDCANMSG_T *pMsg;
@@ -899,7 +898,7 @@ static IOReturn usbFdWriteToBulkPipe(
     )
 {
 IOReturn retval = kIOReturnSuccess;
-IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
+CAN4OSX_USB_INTERFACE **interface = pSelf->can4osxInterfaceInterface;
 IXXUSBFDPRIVATEDATA_T *pPriv = (IXXUSBFDPRIVATEDATA_T *)pSelf->privateData;
 UInt16 size = 0u;
 
@@ -966,7 +965,7 @@ static void usbFdBulkWriteCompletion(
     )
 {
 Can4osxUsbDeviceHandleEntry *pSelf = (Can4osxUsbDeviceHandleEntry *)refCon;
-IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
+CAN4OSX_USB_INTERFACE **interface = pSelf->can4osxInterfaceInterface;
 UInt32 numBytesWritten = (UInt32) arg0;
 IXXUSBFDPRIVATEDATA_T *pPriv = (IXXUSBFDPRIVATEDATA_T *)pSelf->privateData;
 

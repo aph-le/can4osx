@@ -67,7 +67,7 @@ canStatus CAN4OSX_usbSendCommand(
 	)
 {
 IOReturn retVal = kIOReturnSuccess;
-IOUSBInterfaceInterface **ppInterface = pSelf->can4osxInterfaceInterface;
+CAN4OSX_USB_INTERFACE **ppInterface = pSelf->can4osxInterfaceInterface;
 
 	if( pSelf->endpoitBulkOutBusy == FALSE )  {
 		pSelf->endpoitBulkOutBusy = TRUE;

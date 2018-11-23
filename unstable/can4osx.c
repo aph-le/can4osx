@@ -84,7 +84,7 @@ static dispatch_queue_t queueCan4osx = NULL;
 
 static void CAN4OSX_CanInitializeLibrary(void);
 static void CAN4OSX_DeviceAdded(void *refCon, io_iterator_t iterator);
-static IOReturn CAN4OSX_ConfigureDevice(IOUSBDeviceInterface **dev);
+static IOReturn CAN4OSX_ConfigureDevice(IOUSBDeviceInterface182 **dev);
 static IOReturn CAN4OSX_FindInterfaces(Can4osxUsbDeviceHandleEntry *handle);
 static void CAN4OSX_DeviceNotification(void *refCon, io_service_t service, natural_t messageType, void *messageArgument);
 static CanHandle CAN4OSX_CheckHandle(const CanHandle hnd);
@@ -652,7 +652,7 @@ Can4osxUsbDeviceHandleEntry *pDevice;
 
 
 static IOReturn CAN4OSX_ConfigureDevice(
-		IOUSBDeviceInterface **dev
+		IOUSBDeviceInterface182 **dev
 	)
 {
 UInt8 numConfig;
@@ -688,11 +688,11 @@ IOUSBFindInterfaceRequest request;
 io_iterator_t iterator;
 io_service_t usbInterface;
 IOCFPlugInInterface **plugInInterface = NULL;
-IOUSBInterfaceInterface **interface = NULL;
+CAN4OSX_USB_INTERFACE **interface = NULL;
 HRESULT result;
 SInt32 score;
 UInt8 interfaceNumEndpoints;
-IOUSBDeviceInterface **device = handle->can4osxDeviceInterface;
+IOUSBDeviceInterface182 **device = handle->can4osxDeviceInterface;
 int loopCount = 1;
 
 CFRunLoopSourceRef runLoopSource;

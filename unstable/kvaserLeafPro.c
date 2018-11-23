@@ -1040,7 +1040,7 @@ static void LeafProBulkWriteCompletion(
     )
 {
 Can4osxUsbDeviceHandleEntry *self = (Can4osxUsbDeviceHandleEntry *)refCon;
-IOUSBInterfaceInterface **interface = self->can4osxInterfaceInterface;
+CAN4OSX_USB_INTERFACE **interface = self->can4osxInterfaceInterface;
 UInt32 numBytesWritten = (UInt32)arg0;
     
     (void)numBytesWritten;
@@ -1066,7 +1066,7 @@ static IOReturn LeafProWriteBulkPipe(
     )
 {
 IOReturn retval = kIOReturnSuccess;
-IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
+CAN4OSX_USB_INTERFACE **interface = pSelf->can4osxInterfaceInterface;
 LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
     
     if ( pSelf->endpoitBulkOutBusy == FALSE ) {
@@ -1135,7 +1135,7 @@ static IOReturn LeafProCommandWait(
     )
 {
 IOReturn retVal = kIOReturnSuccess;
-IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
+CAN4OSX_USB_INTERFACE **interface = pSelf->can4osxInterfaceInterface;
 
 UInt32 size = LEAFPRO_COMMAND_SIZE;
 UInt64 timeout;
@@ -1161,7 +1161,7 @@ static IOReturn LeafProWriteCommandWait(
     )
 {
 IOReturn retVal = kIOReturnSuccess;
-IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
+CAN4OSX_USB_INTERFACE **interface = pSelf->can4osxInterfaceInterface;
 LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
     
     if( pSelf->endpoitBulkOutBusy == FALSE ) {
@@ -1207,7 +1207,7 @@ static void LeafProBulkReadCompletion(
 {
 Can4osxUsbDeviceHandleEntry *pSelf = (Can4osxUsbDeviceHandleEntry *)refCon;
 LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
-IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
+CAN4OSX_USB_INTERFACE **interface = pSelf->can4osxInterfaceInterface;
 UInt32 numBytesRead = (UInt32) arg0;
     
     if (result != kIOReturnSuccess) {

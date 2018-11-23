@@ -54,6 +54,7 @@
 #include <sys/time.h>
 
 #include "can4osx_internal.h"
+#include "can4osx_usb_core.h"
 #include "can4osx_debug.h"
 
 

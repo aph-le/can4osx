@@ -47,25 +47,31 @@
 
 #include <stdio.h>
 
-#include "can4osx.h"
-
 #include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/IOKitLib.h>
 #include <IOKit/IOMessage.h>
 #include <IOKit/IOCFPlugIn.h>
 #include <IOKit/usb/IOUSBLib.h>
 
+#include "can4osx.h"
+
+
+/* internal buffers */
+#define CAN4OSX_CAN_MAX_MSG_LEN 64
+
+#define CAN4OSX_USB_INTERFACE IOUSBInterfaceInterface182
+
+/* Structure for CAN_CHIP_STATE */
+#define CHIPSTAT_BUSOFF              0x01
+#define CHIPSTAT_ERROR_PASSIVE       0x02
+#define CHIPSTAT_ERROR_WARNING       0x04
+#define CHIPSTAT_ERROR_ACTIVE        0x08
+
 
 typedef struct{
     UInt32 vendorId;
     UInt32 productId;
 }CAN4OSX_DEV_ENTRY_T;
-
-
-
-//internal buffers
-#define CAN4OSX_CAN_MAX_MSG_LEN 64
-
 
 typedef struct {
     UInt32 canTimestamp;
@@ -77,28 +83,18 @@ typedef struct {
     UInt8  canData[CAN4OSX_CAN_MAX_MSG_LEN];
 } __attribute__ ((packed)) CanMsg;
 
-
-/* Structure for V_CHIP_STATE */
-
-#define CHIPSTAT_BUSOFF              0x01
-#define CHIPSTAT_ERROR_PASSIVE       0x02
-#define CHIPSTAT_ERROR_WARNING       0x04
-#define CHIPSTAT_ERROR_ACTIVE        0x08
-
 typedef struct {
     UInt8 chipBusStatus;
     UInt8 chipTxErrorCounter;
     UInt8 chipRxErrorCounter;
 } __attribute__ ((packed)) ChipState;
 
-
 typedef union {
     CanMsg    canMsg;
     ChipState chipState;
 } EventTagData;
 
-
-//holds the actual buffer
+/* holds the actual buffer */
 typedef struct {
 	int bufferSize;
 	int bufferFirst;
@@ -106,8 +102,6 @@ typedef struct {
     dispatch_queue_t bufferGDCqueueRef;
 	CanMsg *canMsgRef;
 } CanEventMsgBuf;
-
-
 
 typedef struct {
     canStatus (*can4osxhwInitRef) (const CanHandle hnd);
@@ -140,8 +134,8 @@ typedef struct {
 
 
 typedef struct {
-    IOUSBDeviceInterface	**can4osxDeviceInterface;
-    IOUSBInterfaceInterface **can4osxInterfaceInterface;
+	IOUSBDeviceInterface182 **can4osxDeviceInterface;
+    CAN4OSX_USB_INTERFACE **can4osxInterfaceInterface;
     io_object_t				can4osxNotification;
     
     CanEventMsgBuf* canEventMsgBuff;

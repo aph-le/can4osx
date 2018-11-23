@@ -646,8 +646,8 @@ IOReturn LeafWriteCommandToBulkPipe(
 		leafCmd cmd
 	)
 {
-	IOReturn retVal = kIOReturnSuccess;
-	IOUSBInterfaceInterface **interface = self->can4osxInterfaceInterface;
+IOReturn retVal = kIOReturnSuccess;
+CAN4OSX_USB_INTERFACE **interface = self->can4osxInterfaceInterface;
 
 	if( self->endpoitBulkOutBusy == FALSE )  {
 
@@ -708,8 +708,8 @@ static void LeafBulkWriteCompletion(
 		void *arg0
 	)
 {
-	Can4osxUsbDeviceHandleEntry *self = (Can4osxUsbDeviceHandleEntry *)refCon;
-	IOUSBInterfaceInterface **interface = self->can4osxInterfaceInterface;
+Can4osxUsbDeviceHandleEntry *self = (Can4osxUsbDeviceHandleEntry *)refCon;
+CAN4OSX_USB_INTERFACE **interface = self->can4osxInterfaceInterface;
 
 	UInt32 numBytesWritten = (UInt32) arg0;
 
@@ -738,8 +738,8 @@ static IOReturn LeafWriteToBulkPipe(
 		Can4osxUsbDeviceHandleEntry *pSelf
 	)
 {
-	IOReturn retval = kIOReturnSuccess;
-	IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
+IOReturn retval = kIOReturnSuccess;
+CAN4OSX_USB_INTERFACE **interface = pSelf->can4osxInterfaceInterface;
 	LeafPrivateData *priv = (LeafPrivateData *)pSelf->privateData;
 
 	if ( pSelf->endpoitBulkOutBusy == FALSE )  {
@@ -868,9 +868,9 @@ static canStatus LeafCanSetBusParams ( const CanHandle hnd, SInt32 freq, unsigne
 
 static void BulkReadCompletion(void *refCon, IOReturn result, void *arg0)
 {
-	Can4osxUsbDeviceHandleEntry *pSelf = (Can4osxUsbDeviceHandleEntry *)refCon;
-	IOUSBInterfaceInterface **interface = pSelf->can4osxInterfaceInterface;
-	UInt32 numBytesRead = (UInt32) arg0;
+Can4osxUsbDeviceHandleEntry *pSelf = (Can4osxUsbDeviceHandleEntry *)refCon;
+CAN4OSX_USB_INTERFACE **interface = pSelf->can4osxInterfaceInterface;
+UInt32 numBytesRead = (UInt32) arg0;
 
 	CAN4OSX_DEBUG_PRINT("Asynchronous bulk read complete (%ld)\n", (long)numBytesRead);
 
