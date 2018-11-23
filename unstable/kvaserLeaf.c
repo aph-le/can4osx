@@ -159,7 +159,13 @@ static canStatus LeafCanClose(const CanHandle hnd)
 }
 
 
-static canStatus LeafCanWrite (const CanHandle hnd,UInt32 id, void *msg, UInt16 dlc, UInt32 flag)
+static canStatus LeafCanWrite(
+		const CanHandle hnd,
+		UInt32 id,
+		void *msg,
+		UInt16 dlc,
+		UInt32 flag
+	)
 {
 Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
 
