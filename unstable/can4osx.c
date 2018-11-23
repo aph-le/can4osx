@@ -615,7 +615,6 @@ Can4osxUsbDeviceHandleEntry *pDevice;
 				break;
 			case 0x0017: /* IXXAT USB-TO-CAN FD Automotive  */
 				pDevice->hwFunctions = ixxUsbFdHardwareFunctions;
-				pDevice->usbFunctions = ixxUsbFdUsbFunctions;
 			 	break;
 			default:
 				pDevice->hwFunctions = leafHardwareFunctions;
