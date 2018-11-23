@@ -57,6 +57,7 @@
 #include "can4osx.h"
 #include "can4osx_debug.h"
 #include "can4osx_internal.h"
+#include "can4osx_usb_core.h"
 
 #include "kvaserLeafPro.h"
 
@@ -134,9 +135,6 @@ static canStatus LeafProCanTranslateBaud (SInt32 *const freq,
 static IOReturn LeafProCommandWait(Can4osxUsbDeviceHandleEntry *pSelf,
 			proCommand_t *pCmd, UInt8 cmdNo);
 
-static IOReturn LeafProWriteCommandWait(Can4osxUsbDeviceHandleEntry *pSelf,
-            proCommand_t cmd, UInt8 reason);
-
 static LeafProCommandMsgBuf_t* LeafProCreateCommandBuffer(UInt32 bufferSize);
 static void LeafProReleaseCommandBuffer(LeafProCommandMsgBuf_t* pBufferRef);
 static UInt8 LeafProTestFullCommandBuffer(LeafProCommandMsgBuf_t* bufferRef);
@@ -150,6 +148,11 @@ static IOReturn LeafProWriteBulkPipe(Can4osxUsbDeviceHandleEntry *pSelf);
 static void LeafProReadFromBulkInPipe(Can4osxUsbDeviceHandleEntry *self);
 static void LeafProBulkReadCompletion(void *refCon, IOReturn result,
             void *arg0);
+
+
+static UInt8 LeafProGetChanFromHe(Can4osxUsbDeviceHandleEntry *pSelf, UInt8 he);
+static UInt8 LeafProGetHe(proCmdHead_t *pHeader);
+
 
 
 //Hardware interface function
@@ -176,7 +179,18 @@ static canStatus LeafProInitHardware(
     )
 {
 Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
-pSelf->privateData = calloc(1,sizeof(LeafProPrivateData_t));
+
+	if (pSelf->deviceChannel == 0u)  {
+		pSelf->privateData = calloc(1,sizeof(LeafProPrivateData_t));
+	} else {
+	UInt8 address;
+	LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
+
+		address = pPriv->chan2he[pSelf->deviceChannel];
+		pSelf->privateData = calloc(1,sizeof(LeafProPrivateData_t));
+		pPriv = (LeafProPrivateData_t *)pSelf->privateData;
+		pPriv->chan2he[pSelf->deviceChannel] = address;
+	}
 
     if ( pSelf->privateData != NULL ) {
     LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
@@ -198,8 +212,6 @@ pSelf->privateData = calloc(1,sizeof(LeafProPrivateData_t));
     	pSelf->devInfo.capability = 0u;
     	pSelf->devInfo.capability |= canCHANNEL_CAP_CAN_FD;
     	sprintf((char*)pSelf->devInfo.deviceString, "%s",pDeviceString);
-        /* Trigger next read */
-        //LeafProReadFromBulkInPipe(pSelf);
  
     	/* Set up channels */
     	LeafProMapChannels(pSelf);
@@ -224,7 +236,7 @@ Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[channel];
 LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
     
     // set CAN Mode
-    if ((flags & canOPEN_CAN_FD) ==  canOPEN_CAN_FD) {
+    if ((flags & canOPEN_CAN_FD) == canOPEN_CAN_FD) {
         pPriv->canFd = 1;
     } else {
         pPriv->canFd = 0;
@@ -235,7 +247,7 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
 
 
 //Set bit timing
-static canStatus LeafProCanSetBusParams (
+static canStatus LeafProCanSetBusParams(
         const CanHandle hnd,
         SInt32 freq,
         unsigned int tseg1,
@@ -281,7 +293,7 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
     memset(&cmd, 0 , sizeof(cmd));
     
     cmd.proCmdSetBusparamsReq.header.cmdNo = LEAFPRO_CMD_SET_BUSPARAMS_REQ;
-    cmd.proCmdSetBusparamsReq.header.address = pPriv->address;
+    cmd.proCmdSetBusparamsReq.header.address = pPriv->chan2he[pSelf->deviceChannel];
     cmd.proCmdSetBusparamsReq.header.transitionId = 0x0000;
     
     cmd.proCmdSetBusparamsReq.bitRate = freq;
@@ -290,8 +302,9 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
     cmd.proCmdSetBusparamsReq.tseg2   = (UInt8)tseg2;
     cmd.proCmdSetBusparamsReq.noSamp  = noSamp;
     
-    retVal = LeafProWriteCommandWait( pSelf, cmd,LEAFPRO_CMD_SET_BUSPARAMS_RESP);
-    
+    //retVal = LeafProWriteCommandWait( pSelf, cmd,LEAFPRO_CMD_SET_BUSPARAMS_RESP);
+    retVal = CAN4OSX_usbSendCommand(pSelf, &cmd, LEAFPRO_COMMAND_SIZE);
+
     /* save locally */
     pPriv->freq = freq;
     pPriv->sjw = sjw;
@@ -334,7 +347,7 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
     memset(&cmd, 0 , sizeof(cmd));
     
     cmd.proCmdSetBusparamsReq.header.cmdNo = LEAFPRO_CMD_SET_BUSPARAMS_FD_REQ;
-    cmd.proCmdSetBusparamsReq.header.address = pPriv->address;
+    cmd.proCmdSetBusparamsReq.header.address = pPriv->chan2he[pSelf->deviceChannel];
     cmd.proCmdSetBusparamsReq.header.transitionId = 0x0000;
     cmd.proCmdSetBusparamsReq.open_as_canfd = 1;
     
@@ -348,9 +361,9 @@ LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
     cmd.proCmdSetBusparamsReq.tseg2Fd = tseg2;
     cmd.proCmdSetBusparamsReq.sjwFd = sjw;
     cmd.proCmdSetBusparamsReq.noSampFd = 1;
-    
-    retVal = LeafProWriteCommandWait( pSelf, cmd,
-                LEAFPRO_CMD_SET_BUSPARAMS_FD_RESP);
+
+    retVal = CAN4OSX_usbSendCommand(pSelf, &cmd, LEAFPRO_COMMAND_SIZE);
+    //retVal = LeafProWriteCommandWait( pSelf, cmd, LEAFPRO_CMD_SET_BUSPARAMS_FD_RESP);
 
     /* save locally */
     pPriv->fd_freq = freq_brs;
@@ -373,20 +386,22 @@ Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hdl];
 LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
 
     memset(&cmd, 0u, sizeof(cmd));
+    
     cmd.proCmdHead.cmdNo = LEAFPRO_CMD_SET_DRIVERMODE_REQ;
-    cmd.proCmdHead.address = pPriv->address;
+    cmd.proCmdHead.address = pPriv->chan2he[pSelf->deviceChannel];
     cmd.proCmdRaw.data[0] = 0x01;
-    LeafProWriteCommandWait(pSelf, cmd, LEAFPRO_CMD_MAP_CHANNEL_RESP);
-
+    //LeafProWriteCommandWait(pSelf, cmd, LEAFPRO_CMD_MAP_CHANNEL_RESP);
+	CAN4OSX_usbSendCommand(pSelf, &cmd, LEAFPRO_COMMAND_SIZE);
     
     CAN4OSX_DEBUG_PRINT("CAN BusOn Command %d\n", hdl);
     memset(&cmd, 0u, sizeof(cmd));
     
     cmd.proCmdHead.cmdNo = LEAFPRO_CMD_START_CHIP_REQ;
-    cmd.proCmdHead.address = pPriv->address;
+    cmd.proCmdHead.address = pPriv->chan2he[pSelf->deviceChannel];
     cmd.proCmdHead.transitionId = 1u;
-    retVal = LeafProWriteCommandWait(pSelf, cmd, LEAFPRO_CMD_CHIP_STATE_EVENT);
-    
+    //retVal = LeafProWriteCommandWait(pSelf, cmd, LEAFPRO_CMD_CHIP_STATE_EVENT);
+    retVal = CAN4OSX_usbSendCommand(pSelf, &cmd, LEAFPRO_COMMAND_SIZE);
+
     return(retVal);
 }
 
@@ -472,7 +487,7 @@ Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
         }
     
         cmd.proCmdHead.cmdNo = LEAFPRO_CMD_TX_CAN_MESSAGE;
-        cmd.proCmdHead.address = pPriv->address;
+        cmd.proCmdHead.address = pPriv->chan2he[pSelf->deviceChannel];
         cmd.proCmdHead.transitionId = 10;
         
         LeafProWriteCommandBuffer(pPriv->cmdBufferRef, cmd);
@@ -677,6 +692,8 @@ CanMsg canMsg;
 
     CAN4OSX_DEBUG_PRINT("Pro-Decode cmd %d\n",(UInt8)pCmd->proCmdHead.cmdNo);
 
+    memset(&canMsg, 0u, sizeof(canMsg));
+
     switch (pCmd->proCmdHead.cmdNo) {
         case LEAFPRO_CMD_CAN_FD:
             CAN4OSX_DEBUG_PRINT("LEAFPRO_CMD_CAN_FD\n");
@@ -737,7 +754,7 @@ CanMsg canMsg;
                                 pCmd->proCmdHead.address);
             if ((pCmd->proCmdHead.transitionId & 0xff) == 0x40u)  {
                 CAN4OSX_DEBUG_PRINT("LEAFPRO_CMD_MAP_CHANNEL_RESP CAN\n");
-                pPriv->address = (UInt8)pCmd->proCmdMapChannelResp.heAddress;
+                //pPriv->address = (UInt8)pCmd->proCmdMapChannelResp.heAddress;
             }
             break;
         case LEAFPRO_CMD_GET_CARD_INFO_RESP:
@@ -769,6 +786,8 @@ static void LeafProDecodeCommandExt(
 {
 LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
 CanMsg canMsg;
+UInt8 channel;
+UInt8 he;
 
     switch (pCmd->proCmdFdHead.header.cmdNo)  {
         default:
@@ -776,10 +795,12 @@ CanMsg canMsg;
                 CAN4OSX_DEBUG_PRINT("LEAFPRO_MESSAGE ERROR_FRAME\n");
                 break;
             }
+
+            memset(&canMsg, 0u, sizeof(canMsg));
             
             canMsg.canTimestamp = pCmd->proCmdFdRxMessage.timestamp;
         
-            canMsg.canId = pCmd->proCmdFdRxMessage.canId;
+            canMsg.canId = pCmd->proCmdFdRxMessage.canId & ~LEAFPRO_EXT_MSG;
             canMsg.canDlc = (pCmd->proCmdFdRxMessage.control>>8u) & 0x0fu;
             
             canMsg.canFlags = 0u;
@@ -814,8 +835,11 @@ CanMsg canMsg;
             }
             
             memcpy(canMsg.canData, pCmd->proCmdFdRxMessage.data, canMsg.canDlc);
-            
-            CAN4OSX_WriteCanEventBuffer(pSelf->canEventMsgBuff,canMsg);
+
+			he = LeafProGetHe(&pCmd->proCmdFdHead.header);
+            channel = LeafProGetChanFromHe(pSelf, he);
+
+            CAN4OSX_WriteCanEventBuffer(pSelf[channel].canEventMsgBuff,canMsg);
             
             if (pSelf->canNotification.notifacionCenter) {
                 CFNotificationCenterPostNotification (pSelf->canNotification.notifacionCenter,
@@ -854,7 +878,8 @@ IOReturn retVal;
     for (i = 0u ; i < 5u; i++)  {
     	cmd.proCmdHead.transitionId = 0x40 + i;
     	cmd.proCmdMapChannelReq.channel = i;
-    	LeafProWriteCommandWait(pSelf, cmd, LEAFPRO_CMD_MAP_CHANNEL_RESP);
+    	//LeafProWriteCommandWait(pSelf, cmd, LEAFPRO_CMD_MAP_CHANNEL_RESP);
+    	CAN4OSX_usbSendCommand(pSelf, &cmd, LEAFPRO_COMMAND_SIZE);
     	retVal =LeafProCommandWait(pSelf, &resp, LEAFPRO_CMD_MAP_CHANNEL_RESP);
         if (retVal == kIOReturnSuccess)  {
             pPriv->chan2he[resp.proCmdHead.transitionId & 0xF] = resp.proCmdMapChannelResp.heAddress;
@@ -865,7 +890,8 @@ IOReturn retVal;
     strcpy(cmd.proCmdMapChannelReq.name, "SYSDBG");
     cmd.proCmdMapChannelReq.channel = 0;
     cmd.proCmdHead.transitionId = 0x61;
-    LeafProWriteCommandWait(pSelf, cmd, LEAFPRO_CMD_MAP_CHANNEL_RESP);
+    //LeafProWriteCommandWait(pSelf, cmd, LEAFPRO_CMD_MAP_CHANNEL_RESP);
+    CAN4OSX_usbSendCommand(pSelf, &cmd, LEAFPRO_COMMAND_SIZE);
     LeafProCommandWait(pSelf, &resp, LEAFPRO_CMD_MAP_CHANNEL_RESP);
 
     return;
@@ -875,7 +901,7 @@ IOReturn retVal;
 #pragma mark card info request
 /******************************************************************************/
 static void LeafProGetCardInfo(
-        Can4osxUsbDeviceHandleEntry *pSelf /**< pointer to my reference */
+		Can4osxUsbDeviceHandleEntry *pSelf /**< pointer to my reference */
     )
 {
 proCommand_t cmd;
@@ -887,7 +913,8 @@ IOReturn retVal;
     cmd.proCmdHead.address = LEAFPRO_HE_ILLEGAL;
 
     cmd.proCmdHead.cmdNo = LEAFPRO_CMD_GET_CARD_INFO_REQ;
-    LeafProWriteCommandWait(pSelf, cmd, LEAFPRO_CMD_GET_CARD_INFO_RESP);
+    //LeafProWriteCommandWait(pSelf, cmd, LEAFPRO_CMD_GET_CARD_INFO_RESP);
+    CAN4OSX_usbSendCommand(pSelf, &cmd, LEAFPRO_COMMAND_SIZE);
     retVal = LeafProCommandWait(pSelf, &resp, LEAFPRO_CMD_GET_CARD_INFO_RESP);
 	if (retVal == kIOReturnSuccess)  {
 		pSelf->deviceChannelCount = resp.proCmdCardInfoResp.nchannels;
@@ -895,12 +922,46 @@ IOReturn retVal;
 
     cmd.proCmdHead.cmdNo = LEAFPRO_CMD_GET_SOFTWARE_INFO_REQ;
     cmd.proCmdGetSoftwareDetailsReq.useExt = 1u;
-    LeafProWriteCommandWait(pSelf, cmd, LEAFPRO_CMD_GET_SOFTWARE_INFO_RESP);
+    //LeafProWriteCommandWait(pSelf, cmd, LEAFPRO_CMD_GET_SOFTWARE_INFO_RESP);
+    CAN4OSX_usbSendCommand(pSelf, &cmd, LEAFPRO_COMMAND_SIZE);
     
     cmd.proCmdHead.cmdNo = LEAFPRO_CMD_GET_SOFTWARE_DETAILS_REQ;
-    LeafProWriteCommandWait(pSelf, cmd, LEAFPRO_CMD_GET_SOFTWARE_INFO_RESP);
+    //LeafProWriteCommandWait(pSelf, cmd, LEAFPRO_CMD_GET_SOFTWARE_INFO_RESP);
+    CAN4OSX_usbSendCommand(pSelf, &cmd, LEAFPRO_COMMAND_SIZE);
     
     return;
+}
+
+
+#pragma mark hydra entnity functions
+/******************************************************************************/
+static UInt8 LeafProGetHe(
+		proCmdHead_t *pHeader
+	)
+{
+UInt8 he = 0u;
+
+	he = (pHeader->address & CAN4OSX_GENMASK(7, 6)) >> 2u;
+	he |= (pHeader->transitionId >> 12u);
+
+	return(he);
+}
+
+
+/******************************************************************************/
+static UInt8 LeafProGetChanFromHe(
+		Can4osxUsbDeviceHandleEntry *pSelf, /**< pointer to my reference */
+		UInt8 he
+	)
+{
+LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
+
+	for(UInt8 i = 0u; i < pSelf->deviceChannelCount; i++)  {
+		if (pPriv->chan2he[i] == he)  {
+			return(i);
+		}
+	}
+	return(0u);
 }
 
 
@@ -1154,51 +1215,6 @@ UInt64 timeout;
 
 
 /******************************************************************************/
-static IOReturn LeafProWriteCommandWait(
-        Can4osxUsbDeviceHandleEntry *pSelf,  /**< pointer to my reference */
-        proCommand_t cmd,
-        UInt8 reason
-    )
-{
-IOReturn retVal = kIOReturnSuccess;
-CAN4OSX_USB_INTERFACE **interface = pSelf->can4osxInterfaceInterface;
-LeafProPrivateData_t *pPriv = (LeafProPrivateData_t *)pSelf->privateData;
-    
-    if( pSelf->endpoitBulkOutBusy == FALSE ) {
-        
-        pSelf->endpoitBulkOutBusy = TRUE;
-        
-        retVal = (*interface)->WritePipe(interface,
-                                         pSelf->endpointNumberBulkOut,
-                                         &cmd, LEAFPRO_COMMAND_SIZE);
-        
-        if (retVal != kIOReturnSuccess) {
-            CAN4OSX_DEBUG_PRINT("Unable to perform synchronous bulk write (%08x)\n", retVal);
-            (void)(*interface)->USBInterfaceClose(interface);
-            (void)(*interface)->Release(interface);
-        }
-        
-        pSelf->endpoitBulkOutBusy = FALSE;
-        
-       
-    } else {
-        /* endpoint busy */
-        LeafProWriteCommandBuffer(pPriv->cmdBufferRef, cmd);
-    }
-
-    
-    pPriv->timeOutReason = reason;
-    return(retVal);
-    if (dispatch_semaphore_wait(pPriv->semaTimeout,
-            dispatch_time(DISPATCH_TIME_NOW, LEAFPRO_TIMEOUT_TEN_MS * 10u)))  {
-        return(canERR_TIMEOUT);
-    } else {
-        return(retVal);
-    }
-}
-
-
-/******************************************************************************/
 static void LeafProBulkReadCompletion(
         void *refCon,
         IOReturn result,
@@ -1217,9 +1233,9 @@ UInt32 numBytesRead = (UInt32) arg0;
     }
     
     if (numBytesRead > 0u) {
-        int count = 0;
-        proCommand_t *pCmd;
-        int loopCounter = pSelf->endpointMaxSizeBulkIn;
+	int count = 0;
+	proCommand_t *pCmd;
+	int loopCounter = pSelf->endpointMaxSizeBulkIn;
         
         while ( count < numBytesRead ) {
             if (loopCounter-- == 0) break;
