@@ -81,6 +81,8 @@
 #define LEAFPRO_CMD_MAP_CHANNEL_RESP            201u
 #define LEAFPRO_CMD_GET_SOFTWARE_DETAILS_REQ    202u
 #define LEAFPRO_CMD_GET_SOFTWARE_DETAILS_RESP   203u
+
+#define LEAFPRO_CMD_TX_ACKNOWLEDGE_FD           225u
 #define LEAFPRO_CMD_RX_MESSAGE_FD               226u
 
 /* extended FD able command code */
@@ -145,7 +147,7 @@ static UInt8 LeafProWriteCommandBuffer(LeafProCommandMsgBuf_t* pBufferRef,
 static UInt16 LeafProFillBulkPipeBuffer(LeafProCommandMsgBuf_t* bufferRef,
             UInt8 *pPipe, UInt16 maxPipeSize);
 static IOReturn LeafProWriteBulkPipe(Can4osxUsbDeviceHandleEntry *pSelf);
-static void LeafProReadFromBulkInPipe(Can4osxUsbDeviceHandleEntry *self);
+
 static void LeafProBulkReadCompletion(void *refCon, IOReturn result,
             void *arg0);
 
@@ -220,7 +222,8 @@ Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
     	LeafProGetCardInfo(pSelf);
     
         /* Trigger next read */
-        LeafProReadFromBulkInPipe(pSelf);
+        pSelf->usbFunctions.bulkReadCompletion = LeafProBulkReadCompletion;
+        CAN4OSX_usbReadFromBulkInPipe(pSelf);
     }
     
     return(canOK);
@@ -789,8 +792,10 @@ CanMsg canMsg;
 UInt8 channel;
 UInt8 he;
 
-    switch (pCmd->proCmdFdHead.header.cmdNo)  {
-        default:
+    switch (pCmd->proCmdFdHead.cmd)  {
+		case LEAFPRO_CMD_TX_ACKNOWLEDGE_FD:
+			break;
+		case LEAFPRO_CMD_RX_MESSAGE_FD:
             if (pCmd->proCmdFdRxMessage.flags & LEAFPRO_MSG_FLAG_ERROR_FRAME) {
                 CAN4OSX_DEBUG_PRINT("LEAFPRO_MESSAGE ERROR_FRAME\n");
                 break;
@@ -847,6 +852,8 @@ UInt8 he;
             }
             
             break;
+		default:
+			break;
     }
 }
 
@@ -1260,20 +1267,8 @@ UInt32 numBytesRead = (UInt32) arg0;
     }
     
     /* Trigger next read */
-    LeafProReadFromBulkInPipe(pSelf);
+    CAN4OSX_usbReadFromBulkInPipe(pSelf);
 }
 
-
-/******************************************************************************/
-static void LeafProReadFromBulkInPipe(
-	    Can4osxUsbDeviceHandleEntry *pSelf /**< pointer to my reference */
-    )
-{
-IOReturn ret = (*(pSelf->can4osxInterfaceInterface))->ReadPipeAsync(pSelf->can4osxInterfaceInterface, pSelf->endpointNumberBulkIn, pSelf->endpointBufferBulkInRef, pSelf->endpointMaxSizeBulkIn, LeafProBulkReadCompletion, (void*)pSelf);
-    
-    if (ret != kIOReturnSuccess) {
-        CAN4OSX_DEBUG_PRINT("Unable to read async interface (%08x)\n", ret);
-    }
-}
 
 
