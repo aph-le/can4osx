@@ -641,37 +641,6 @@ canStatus LeafCanTranslateBaud(
 
 
 #pragma mark - Leaf USB functions
-IOReturn LeafWriteCommandToBulkPipe(
-		Can4osxUsbDeviceHandleEntry *self,
-		leafCmd cmd
-	)
-{
-IOReturn retVal = kIOReturnSuccess;
-CAN4OSX_USB_INTERFACE **interface = self->can4osxInterfaceInterface;
-
-	if( self->endpoitBulkOutBusy == FALSE )  {
-
-		self->endpoitBulkOutBusy = TRUE;
-
-		retVal = (*interface)->WritePipe( interface, self->endpointNumberBulkOut, &cmd, cmd.head.cmdLen );
-
-		if (retVal != kIOReturnSuccess)  {
-			CAN4OSX_DEBUG_PRINT("Unable to perform synchronous bulk write (%08x)\n", retVal);
-			(void) (*interface)->USBInterfaceClose(interface);
-			(void) (*interface)->Release(interface);
-		}
-
-		self->endpoitBulkOutBusy = FALSE;
-	} else {
-		//Endpoint busy
-		LeafPrivateData *priv = (LeafPrivateData *)self->privateData;
-		LeafWriteCommandBuffer(priv->cmdBufferRef, cmd);
-	}
-
-	return(retVal);
-}
-
-
 #pragma mark - Leaf stuff
 static UInt16 LeafFillBulkPipeBuffer(
 		LeafCommandMsgBuf* bufferRef,
@@ -780,7 +749,7 @@ LeafPrivateData *priv = (LeafPrivateData*)pSelf->privateData;
 	cmd.startChipReq.channel = 0;
 	cmd.startChipReq.transId = 0;
 
-	retVal = LeafWriteCommandToBulkPipe( pSelf, cmd);
+	retVal = CAN4OSX_usbSendCommand(pSelf, &cmd, cmd.head.cmdLen);
 
 	if ( dispatch_semaphore_wait(priv->semaTimeout, dispatch_time(DISPATCH_TIME_NOW, LEAF_TIMEOUT_TEN_MS)) )  {
 		return(canERR_TIMEOUT);
@@ -795,8 +764,8 @@ static canStatus LeafCanStopChip(CanHandle hdl)
 {
 	int retVal = 0;
 	leafCmd cmd;
-	Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hdl];
-	LeafPrivateData *priv = (LeafPrivateData*)self->privateData;
+	Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hdl];
+	LeafPrivateData *priv = (LeafPrivateData*)pSelf->privateData;
 
 
 	CAN4OSX_DEBUG_PRINT("CAN BusOff Command %d\n", hdl);
@@ -806,7 +775,7 @@ static canStatus LeafCanStopChip(CanHandle hdl)
 	cmd.startChipReq.channel  = 0;
 	cmd.startChipReq.transId  = 0;
 
-	retVal = LeafWriteCommandToBulkPipe( self, cmd);
+	retVal = CAN4OSX_usbSendCommand(pSelf, &cmd, cmd.head.cmdLen);
 
 	if ( dispatch_semaphore_wait(priv->semaTimeout, dispatch_time(DISPATCH_TIME_NOW, LEAF_TIMEOUT_TEN_MS)) )  {
 		return(canERR_TIMEOUT);
@@ -826,7 +795,7 @@ static canStatus LeafCanSetBusParams ( const CanHandle hnd, SInt32 freq, unsigne
 	leafCmd		cmd;
 	UInt32		 tmp, PScl;
 	int			retVal;
-	Can4osxUsbDeviceHandleEntry *self = &can4osxUsbDeviceHandle[hnd];
+	Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
 
 	CAN4OSX_DEBUG_PRINT("leaf: _set_busparam\n");
 
@@ -860,7 +829,7 @@ static canStatus LeafCanSetBusParams ( const CanHandle hnd, SInt32 freq, unsigne
 	cmd.setBusparamsReq.channel = (UInt8)0;//vChan->channel;
 	cmd.setBusparamsReq.noSamp  = 1; // qqq Can't be trusted: (BYTE) pi->chip_param.samp3
 
-	retVal = LeafWriteCommandToBulkPipe( self, cmd);
+	retVal = CAN4OSX_usbSendCommand(pSelf, &cmd, cmd.head.cmdLen);
 
 	return(retVal);
 }
