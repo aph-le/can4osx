@@ -42,8 +42,8 @@
 // =============================================================================
 //
 //
-#ifndef can4osx_ixxatUsbFd_h
-#define can4osx_ixxatUsbFd_h
+#ifndef CAN4OSX_IXXATUSBFD_H
+#define CAN4OSX_IXXATUSBFD_H
 
 extern CAN4OSX_HW_FUNC_T ixxUsbFdHardwareFunctions;
 extern CAN4OSX_USB_FUNC_T ixxUsbFdUsbFunctions;
@@ -136,7 +136,6 @@ typedef struct  {
     IXXUSBFDDEVICECAPS_T caps;
 } __attribute__ ((packed)) IXXUSBFDDEVICECAPSRESP_T;
 
-
 typedef struct  {
 	UInt32 mode;
 	UInt32 bps;
@@ -159,7 +158,6 @@ typedef struct  {
     IXXUSBFDMSGRESPHEAD_T header;
 } __attribute__ ((packed)) IXXUSBFDCANINITRESP_T;
 
-
 typedef struct  {
 	IXXUSBFDMSGREQHEAD_T header;
 } __attribute__ ((packed)) IXXUSBFDCANSTARTREQ_T;
@@ -169,7 +167,6 @@ typedef struct  {
     UInt32 startTime;
 } __attribute__ ((packed)) IXXUSBFDCANSTARTRESP_T;
 
-
 typedef struct  {
     IXXUSBFDMSGREQHEAD_T header;
 	UInt32 action;
@@ -178,7 +175,6 @@ typedef struct  {
 typedef struct  {
     IXXUSBFDMSGRESPHEAD_T header;
 } __attribute__ ((packed)) IXXUSBFDCANSTOPRESP_T;
-
 
 typedef union {
 	IXXUSBFDMSGREQHEAD_T 	reqHeader;
@@ -196,4 +192,4 @@ typedef struct  {
 
 
 
-#endif /* can4osx_ixxatUsbFd_h */
+#endif /* CAN4OSX_IXXATUSBFD_H */
