@@ -249,7 +249,7 @@ typedef struct {
     dispatch_semaphore_t semaTimeout;
     UInt8   extendedMode;
     UInt8   timeOutReason;
-    UInt8   address;
+    //UInt8   address;
     UInt8   canFd;
     UInt32  freq;
     UInt8   tseg1;
