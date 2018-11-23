@@ -58,16 +58,16 @@
 #include "can4osx_debug.h"
 
 
-static UInt8 CAN4OSX_TestFullCanEventBuffer(CanEventMsgBuf* bufferRef);
-static UInt8 CAN4OSX_TestEmptyCanEventBuffer(CanEventMsgBuf* bufferRef);
+static UInt8 CAN4OSX_TestFullCanEventBuffer(CAN_EVENT_MSG_BUF_T* bufferRef);
+static UInt8 CAN4OSX_TestEmptyCanEventBuffer(CAN_EVENT_MSG_BUF_T* bufferRef);
 
 
 /******************************************************************************/
-CanEventMsgBuf* CAN4OSX_CreateCanEventBuffer(
+CAN_EVENT_MSG_BUF_T* CAN4OSX_CreateCanEventBuffer(
         UInt32 bufferSize
     )
 {
-	CanEventMsgBuf* bufferRef = malloc(sizeof(CanEventMsgBuf));
+	CAN_EVENT_MSG_BUF_T* bufferRef = malloc(sizeof(CAN_EVENT_MSG_BUF_T));
 	if ( bufferRef == NULL )  {
 		return(NULL);
 	}
@@ -96,7 +96,7 @@ CanEventMsgBuf* CAN4OSX_CreateCanEventBuffer(
 
 /******************************************************************************/
 void CAN4OSX_ReleaseCanEventBuffer(
-		CanEventMsgBuf* bufferRef
+		CAN_EVENT_MSG_BUF_T* bufferRef
 	)
 {
 	if ( bufferRef != NULL )  {
@@ -114,7 +114,7 @@ void CAN4OSX_ReleaseCanEventBuffer(
 
 /******************************************************************************/
 static UInt8 CAN4OSX_TestFullCanEventBuffer(
-		CanEventMsgBuf* bufferRef
+		CAN_EVENT_MSG_BUF_T* bufferRef
 	)
 {
 	if (bufferRef->bufferCount == bufferRef->bufferSize)  {
@@ -127,7 +127,7 @@ static UInt8 CAN4OSX_TestFullCanEventBuffer(
 
 /******************************************************************************/
 static UInt8 CAN4OSX_TestEmptyCanEventBuffer(
-		CanEventMsgBuf* bufferRef
+		CAN_EVENT_MSG_BUF_T* bufferRef
 	)
 {
 	if ( bufferRef->bufferCount == 0 )  {
@@ -140,7 +140,7 @@ static UInt8 CAN4OSX_TestEmptyCanEventBuffer(
 
 /******************************************************************************/
 UInt8 CAN4OSX_WriteCanEventBuffer(
-		CanEventMsgBuf* bufferRef,
+		CAN_EVENT_MSG_BUF_T* bufferRef,
 		CanMsg newEvent
 	)
 {
@@ -160,7 +160,7 @@ __block UInt8 retval = 1;
 
 /******************************************************************************/
 UInt8 CAN4OSX_ReadCanEventBuffer(
-		CanEventMsgBuf* bufferRef,
+		CAN_EVENT_MSG_BUF_T* bufferRef,
 		CanMsg* readEvent
 	)
 {

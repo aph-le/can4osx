@@ -101,7 +101,7 @@ typedef struct {
 	int bufferCount;
     dispatch_queue_t bufferGDCqueueRef;
 	CanMsg *canMsgRef;
-} CanEventMsgBuf;
+} CAN_EVENT_MSG_BUF_T;
 
 typedef struct {
     canStatus (*can4osxhwInitRef) (const CanHandle hnd);
@@ -138,7 +138,7 @@ typedef struct {
     CAN4OSX_USB_INTERFACE **can4osxInterfaceInterface;
     io_object_t				can4osxNotification;
     
-    CanEventMsgBuf* canEventMsgBuff;
+    CAN_EVENT_MSG_BUF_T* canEventMsgBuff;
     
     CanNotificationType     canNotification;
     
@@ -169,10 +169,10 @@ typedef struct {
 extern Can4osxUsbDeviceHandleEntry can4osxUsbDeviceHandle[CAN4OSX_MAX_CHANNEL_COUNT];
 
 
-CanEventMsgBuf* CAN4OSX_CreateCanEventBuffer( UInt32 bufferSize );
-void CAN4OSX_ReleaseCanEventBuffer( CanEventMsgBuf* bufferRef );
-UInt8 CAN4OSX_WriteCanEventBuffer(CanEventMsgBuf* bufferRef, CanMsg newEvent);
-UInt8 CAN4OSX_ReadCanEventBuffer(CanEventMsgBuf* bufferRef, CanMsg* readEvent);
+CAN_EVENT_MSG_BUF_T* CAN4OSX_CreateCanEventBuffer( UInt32 bufferSize );
+void CAN4OSX_ReleaseCanEventBuffer( CAN_EVENT_MSG_BUF_T* bufferRef );
+UInt8 CAN4OSX_WriteCanEventBuffer(CAN_EVENT_MSG_BUF_T* bufferRef, CanMsg newEvent);
+UInt8 CAN4OSX_ReadCanEventBuffer(CAN_EVENT_MSG_BUF_T* bufferRef, CanMsg* readEvent);
 
 /* helper functions for all devices */
 UInt8 CAN4OSX_decodeFdDlc(UInt8 dlc);
