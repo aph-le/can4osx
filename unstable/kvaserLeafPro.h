@@ -115,6 +115,16 @@ typedef struct {
     UInt8 reserved1[3];
 } __attribute__ ((packed)) proCmdCardInfoResp_t;
 
+typedef struct  {
+    proCmdHead_t    header;
+	UInt32	flags;
+	UInt32	version;
+	UInt32	name;
+	UInt32	ean[2];
+	UInt32	maxBitrate;
+	UInt8	reseved[4];
+} __attribute__ ((packed)) proCmdSwDetailResp_t;
+
 typedef struct {
     proCmdHead_t    header;
     UInt32          bitRate;
@@ -218,19 +228,20 @@ typedef union  {
 
 
 typedef union {
-    LeafProRaw_t                    raw;
-    proCmdHead_t                    proCmdHead;
-    proCmdRaw_t                     proCmdRaw;
-    proCmdReadClockReq_t            proCmdReadClockReq;
-    proCmdMapChannelReq_t           proCmdMapChannelReq;
-    proCmdMapChannelResp_t          proCmdMapChannelResp;
-    proCmdSetBusparamsReq_t         proCmdSetBusparamsReq;
-    proCmdLogMessage_t              proCmdLogMessage;
-    proCmdTxMessage_t               proCmdTxMessage;
-    proCmdGetSoftwareDetailsReq_t   proCmdGetSoftwareDetailsReq;
-    proCcmdGetSoftwareDetailsResp_t proCcmdGetSoftwareDetailsResp;
-    proCommandExt_t                 proCommandExt;
+    LeafProRaw_t					raw;
+    proCmdHead_t					proCmdHead;
+    proCmdRaw_t						proCmdRaw;
+    proCmdReadClockReq_t			proCmdReadClockReq;
+    proCmdMapChannelReq_t			proCmdMapChannelReq;
+    proCmdMapChannelResp_t			proCmdMapChannelResp;
+    proCmdSetBusparamsReq_t			proCmdSetBusparamsReq;
+    proCmdLogMessage_t				proCmdLogMessage;
+    proCmdTxMessage_t				proCmdTxMessage;
+    proCmdGetSoftwareDetailsReq_t	proCmdGetSoftwareDetailsReq;
+    proCcmdGetSoftwareDetailsResp_t	proCcmdGetSoftwareDetailsResp;
+    proCommandExt_t					proCommandExt;
     proCmdCardInfoResp_t			proCmdCardInfoResp;
+    proCmdSwDetailResp_t			proCmdSwDetailResp;
 } __attribute__ ((packed)) proCommand_t;
 
 
