@@ -877,8 +877,9 @@ kern_return_t retval;
 
 	// FIXME with the channelnumber
 
-	pSelf->hwFunctions.can4osxhwCanCloseRef(pSelf->channelNumber);
-
+	if (pSelf->hwFunctions.can4osxhwCanCloseRef != NULL)  {
+		pSelf->hwFunctions.can4osxhwCanCloseRef(pSelf->channelNumber);
+	}
 	return(retval);
 
 }
