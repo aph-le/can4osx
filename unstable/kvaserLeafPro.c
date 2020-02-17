@@ -101,8 +101,8 @@
 #define LEAFPRO_TIMEOUT_ONE_MS 1000000
 #define LEAFPRO_TIMEOUT_TEN_MS 10*LEAFPRO_TIMEOUT_ONE_MS
 
-static char* pDeviceString = "Kvaser Leaf Pro v2";
-
+/* list of local defined functions
+------------------------------------------------------------------------------*/
 static UInt32 getCommandSize(proCommand_t *pCmd);
 
 static void LeafProDecodeCommand(Can4osxUsbDeviceHandleEntry *pSelf,
@@ -156,7 +156,7 @@ static void LeafProBulkReadCompletion(void *refCon, IOReturn result,
 static UInt8 LeafProGetChanFromHe(Can4osxUsbDeviceHandleEntry *pSelf, UInt8 he);
 static UInt8 LeafProGetHe(proCmdHead_t *pHeader);
 
-
+static char* leafProGetDeviceName(UInt16 productId);
 
 //Hardware interface function
 static canStatus LeafProInitHardware(const CanHandle hnd, UInt16 productId);
@@ -164,6 +164,8 @@ static CanHandle LeafProCanOpenChannel(int channel, int flags);
 static canStatus LeafProCanStartChip(CanHandle hdl);
 static canStatus LeafProCanStopChip(CanHandle hdl);
 
+/* global variables
+------------------------------------------------------------------------------*/
 CAN4OSX_HW_FUNC_T leafProHardwareFunctions = {
 	.can4osxhwInitRef = LeafProInitHardware,
 	.can4osxhwCanOpenChannel = LeafProCanOpenChannel,
@@ -176,6 +178,15 @@ CAN4OSX_HW_FUNC_T leafProHardwareFunctions = {
 	.can4osxhwCanCloseRef = NULL,
 };
 
+/* local defined variables
+------------------------------------------------------------------------------*/
+static CAN4OSX_DEVICE_NAME_T prId2Name[] = {
+	{0x0107, "Kvaser Leaf Pro HS v.2"},
+	{0x0108, "Kvaser USBcan Pro 2xHS v.2"},
+};
+
+static char* pDeviceString = "Kvaser Leaf Pro v2 Generic";
+
 
 static canStatus LeafProInitHardware(
 		const CanHandle hnd,
@@ -183,6 +194,7 @@ static canStatus LeafProInitHardware(
 	)
 {
 Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
+char* pDevName;
 
 	if (pSelf->deviceChannel == 0u)  {
 		pSelf->privateData = calloc(1,sizeof(LeafProPrivateData_t));
@@ -226,13 +238,34 @@ Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
 	pSelf->devInfo.capability = 0u;
 	pSelf->devInfo.capability |= canCHANNEL_CAP_CAN_FD;
 
+	pDevName = leafProGetDeviceName(productId);
+	if (NULL == pDevName)  {
+		pDevName = pDeviceString;
+	}
+
 	if (pSelf->deviceChannelCount > 1u)  {
-		sprintf((char*)pSelf->devInfo.deviceString, "%s %d/%d",pDeviceString,pSelf->deviceChannel + 1, pSelf->deviceChannelCount);
+		sprintf((char*)pSelf->devInfo.deviceString, "%s %d/%d",pDevName,pSelf->deviceChannel + 1, pSelf->deviceChannelCount);
 	} else {
-		sprintf((char*)pSelf->devInfo.deviceString, "%s",pDeviceString);
+		sprintf((char*)pSelf->devInfo.deviceString, "%s",pDevName);
 	}
 
 	return(canOK);
+}
+
+
+static char* leafProGetDeviceName(
+		UInt16 productId
+	)
+{
+char* pRetName = NULL;
+
+	for (UInt i = 0; i < sizeof(prId2Name); i++)  {
+		if (productId == prId2Name[i].productId)  {
+			pRetName = prId2Name[i].pName;
+		}
+	}
+
+	return(pRetName);
 }
 
 
@@ -536,9 +569,6 @@ proCommand_t extCmd;
 		return(canERR_PARAM);
 	}
 	extCmd.proCommandExt.proCmdFdTxMessage.control = ((UInt32)dlc << 8) | 0x80000000;
-
-
-
 
 	LeafProWriteCommandBuffer(pPriv->cmdBufferRef, extCmd);
 
