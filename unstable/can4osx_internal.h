@@ -71,6 +71,12 @@
 	(((~0UL) << (l)) & (~0UL >> ((__SIZEOF_LONG__ * 8) - 1 - (h))))
 
 
+typedef struct {
+	UInt16 productId;
+	char *pName;
+} CAN4OSX_DEVICE_NAME_T;
+
+
 typedef struct{
     UInt32 vendorId;
     UInt32 productId;
@@ -107,7 +113,7 @@ typedef struct {
 } CAN_EVENT_MSG_BUF_T;
 
 typedef struct {
-    canStatus (*can4osxhwInitRef) (const CanHandle hnd);
+    canStatus (*can4osxhwInitRef) (const CanHandle hnd, UInt16 productId);
     CanHandle (*can4osxhwCanOpenChannel)(int channel, int flags);
     canStatus (*can4osxhwCanBusOnRef) (const CanHandle hndl);
     canStatus (*can4osxhwCanBusOffRef) (const CanHandle hnd);
