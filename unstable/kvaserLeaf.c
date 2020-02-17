@@ -89,7 +89,7 @@ static void BulkReadCompletion(void *refCon, IOReturn result, void *arg0);
 
 
 //Hardware interface function
-canStatus LeafInitHardware(const CanHandle hnd);
+canStatus LeafInitHardware(const CanHandle hnd, UInt16 productId);
 
 CAN4OSX_HW_FUNC_T leafHardwareFunctions = {
 	.can4osxhwInitRef = LeafInitHardware,
@@ -106,7 +106,10 @@ CAN4OSX_HW_FUNC_T leafHardwareFunctions = {
 
 
 
-canStatus LeafInitHardware(const CanHandle hnd)
+canStatus LeafInitHardware(
+		const CanHandle hnd,
+		UInt16 productId
+	)
 {
 	Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
 	pSelf->privateData = calloc(1,sizeof(LeafPrivateData));
