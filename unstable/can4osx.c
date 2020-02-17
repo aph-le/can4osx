@@ -71,7 +71,8 @@ static CAN4OSX_DEV_ENTRY_T can4osxSupportedDevices[] =
 	{0x0bfd, 0x0107}, //Kvaser Leaf Pro HS v.2
 	{0x0bfd, 0x0108}, //Kvaser USBcan Pro 2xHS v.2
 	{0x0bfd, 0x000E}, //Kvaser Leaf SemiPro HS
-	{0x08d8, 0x0017}, //IXXAT USB-to-CAN FD
+	{0x08d8, 0x0017}, //IXXAT USB-to-CAN FD Automotive
+	{0x08d8, 0x0014}, //IXXAT USB-to-CAN FD compact
 };
 
 
@@ -614,17 +615,17 @@ Can4osxUsbDeviceHandleEntry *pDevice;
 				pDevice->hwFunctions = leafProHardwareFunctions;
 				break;
 			case 0x0017: /* IXXAT USB-TO-CAN FD Automotive  */
+			case 0x0014: /* IXXAT USB-TO_CAN FD Compact */
 				pDevice->hwFunctions = ixxUsbFdHardwareFunctions;
 			 	break;
 			default:
 				pDevice->hwFunctions = leafHardwareFunctions;
 				break;
 		}
-
 		if (pDevice->hwFunctions.can4osxhwInitRef != NULL)  {
 			can4osxUsbDeviceHandle[can4osxMaxChannelCount].deviceChannelCount = 0u;
 		 	can4osxUsbDeviceHandle[can4osxMaxChannelCount].deviceChannel = 0u;
-			pDevice->hwFunctions.can4osxhwInitRef(can4osxMaxChannelCount);
+			pDevice->hwFunctions.can4osxhwInitRef(can4osxMaxChannelCount, productId);
 		 	if (can4osxUsbDeviceHandle[can4osxMaxChannelCount].deviceChannelCount > 1u)  {
 			UInt8 maxChannel = can4osxUsbDeviceHandle[can4osxMaxChannelCount].deviceChannelCount;
 				CAN4OSX_DEBUG_PRINT("Multichannel device found with %d channels\n", maxChannel);
@@ -639,7 +640,7 @@ Can4osxUsbDeviceHandleEntry *pDevice;
 					can4osxUsbDeviceHandle[can4osxMaxChannelCount].channelNumber = can4osxMaxChannelCount;
 				 	pDevice++;
 				  	pDevice->canEventMsgBuff = CAN4OSX_CreateCanEventBuffer(1000);
-				  	pDevice->hwFunctions.can4osxhwInitRef(can4osxMaxChannelCount);
+				  	pDevice->hwFunctions.can4osxhwInitRef(can4osxMaxChannelCount, productId);
 				}
 			}
 		}
