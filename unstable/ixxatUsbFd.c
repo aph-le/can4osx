@@ -166,12 +166,12 @@ static CAN4OSX_DEVICE_NAME_T prId2Name[] = {
 static char* pDeviceString = "IXXAT USB-to-CAN FD Generic";
 
 
-/******************************************************************************/
+/*-**************************************************************************-*/
 /**
 *
 * \brief usbFdInitHardware - initialze internal data structures
 *
-* This function initilize internal data structures and created device specific
+* This function initilizes internal data structures and created device specific
 * private data. Sometimes this function has to correct endpoint information,
 * depending on the real hardware.
 *
@@ -271,7 +271,7 @@ IXXUSBFDPRIVATEDATA_T *pPriv = (IXXUSBFDPRIVATEDATA_T *)pSelf->privateData;
 }
 
 
-/******************************************************************************/
+/*-****************************************************************************/
 static canStatus usbFdCanClose(
 		const CanHandle hnd
     )
@@ -474,7 +474,7 @@ static canStatus usbFdCanWrite (
 Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
 UInt8 retVal = 0u;
     
-    if ( pSelf->privateData != NULL ) {
+    if ( pSelf->privateData != NULL )  {
     IXXUSBFDPRIVATEDATA_T *pPriv = (IXXUSBFDPRIVATEDATA_T *)pSelf->privateData;
 	IXXUSBFDCANMSG_T canMsg = {0};
 	
@@ -494,13 +494,13 @@ UInt8 retVal = 0u;
         }
      	canMsg.flags <<= 16u;
   
-  		if (flag & canMSG_EXT)  {
+  		if ((flag & canMSG_EXT) == canMSG_EXT)  {
     		canMsg.flags |= IXXUSBFD_MSG_FLAG_EXT;
         }
-        if (flag & canMSG_RTR)  {
+        if ((flag & canMSG_RTR) == canMSG_RTR)  {
         	canMsg.flags |= IXXUSBFD_MSG_FLAG_RTR;
         }
-        if (flag & canFDMSG_FDF)  {
+        if ((flag & canFDMSG_FDF) == canFDMSG_FDF)  {
         	canMsg.flags |= IXXUSBFD_MSG_FLAG_EDL;
          	if (flag & canFDMSG_BRS)  {
           		canMsg.flags |= IXXUSBFD_MSG_FLAG_FDR;
