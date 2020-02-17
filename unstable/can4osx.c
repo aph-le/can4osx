@@ -505,10 +505,10 @@ static void CAN4OSX_DeviceAdded(
 		io_iterator_t iterator
 	)
 {
-kern_return_t kernRetVal;
-SInt32                 score;
-HRESULT                result;
-UInt16                 productId;
+kern_return_t	kernRetVal;
+SInt32			score;
+HRESULT			result;
+UInt16			productId;
 
 io_service_t           can4osxUsbDevice;
 IOCFPlugInInterface  **can4osxPluginInterface = NULL;
