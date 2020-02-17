@@ -100,7 +100,7 @@ typedef struct {
 
 /* list of local defined functions
 ------------------------------------------------------------------------------*/
-static canStatus usbFdInitHardware(const CanHandle hnd);
+static canStatus usbFdInitHardware(const CanHandle hnd, UInt16 productId);
 static CanHandle usbFdCanOpenChannel(int channel, int flags);
 static canStatus usbFdCanClose(const CanHandle hnd);
 static canStatus usbFdCanStartChip(CanHandle hdl);
@@ -156,6 +156,13 @@ CAN4OSX_HW_FUNC_T ixxUsbFdHardwareFunctions = {
 
 /* local defined variables
 ------------------------------------------------------------------------------*/
+static CAN4OSX_DEVICE_NAME_T prId2Name[] = {
+	{0x0017, "IXXAT USB-to-CAN FD Automotive"},
+	{0x0014, "IXXAT USB-to-CAN FD Compact"},
+};
+
+
+
 static char* pDeviceString = "IXXAT USB-to-CAN FD";
 
 
@@ -172,7 +179,8 @@ static char* pDeviceString = "IXXAT USB-to-CAN FD";
 *
 */
 static canStatus usbFdInitHardware(
-		const CanHandle hnd
+		const CanHandle hnd,
+		UInt16 productId
     )
 {
 Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
@@ -811,6 +819,7 @@ CanMsg canMsg;
     case IXXUSBFD_CAN_DATA:
     	canMsg.canId = pMsg->canId;
     	canMsg.canDlc = (pMsg->flags & IXXUSBFD_MSG_FLAG_DLC ) >> 16;
+    	canMsg.canDlc &= 0xf;
      
         /* decode dlc to length */
     	canMsg.canDlc = CAN4OSX_decodeFdDlc(canMsg.canDlc);
