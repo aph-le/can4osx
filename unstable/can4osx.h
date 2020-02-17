@@ -2,7 +2,7 @@
 //  can4osx.h
 //
 //
-// Copyright (c) 2014 - 2018 Alexander Philipp. All rights reserved.
+// Copyright (c) 2014-2020 Alexander Philipp. All rights reserved.
 //
 //
 // License: GPLv2

@@ -2,7 +2,7 @@
 //  ixxatUsbFd.h
 //
 //
-// Copyright (c) 2018 Alexander Philipp. All rights reserved.
+// Copyright (c) 2018-2020 Alexander Philipp. All rights reserved.
 //
 //
 // License: GPLv2
