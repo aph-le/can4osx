@@ -138,6 +138,8 @@ static void usbFdBulkWriteCompletion(void *refCon, IOReturn result, void *arg0);
 static UInt8 usbFdWriteTransmitBuffer(IXXUSBFDTRANSMITBUFFER_T* pBuffer, IXXUSBFDCANMSG_T newMsg);
 static UInt8 usbFdReadCommandBuffer(IXXUSBFDTRANSMITBUFFER_T* pBuffer, IXXUSBFDCANMSG_T* pCanMsg);
 
+static char* usbFdGetDeviceName(UInt16 productId);
+
 
 /* global variables
 ------------------------------------------------------------------------------*/
@@ -161,9 +163,7 @@ static CAN4OSX_DEVICE_NAME_T prId2Name[] = {
 	{0x0014, "IXXAT USB-to-CAN FD Compact"},
 };
 
-
-
-static char* pDeviceString = "IXXAT USB-to-CAN FD";
+static char* pDeviceString = "IXXAT USB-to-CAN FD Generic";
 
 
 /******************************************************************************/
@@ -184,6 +184,7 @@ static canStatus usbFdInitHardware(
     )
 {
 Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
+char* pDevName;
 	
 	pSelf->privateData = calloc(1,sizeof(IXXUSBFDPRIVATEDATA_T));
     
@@ -209,8 +210,14 @@ Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
         pSelf->endpointBufferBulkInRef = calloc( 1 , pSelf->endpointMaxSizeBulkIn);
     	pSelf->endpointBufferBulkOutRef = calloc( 1 , pSelf->endpointMaxSizeBulkOut);
     }
-    
-    sprintf((char*)pSelf->devInfo.deviceString, "%s %d/%d",pDeviceString,pSelf->deviceChannel + 1, pSelf->deviceChannelCount);
+
+	pDevName = usbFdGetDeviceName(productId);
+	if (NULL == pDevName)  {
+		pDevName = pDeviceString;
+	}
+
+    sprintf((char*)pSelf->devInfo.deviceString, "%s %d/%d",pDevName,
+			pSelf->deviceChannel + 1, pSelf->deviceChannelCount);
 
     pSelf->devInfo.capability = 0u;
     pSelf->devInfo.capability |= canCHANNEL_CAP_CAN_FD;
@@ -225,6 +232,22 @@ Can4osxUsbDeviceHandleEntry *pSelf = &can4osxUsbDeviceHandle[hnd];
     CAN4OSX_usbReadFromBulkInPipe(pSelf);
     
     return(canOK);
+}
+
+
+static char* usbFdGetDeviceName(
+		UInt16 productId
+	)
+{
+char* pRetName = NULL;
+
+	for (UInt i = 0; i < sizeof(prId2Name); i++)  {
+		if (productId == prId2Name[i].productId)  {
+			pRetName = prId2Name[i].pName;
+		}
+	}
+
+	return(pRetName);
 }
 
 
