@@ -1,6 +1,6 @@
 can4osx
 =======
-(C) 2018 Alexander Philipp
+(C) 2014-2020 Alexander Philipp
 
 * [Project Website](http://aph-le.github.io/can4osx/)
 
