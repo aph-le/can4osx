@@ -87,26 +87,26 @@ Based on Kvaser canlib linux driver.</p>
 <h2><a name="example" class="anchor" href="#example"><span class="octicon octicon-link"></span></a>Example</h2>
 <pre class="line-numbers">
     <code class="language-markup">
-    void simpleSend(void)
-    {
-    CanHandle hdl;
-    int channel = 0;
-    int bitrate = canBITRATE_125K;
-        
-        canInitializeLibrary();
-        
-        hdl = canOpenChannel(channel, canOPEN_EXCLUSIVE | canOPEN_REQUIRE_EXTENDED);
-        
-        canBusOff(hdl);
-            
-        canSetBusParams(hdl, bitrate, 10, 5, 1, 1, 0);
-        
-        canBusOn(hdl);
-        
-        canWrite(hdl, 0x123, "can4osx", 8, 0);
-        
-        canBusOff(hdl);
-    }
+void simpleSend(void)
+{
+CanHandle hdl;
+int channel = 0;
+int bitrate = canBITRATE_125K;
+	
+	canInitializeLibrary();
+	
+	hdl = canOpenChannel(channel, canOPEN_EXCLUSIVE | canOPEN_REQUIRE_EXTENDED);
+	
+	canBusOff(hdl);
+		
+	canSetBusParams(hdl, bitrate, 10, 5, 1, 1, 0);
+	
+	canBusOn(hdl);
+	
+	canWrite(hdl, 0x123, "can4osx", 8, 0);
+	
+	canBusOff(hdl);
+}
     </code>
 </pre>
 
