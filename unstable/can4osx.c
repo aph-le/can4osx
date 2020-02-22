@@ -57,6 +57,7 @@
 #include "kvaserLeaf.h"
 #include "kvaserLeafPro.h"
 #include "ixxatUsbFd.h"
+#include "peakUsbFd.h"
 
 
 Can4osxUsbDeviceHandleEntry can4osxUsbDeviceHandle[CAN4OSX_MAX_CHANNEL_COUNT];
@@ -73,6 +74,7 @@ static CAN4OSX_DEV_ENTRY_T can4osxSupportedDevices[] =
 	{0x0bfd, 0x000E}, //Kvaser Leaf SemiPro HS
 	{0x08d8, 0x0017}, //IXXAT USB-to-CAN FD Automotive
 	{0x08d8, 0x0014}, //IXXAT USB-to-CAN FD compact
+	{0x0c72, 0x0012}, //Peak USB FD
 };
 
 
@@ -618,6 +620,9 @@ Can4osxUsbDeviceHandleEntry *pDevice;
 			case 0x0014: /* IXXAT USB-TO_CAN FD Compact */
 				pDevice->hwFunctions = ixxUsbFdHardwareFunctions;
 			 	break;
+			case 0x0012: /* Peak USB FD */
+				pDevice->hwFunctions = peakUsbFdHardwareFunctions;
+				break;
 			default:
 				pDevice->hwFunctions = leafHardwareFunctions;
 				break;
